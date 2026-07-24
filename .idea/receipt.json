@@ -18,7 +18,10 @@
                     "compose"
                 ]
             }
+        },
+        "android_project_spec": {
+            "min_android_sdk": 26
         }
     },
-    "timestamp": "2026-07-22T10:37:14.950271687Z"
+    "timestamp": "2026-07-24T17:10:33.474247973Z"
 }
