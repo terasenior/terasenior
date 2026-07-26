@@ -36,6 +36,9 @@ jobs:
       - name: Build Wasm
         run: ./gradlew :webApp:wasmJsBrowserDistribution
 
+      - name: Add CNAME
+        run: cp CNAME ./webApp/build/dist/wasmJs/productionExecutable/CNAME
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
