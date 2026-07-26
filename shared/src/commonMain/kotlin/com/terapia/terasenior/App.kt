@@ -11,6 +11,7 @@ import com.terapia.terasenior.models.Profile
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
 import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
 import com.terapia.terasenior.ui.login.LoginScreen
+import com.terapia.terasenior.ui.theme.TeraseniorTheme
 
 enum class Screen {
     MENU, NUMBER_SEARCH
@@ -19,7 +20,7 @@ enum class Screen {
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    TeraseniorTheme {
         // Estado para guardar el perfil del usuario autenticado
         var currentUserProfile by remember { mutableStateOf<Profile?>(null) }
         var currentScreen by remember { mutableStateOf(Screen.MENU) }

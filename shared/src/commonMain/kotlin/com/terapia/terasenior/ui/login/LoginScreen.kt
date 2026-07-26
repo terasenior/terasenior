@@ -1,127 +1,172 @@
 package com.terapia.terasenior.ui.login
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.models.Profile
+import org.jetbrains.compose.resources.painterResource
+import terasenior.shared.generated.resources.Res
+import terasenior.shared.generated.resources.logo
 
 @Composable
 fun LoginScreen(
-    // Cambiamos 'viewModel { LoginViewModel() }' por 'remember { LoginViewModel() }'
     viewModel: LoginViewModel = remember { LoginViewModel() },
     onLoginSuccess: (Profile) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    // Escuchar cuando el usuario se autentica correctamente
     LaunchedEffect(state.userProfile) {
         state.userProfile?.let { profile ->
             onLoginSuccess(profile)
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Card(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .widthIn(max = 420.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .fillMaxSize()
+                .padding(horizontal = 32.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
+            // Logo Corporativo
+            Image(
+                painter = painterResource(Res.drawable.logo),
+                contentDescription = "Logo Terasenior",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Bienvenido a Terasenior",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Text(
+                text = "Cuidando tu salud mental, día a día",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Formulario
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text(
-                    text = "Terasenior",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Text(
-                    text = "Acceso a la plataforma terapéutica",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Campo Correo
-                OutlinedTextField(
-                    value = state.email,
-                    onValueChange = viewModel::onEmailChanged,
-                    label = { Text("Correo electrónico") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isLoading
-                )
-
-                // Campo Contraseña
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = viewModel::onPasswordChanged,
-                    label = { Text("Contraseña") },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { viewModel.login() }
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isLoading
-                )
-
-                // Mensaje de Error
-                state.errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Botón Iniciar Sesión
-                Button(
-                    onClick = viewModel::login,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    enabled = !state.isLoading
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
+                    // Campo Correo con Icono
+                    OutlinedTextField(
+                        value = state.email,
+                        onValueChange = viewModel::onEmailChanged,
+                        label = { Text("Tu correo electrónico") },
+                        placeholder = { Text("ejemplo@correo.com") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isLoading
+                    )
+
+                    // Campo Contraseña con Icono
+                    OutlinedTextField(
+                        value = state.password,
+                        onValueChange = viewModel::onPasswordChanged,
+                        label = { Text("Tu contraseña") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { viewModel.login() }
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isLoading
+                    )
+
+                    if (state.errorMessage != null) {
+                        Text(
+                            text = state.errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(horizontal = 4.dp)
                         )
-                    } else {
-                        Text("Iniciar Sesión")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Botón de Acción Principal (Grande para Seniors)
+                    Button(
+                        onClick = { viewModel.login() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp), // Más alto para facilitar el toque
+                        shape = RoundedCornerShape(18.dp),
+                        enabled = !state.isLoading,
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(28.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 3.dp
+                            )
+                        } else {
+                            Text(
+                                "Entrar a la Plataforma",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            TextButton(onClick = { /* Próximamente */ }) {
+                Text("¿Olvidaste tu contraseña?", color = MaterialTheme.colorScheme.secondary)
             }
         }
     }

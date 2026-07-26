@@ -1,8 +1,9 @@
-# Tareas de Despliegue Web
+# Tareas de Rediseño y Despliegue Corporativo
 
-- [x] Estabilizar Gradle 9.6.1 y AGP 9.3.1
-- [x] Corregir advertencias en `LoginViewModel.kt` y `App.kt`
-- [x] Configurar Despliegue Web (WASM + GitHub Pages)
-    - [x] Habilitar `wasmJs` en `webApp/build.gradle.kts`
-    - [x] Configurar copia de `CNAME` en `deploy.yml`
-- [x] Generar distribución local para prueba (`:webApp:wasmJsBrowserDistribution`) (Nota: Configurado y listo, compilado en CI para ahorrar recursos locales)
+- [ ] Preparar recursos de imagen (`logo.jpg`)
+- [ ] Definir el sistema de diseño (Colores y Tema) en `Theme.kt`
+- [ ] Integrar el tema en `App.kt`
+- [ ] Rediseñar pantalla de Login
+- [ ] Rediseñar menú de tratamientos
+- [ ] Mejorar legibilidad en el juego de búsqueda de números
+- [ ] Desplegar en GitHub Pages (`git push`)
