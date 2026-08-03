@@ -11,6 +11,9 @@ sealed interface AdminEntitiesUiState {
 
 sealed interface AdminUsersUiState {
     data object Loading : AdminUsersUiState
-    data class Success(val users: List<UserProfile>) : AdminUsersUiState
+    data class Success(
+        val users: List<UserProfile>,
+        val entities: List<Entity> = emptyList()
+    ) : AdminUsersUiState
     data class Error(val message: String) : AdminUsersUiState
 }

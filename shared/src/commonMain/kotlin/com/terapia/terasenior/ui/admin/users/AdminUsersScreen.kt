@@ -26,6 +26,7 @@ fun AdminUsersScreen(
     viewModel: AdminUsersViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showCreateDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -45,7 +46,7 @@ fun AdminUsersScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* Implementar diálogo de creación */ },
+                onClick = { showCreateDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp)
@@ -99,6 +100,22 @@ fun AdminUsersScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (showCreateDialog) {
+            val state = uiState
+            if (state is AdminUsersUiState.Success) {
+                CreateUserDialog(
+                    entities = state.entities,
+                    onDismiss = { showCreateDialog = false },
+                    onConfirm = { fullName, email, phone, role, entityId ->
+                        viewModel.createUser(fullName, email, role, entityId, phone)
+                        showCreateDialog = false
+                    }
+                )
+            } else if (state is AdminUsersUiState.Loading) {
+                 // Diálogo de espera o simplemente no mostrar hasta tener entidades
             }
         }
     }

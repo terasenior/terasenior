@@ -91,11 +91,13 @@ fun App() {
                         }
 
                         Screen.ADMIN_USERS -> {
-                            val repository = remember { SupabaseUserProfileRepository() }
+                            val profileRepository = remember { SupabaseUserProfileRepository() }
+                            val entityRepository = remember { SupabaseEntityRepository() }
                             val viewModel = remember { 
                                 AdminUsersViewModel(
-                                    GetUserProfilesUseCase(repository),
-                                    CreateUserProfileUseCase(repository)
+                                    GetUserProfilesUseCase(profileRepository),
+                                    CreateUserProfileUseCase(profileRepository),
+                                    GetEntitiesUseCase(entityRepository)
                                 ) 
                             }
                             AdminUsersScreen(viewModel)
