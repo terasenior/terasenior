@@ -19,7 +19,15 @@ internal val Res.drawable.compose_multiplatform: DrawableResource by lazy {
       ))
     }
 
+@delegate:ResourceContentHash(1_619_299_531)
+internal val Res.drawable.logo: DrawableResource by lazy {
+      DrawableResource("drawable:logo", setOf(
+        ResourceItem(setOf(), "${MD}drawable/logo.jpg", -1, -1),
+      ))
+    }
+
 @InternalResourceApi
 internal fun _collectCommonMainDrawable0Resources(map: MutableMap<String, DrawableResource>) {
   map.put("compose_multiplatform", Res.drawable.compose_multiplatform)
+  map.put("logo", Res.drawable.logo)
 }
