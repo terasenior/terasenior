@@ -3,7 +3,6 @@ package com.terapia.terasenior.ui.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.models.Profile
-import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,20 +44,37 @@ class LoginViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.login(currentEmail, currentPassword)
+            
+            // 1. Intento de login
+            val loginResult = authRepository.login(currentEmail, currentPassword)
 
-            result.onSuccess {
-                val profile = Profile(
-                    id = "",
-                    email = currentEmail,
-                    role = UserRole.THERAPIST
-                )
-
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        userProfile = profile
-                    )
+            loginResult.onSuccess {
+                // 2. Si el login es exitoso, buscamos el perfil real en la BD
+                val profileResult = authRepository.getCurrentProfile()
+                
+                profileResult.onSuccess { profile ->
+                    if (profile != null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                userProfile = profile
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "No se encontró el perfil de usuario"
+                            )
+                        }
+                    }
+                }.onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Error al obtener el perfil: ${error.message}"
+                        )
+                    }
                 }
             }.onFailure { error ->
                 _uiState.update {

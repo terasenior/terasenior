@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.domain.model.admin.UserProfile
-import com.terapia.terasenior.domain.model.admin.UserRole
+import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.domain.usecase.admin.CreateUserProfileUseCase
 import com.terapia.terasenior.domain.usecase.admin.GetEntitiesUseCase
 import com.terapia.terasenior.domain.usecase.admin.GetUserProfilesUseCase

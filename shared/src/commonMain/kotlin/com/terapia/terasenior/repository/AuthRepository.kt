@@ -1,5 +1,6 @@
 package com.terapia.terasenior.repository
 
+import com.terapia.terasenior.models.Profile
 import com.terapia.terasenior.supabase
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -25,15 +26,17 @@ class AuthRepository {
         }
     }
 
-    suspend fun getCurrentProfile(): Result<Unit> {
+    suspend fun getCurrentProfile(): Result<Profile?> {
         return runCatching {
             val user = supabase.auth.currentUserOrNull()
             if (user != null) {
-                supabase.postgrest["profiles"].select {
+                supabase.postgrest["user_profiles"].select {
                     filter {
                         eq("id", user.id)
                     }
-                }
+                }.decodeSingleOrNull<Profile>()
+            } else {
+                null
             }
         }
     }

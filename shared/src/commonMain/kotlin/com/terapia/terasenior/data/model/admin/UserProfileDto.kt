@@ -1,7 +1,7 @@
 package com.terapia.terasenior.data.model.admin
 
 import com.terapia.terasenior.domain.model.admin.UserProfile
-import com.terapia.terasenior.domain.model.admin.UserRole
+import com.terapia.terasenior.models.UserRole
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

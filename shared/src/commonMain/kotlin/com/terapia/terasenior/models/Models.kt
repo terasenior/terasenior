@@ -3,21 +3,30 @@ package com.terapia.terasenior.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Serializable
 enum class UserRole {
-    SUPER_ADMIN,
-    ENTITY_ADMIN,
-    THERAPIST
+    @SerialName("SUPER_ADMIN") SUPER_ADMIN,
+    @SerialName("ADMIN_CENTRO") ADMIN_CENTRO,
+    @SerialName("TERAPEUTA") TERAPEUTA,
+    @SerialName("AUXILIAR") AUXILIAR;
+
+    companion object {
+        fun fromId(id: String): UserRole = entries.find { it.name == id } ?: AUXILIAR
+    }
 }
 
 @Serializable
 data class Profile(
     val id: String,
     val email: String,
+    @SerialName("role_id")
     val role: UserRole,
     @SerialName("entity_id")
     val entityId: String? = null,
     @SerialName("full_name")
-    val fullName: String? = null
+    val fullName: String? = null,
+    @SerialName("is_active")
+    val isActive: Boolean = true
 )
 
 @Serializable

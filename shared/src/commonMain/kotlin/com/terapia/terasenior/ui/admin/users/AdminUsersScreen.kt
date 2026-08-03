@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.admin.UserProfile
-import com.terapia.terasenior.domain.model.admin.UserRole
+import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.ui.admin.AdminUsersUiState
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 

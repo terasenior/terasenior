@@ -1,5 +1,7 @@
 package com.terapia.terasenior.domain.model.admin
 
+import com.terapia.terasenior.models.UserRole
+
 data class UserProfile(
     val id: String,
     val entityId: String?,

@@ -11,6 +11,7 @@ import com.terapia.terasenior.domain.usecase.admin.CreateEntityUseCase
 import com.terapia.terasenior.domain.usecase.admin.CreateUserProfileUseCase
 import com.terapia.terasenior.domain.usecase.admin.GetEntitiesUseCase
 import com.terapia.terasenior.domain.usecase.admin.GetUserProfilesUseCase
+import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
 import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
@@ -34,11 +35,12 @@ fun App() {
             LoginScreen { profile ->
                 currentUserProfile = profile
                 currentScreen = Screen.THERAPY_PANEL
+                println("Login exitoso: ${profile.email} con rol ${profile.role}")
             }
         } else {
             val userRole = currentUserProfile?.role
-            val canAdmin = userRole == com.terapia.terasenior.models.UserRole.SUPER_ADMIN || 
-                         userRole == com.terapia.terasenior.models.UserRole.ENTITY_ADMIN
+            val canAdmin = userRole == UserRole.SUPER_ADMIN || 
+                         userRole == UserRole.ADMIN_CENTRO
 
             Scaffold(
                 bottomBar = {
