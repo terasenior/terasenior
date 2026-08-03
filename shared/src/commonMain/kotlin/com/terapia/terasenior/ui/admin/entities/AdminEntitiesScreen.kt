@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.ui.admin.AdminEntitiesUiState
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
+import com.terapia.terasenior.ui.admin.EntityStatusFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,14 +56,16 @@ fun AdminEntitiesScreen(
             }
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
             when (val state = uiState) {
                 is AdminEntitiesUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
 
                 is AdminEntitiesUiState.Error -> {
@@ -84,49 +87,49 @@ fun AdminEntitiesScreen(
                 }
 
                 is AdminEntitiesUiState.Success -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        // Mensaje de error temporal (SnackBar-like)
-                        state.errorMessage?.let { error ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    // Barra de búsqueda y filtros
+                    SearchBarAndFilters(
+                        query = state.searchQuery,
+                        onQueryChange = viewModel::onSearchQueryChanged,
+                        selectedFilter = state.selectedFilter,
+                        onFilterChange = viewModel::onFilterChanged
+                    )
+
+                    // Mensaje de error temporal
+                    state.errorMessage?.let { error ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(text = error, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
-                                    IconButton(onClick = { viewModel.clearError() }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
-                                    }
+                                Text(text = error, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
+                                IconButton(onClick = { viewModel.clearError() }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Cerrar")
                                 }
                             }
                         }
+                    }
 
-                        if (state.entities.isEmpty()) {
-                            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "No hay centros registrados todavía.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (state.entities.isEmpty()) {
+                        EmptyState(isSearch = state.searchQuery.isNotEmpty() || state.selectedFilter != EntityStatusFilter.ALL)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(state.entities) { entity ->
+                                EntityCard(
+                                    entity = entity,
+                                    onEdit = { entityToEdit = entity },
+                                    onDelete = { 
+                                        entityToDelete = entity
+                                        hasDependencies = null
+                                    }
                                 )
-                            }
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier.weight(1f).fillMaxWidth(),
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(state.entities) { entity ->
-                                    EntityCard(
-                                        entity = entity,
-                                        onEdit = { entityToEdit = entity },
-                                        onDelete = { 
-                                            entityToDelete = entity
-                                            hasDependencies = null
-                                        }
-                                    )
-                                }
                             }
                         }
                     }
@@ -134,7 +137,7 @@ fun AdminEntitiesScreen(
             }
         }
 
-        // Diálogos... (mantener igual)
+        // Diálogos
         if (showCreateDialog) {
             CreateEntityDialog(
                 onDismiss = { showCreateDialog = false },
@@ -173,6 +176,82 @@ fun AdminEntitiesScreen(
                     viewModel.deactivateEntity(entity.id)
                     entityToDelete = null
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchBarAndFilters(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    selectedFilter: EntityStatusFilter,
+    onFilterChange: (EntityStatusFilter) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Buscar por nombre o CIF...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                    }
+                }
+            },
+            shape = RoundedCornerShape(12.dp),
+            singleLine = true
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            EntityStatusFilter.entries.forEach { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { onFilterChange(filter) },
+                    label = {
+                        Text(
+                            when (filter) {
+                                EntityStatusFilter.ALL -> "Todas"
+                                EntityStatusFilter.ACTIVE -> "Activas"
+                                EntityStatusFilter.INACTIVE -> "Inactivas"
+                            }
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(isSearch: Boolean) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = if (isSearch) Icons.Default.SearchOff else Icons.Default.Business,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = if (isSearch) "No se encontraron resultados para la búsqueda" else "No hay centros registrados todavía.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
