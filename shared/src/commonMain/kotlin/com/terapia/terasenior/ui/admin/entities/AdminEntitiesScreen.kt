@@ -84,28 +84,49 @@ fun AdminEntitiesScreen(
                 }
 
                 is AdminEntitiesUiState.Success -> {
-                    if (state.entities.isEmpty()) {
-                        Text(
-                            text = "No hay centros registrados todavía.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(state.entities) { entity ->
-                                EntityCard(
-                                    entity = entity,
-                                    onEdit = { entityToEdit = entity },
-                                    onDelete = { 
-                                        entityToDelete = entity
-                                        hasDependencies = null
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Mensaje de error temporal (SnackBar-like)
+                        state.errorMessage?.let { error ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = error, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
+                                    IconButton(onClick = { viewModel.clearError() }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
                                     }
+                                }
+                            }
+                        }
+
+                        if (state.entities.isEmpty()) {
+                            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "No hay centros registrados todavía.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f).fillMaxWidth(),
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(state.entities) { entity ->
+                                    EntityCard(
+                                        entity = entity,
+                                        onEdit = { entityToEdit = entity },
+                                        onDelete = { 
+                                            entityToDelete = entity
+                                            hasDependencies = null
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -113,7 +134,7 @@ fun AdminEntitiesScreen(
             }
         }
 
-        // Diálogos
+        // Diálogos... (mantener igual)
         if (showCreateDialog) {
             CreateEntityDialog(
                 onDismiss = { showCreateDialog = false },
@@ -187,7 +208,6 @@ private fun EntityCard(
                 )
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Badge de Estado
                     val isActive = entity.status == "ACTIVE"
                     Surface(
                         color = if (isActive) Color(0xFFC8E6C9) else Color(0xFFFFCDD2),

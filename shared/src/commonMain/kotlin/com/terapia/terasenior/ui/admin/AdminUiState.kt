@@ -5,7 +5,10 @@ import com.terapia.terasenior.domain.model.admin.UserProfile
 
 sealed interface AdminEntitiesUiState {
     data object Loading : AdminEntitiesUiState
-    data class Success(val entities: List<Entity>) : AdminEntitiesUiState
+    data class Success(
+        val entities: List<Entity>,
+        val errorMessage: String? = null
+    ) : AdminEntitiesUiState
     data class Error(val message: String) : AdminEntitiesUiState
 }
 

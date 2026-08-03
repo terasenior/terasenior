@@ -7,6 +7,7 @@ import com.terapia.terasenior.domain.usecase.admin.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AdminEntitiesViewModel(
@@ -52,7 +53,7 @@ class AdminEntitiesViewModel(
             createEntityUseCase(newEntity)
                 .onSuccess { loadEntities() }
                 .onFailure { error ->
-                    _uiState.value = AdminEntitiesUiState.Error(error.message ?: "Error al crear entidad")
+                    showTempError(error.message ?: "Error al crear entidad")
                 }
         }
     }
@@ -62,31 +63,11 @@ class AdminEntitiesViewModel(
             updateEntityUseCase(entity)
                 .onSuccess { loadEntities() }
                 .onFailure { error ->
-                    _uiState.value = AdminEntitiesUiState.Error(error.message ?: "Error al actualizar")
+                    showTempError(error.message ?: "Error al actualizar")
                 }
         }
     }
 
-    fun deleteOrDeactivate(entity: Entity, forceDeactivate: Boolean = false) {
-        viewModelScope.launch {
-            if (forceDeactivate) {
-                deactivateEntityUseCase(entity.id)
-                    .onSuccess { loadEntities() }
-                    .onFailure { error ->
-                        _uiState.value = AdminEntitiesUiState.Error(error.message ?: "Error al desactivar")
-                    }
-            } else {
-                checkDependenciesUseCase(entity.id)
-                    .onSuccess { hasDeps ->
-                        if (hasDependencies(entity)) { // En una app real esto vendría del usecase
-                             // Lógica manejada en la UI con el resultado de hasDeps
-                        }
-                    }
-            }
-        }
-    }
-
-    // Método auxiliar para el diálogo de eliminación
     suspend fun checkDependencies(entityId: String): Boolean {
         return checkDependenciesUseCase(entityId).getOrDefault(true)
     }
@@ -94,9 +75,11 @@ class AdminEntitiesViewModel(
     fun deleteEntity(entityId: String) {
         viewModelScope.launch {
             deleteEntityUseCase(entityId)
-                .onSuccess { loadEntities() }
+                .onSuccess { 
+                    loadEntities() 
+                }
                 .onFailure { error ->
-                    _uiState.value = AdminEntitiesUiState.Error(error.message ?: "Error al eliminar")
+                    showTempError(error.message ?: "Error al eliminar: Verifica permisos en Supabase")
                 }
         }
     }
@@ -106,12 +89,24 @@ class AdminEntitiesViewModel(
             deactivateEntityUseCase(entityId)
                 .onSuccess { loadEntities() }
                 .onFailure { error ->
-                    _uiState.value = AdminEntitiesUiState.Error(error.message ?: "Error al desactivar")
+                    showTempError(error.message ?: "Error al desactivar")
                 }
         }
     }
-    
-    private fun hasDependencies(entity: Entity): Boolean {
-        return false // Placeholder
+
+    private fun showTempError(message: String) {
+        val currentState = _uiState.value
+        if (currentState is AdminEntitiesUiState.Success) {
+            _uiState.value = currentState.copy(errorMessage = message)
+        } else {
+            _uiState.value = AdminEntitiesUiState.Error(message)
+        }
+    }
+
+    fun clearError() {
+        val currentState = _uiState.value
+        if (currentState is AdminEntitiesUiState.Success) {
+            _uiState.value = currentState.copy(errorMessage = null)
+        }
     }
 }
