@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,6 +99,7 @@ fun LoginScreen(
                         onValueChange = viewModel::onEmailChanged,
                         label = { Text("Tu correo electrónico") },
                         placeholder = { Text("ejemplo@correo.com") },
+                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                         singleLine = true,
                         shape = RoundedCornerShape(16.dp),
                         keyboardOptions = KeyboardOptions(
@@ -111,6 +115,7 @@ fun LoginScreen(
                         value = state.password,
                         onValueChange = viewModel::onPasswordChanged,
                         label = { Text("Tu contraseña") },
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                         singleLine = true,
                         shape = RoundedCornerShape(16.dp),
                         visualTransformation = PasswordVisualTransformation(),

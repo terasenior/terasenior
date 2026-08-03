@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,7 +39,7 @@ fun AdminEntitiesScreen(
                 },
                 actions = {
                     IconButton(onClick = { viewModel.loadEntities() }) {
-                        Text("🔄", fontSize = 20.sp)
+                        Icon(Icons.Default.Refresh, contentDescription = "Recargar")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -50,7 +54,7 @@ fun AdminEntitiesScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("➕", fontSize = 24.sp)
+                Icon(Icons.Default.Add, contentDescription = "Añadir Centro")
             }
         }
     ) { padding ->
@@ -168,11 +172,14 @@ private fun EntityCard(entity: Entity) {
 
             if (!entity.address.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Row {
-                    Text(
-                        text = "📍 ",
-                        fontSize = 14.sp
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = entity.address,
                         style = MaterialTheme.typography.bodyMedium,

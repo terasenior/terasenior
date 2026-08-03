@@ -1,10 +1,13 @@
 package com.terapia.terasenior
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
 import com.terapia.terasenior.domain.usecase.admin.CreateEntityUseCase
@@ -48,7 +51,7 @@ fun App() {
                         NavigationBarItem(
                             selected = currentScreen == Screen.THERAPY_PANEL || currentScreen == Screen.NUMBER_SEARCH,
                             onClick = { currentScreen = Screen.THERAPY_PANEL },
-                            icon = { Text("🎯", fontSize = 20.sp) },
+                            icon = { Icon(Icons.Default.Psychology, contentDescription = null) },
                             label = { Text("Terapia") }
                         )
                         
@@ -56,13 +59,13 @@ fun App() {
                             NavigationBarItem(
                                 selected = currentScreen == Screen.ADMIN_ENTITIES,
                                 onClick = { currentScreen = Screen.ADMIN_ENTITIES },
-                                icon = { Text("🏢", fontSize = 20.sp) },
+                                icon = { Icon(Icons.Default.Business, contentDescription = null) },
                                 label = { Text("Centros") }
                             )
                             NavigationBarItem(
                                 selected = currentScreen == Screen.ADMIN_USERS,
                                 onClick = { currentScreen = Screen.ADMIN_USERS },
-                                icon = { Text("👥", fontSize = 20.sp) },
+                                icon = { Icon(Icons.Default.People, contentDescription = null) },
                                 label = { Text("Usuarios") }
                             )
                         }

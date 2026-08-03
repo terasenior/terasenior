@@ -4,6 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,7 +82,7 @@ fun TreatmentMenuScreen(
                 ActivityCard(
                     title = "Busca el Número",
                     description = "Entrena tu atención visual encontrando los números indicados.",
-                    icon = "🔍",
+                    icon = Icons.Default.Search,
                     gradient = Brush.linearGradient(listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB))),
                     onClick = onNumberSearchClick
                 )
@@ -85,7 +90,7 @@ fun TreatmentMenuScreen(
                 ActivityCard(
                     title = "Busca la Letra",
                     description = "Próximamente: Mejora tu reconocimiento léxico.",
-                    icon = "🔤",
+                    icon = Icons.Default.FontDownload,
                     gradient = Brush.linearGradient(listOf(Color(0xFFF1F8E9), Color(0xFFC5E1A5))),
                     onClick = { /* Próximamente */ }
                 )
@@ -98,7 +103,7 @@ fun TreatmentMenuScreen(
 private fun ActivityCard(
     title: String,
     description: String,
-    icon: String,
+    icon: ImageVector,
     gradient: Brush,
     onClick: () -> Unit
 ) {
@@ -124,7 +129,7 @@ private fun ActivityCard(
                 color = Color.White.copy(alpha = 0.6f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(icon, fontSize = 32.sp)
+                    Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp), tint = Color.DarkGray)
                 }
             }
 
@@ -144,7 +149,7 @@ private fun ActivityCard(
                 )
             }
             
-            Text("→", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray)
         }
     }
 }
