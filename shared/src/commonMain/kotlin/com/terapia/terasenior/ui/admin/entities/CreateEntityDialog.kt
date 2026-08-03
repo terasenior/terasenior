@@ -10,11 +10,12 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CreateEntityDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, cif: String, address: String) -> Unit
+    onConfirm: (name: String, cif: String, address: String, licenseExpiry: String?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var cif by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+    var licenseExpiry by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -56,13 +57,24 @@ fun CreateEntityDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
+
+                OutlinedTextField(
+                    value = licenseExpiry,
+                    onValueChange = { licenseExpiry = it },
+                    label = { Text("Vencimiento Licencia (AAAA-MM-DD)") },
+                    placeholder = { Text("Ej: 2026-12-31") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     if (name.isNotBlank() && cif.isNotBlank()) {
-                        onConfirm(name, cif, address)
+                        val expiry = if (licenseExpiry.isBlank()) null else licenseExpiry
+                        onConfirm(name, cif, address, expiry)
                     }
                 },
                 enabled = name.isNotBlank() && cif.isNotBlank(),

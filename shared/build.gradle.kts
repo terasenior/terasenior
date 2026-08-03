@@ -73,6 +73,7 @@ kotlin {
             implementation("io.github.jan-tennert.supabase:auth-kt:3.7.0")
             implementation("io.ktor:ktor-client-core:3.0.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

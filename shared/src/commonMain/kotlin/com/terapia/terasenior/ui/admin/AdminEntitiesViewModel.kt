@@ -92,7 +92,7 @@ class AdminEntitiesViewModel(
         _statusFilter.value = filter
     }
 
-    fun createEntity(name: String, cif: String, address: String) {
+    fun createEntity(name: String, cif: String, address: String, licenseExpiry: String?) {
         viewModelScope.launch {
             val newEntity = Entity(
                 id = "", 
@@ -100,7 +100,8 @@ class AdminEntitiesViewModel(
                 cif = cif,
                 address = address,
                 status = "ACTIVE",
-                createdAt = ""
+                createdAt = "",
+                licenseExpiresAt = licenseExpiry
             )
 
             createEntityUseCase(newEntity)

@@ -45,26 +45,38 @@ class LoginViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             
-            // 1. Intento de login
+            // 1. Login con Supabase Auth
             val loginResult = authRepository.login(currentEmail, currentPassword)
 
             loginResult.onSuccess {
-                // 2. Si el login es exitoso, buscamos el perfil real en la BD
+                // 2. Obtener el perfil del usuario
                 val profileResult = authRepository.getCurrentProfile()
                 
                 profileResult.onSuccess { profile ->
                     if (profile != null) {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                userProfile = profile
-                            )
+                        // 3. Validar Licencia y registrar acceso
+                        val licenseResult = authRepository.checkLicenseAndRecordLogin(profile)
+                        
+                        licenseResult.onSuccess {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    userProfile = profile
+                                )
+                            }
+                        }.onFailure { licenseError ->
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = licenseError.message
+                                )
+                            }
                         }
                     } else {
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = "No se encontró el perfil de usuario"
+                                errorMessage = "No se pudo recuperar tu perfil de usuario."
                             )
                         }
                     }
@@ -72,7 +84,7 @@ class LoginViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "Error al obtener el perfil: ${error.message}"
+                            errorMessage = "Error al obtener perfil: ${error.message}"
                         )
                     }
                 }
@@ -80,7 +92,7 @@ class LoginViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = error.message ?: "Error al iniciar sesión"
+                        errorMessage = error.message ?: "Credenciales incorrectas o error de conexión."
                     )
                 }
             }

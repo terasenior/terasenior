@@ -13,7 +13,8 @@ data class UserProfileDto(
     @SerialName("full_name") val fullName: String,
     @SerialName("email") val email: String,
     @SerialName("phone") val phone: String? = null,
-    @SerialName("is_active") val isActive: Boolean = true
+    @SerialName("is_active") val isActive: Boolean = true,
+    @SerialName("last_login_at") val lastLoginAt: String? = null
 )
 
 fun UserProfileDto.toDomain() = UserProfile(
@@ -23,7 +24,8 @@ fun UserProfileDto.toDomain() = UserProfile(
     fullName = fullName,
     email = email,
     phone = phone,
-    isActive = isActive
+    isActive = isActive,
+    lastLoginAt = lastLoginAt
 )
 
 fun UserProfile.toData() = UserProfileDto(
@@ -33,5 +35,6 @@ fun UserProfile.toData() = UserProfileDto(
     fullName = fullName,
     email = email,
     phone = phone,
-    isActive = isActive
+    isActive = isActive,
+    lastLoginAt = lastLoginAt
 )

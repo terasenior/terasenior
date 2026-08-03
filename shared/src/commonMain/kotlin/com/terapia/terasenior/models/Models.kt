@@ -26,13 +26,19 @@ data class Profile(
     @SerialName("full_name")
     val fullName: String? = null,
     @SerialName("is_active")
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    @SerialName("last_login_at")
+    val lastLoginAt: String? = null
 )
 
 @Serializable
 data class Entity(
     val id: String,
     val name: String,
+    @SerialName("status")
+    val status: String = "ACTIVE",
+    @SerialName("license_expires_at")
+    val licenseExpiresAt: String? = null,
     @SerialName("created_at")
     val createdAt: String? = null
 )

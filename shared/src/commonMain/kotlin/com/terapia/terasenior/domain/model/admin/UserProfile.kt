@@ -9,5 +9,6 @@ data class UserProfile(
     val fullName: String,
     val email: String,
     val phone: String?,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val lastLoginAt: String? = null
 )

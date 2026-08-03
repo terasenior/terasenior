@@ -117,8 +117,6 @@ fun AdminUsersScreen(
                         showCreateDialog = false
                     }
                 )
-            } else if (state is AdminUsersUiState.Loading) {
-                 // Diálogo de espera o simplemente no mostrar hasta tener entidades
             }
         }
     }
@@ -136,7 +134,6 @@ private fun UserCard(user: UserProfile) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar con inicial
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -164,9 +161,24 @@ private fun UserCard(user: UserProfile) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                user.lastLoginAt?.let { lastLogin ->
+                    Text(
+                        text = "Último acceso: ${lastLogin.replace("T", " ").take(16)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                } ?: run {
+                    Text(
+                        text = "Sin accesos previos",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
                 
-                // Badge de Rol
                 Surface(
                     color = when(user.role) {
                         UserRole.SUPER_ADMIN -> Color(0xFFE1BEE7)

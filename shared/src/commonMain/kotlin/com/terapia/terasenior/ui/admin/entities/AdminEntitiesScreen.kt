@@ -17,8 +17,9 @@ import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.ui.admin.AdminEntitiesUiState
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.EntityStatusFilter
+import kotlinx.datetime.Instant
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun AdminEntitiesScreen(
     viewModel: AdminEntitiesViewModel
@@ -87,7 +88,6 @@ fun AdminEntitiesScreen(
                 }
 
                 is AdminEntitiesUiState.Success -> {
-                    // Barra de búsqueda y filtros
                     SearchBarAndFilters(
                         query = state.searchQuery,
                         onQueryChange = viewModel::onSearchQueryChanged,
@@ -95,7 +95,6 @@ fun AdminEntitiesScreen(
                         onFilterChange = viewModel::onFilterChanged
                     )
 
-                    // Mensaje de error temporal
                     state.errorMessage?.let { error ->
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -137,12 +136,11 @@ fun AdminEntitiesScreen(
             }
         }
 
-        // Diálogos
         if (showCreateDialog) {
             CreateEntityDialog(
                 onDismiss = { showCreateDialog = false },
-                onConfirm = { name, cif, address ->
-                    viewModel.createEntity(name, cif, address)
+                onConfirm = { name, cif, address, licenseExpiry ->
+                    viewModel.createEntity(name, cif, address, licenseExpiry)
                     showCreateDialog = false
                 }
             )
@@ -314,6 +312,29 @@ private fun EntityCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            entity.licenseExpiresAt?.let { expiresAt ->
+                val isExpired = try {
+                    Instant.parse(expiresAt) < kotlin.time.Clock.System.now()
+                } catch (e: Exception) {
+                    false
+                }
+                
+                Surface(
+                    color = if (isExpired) Color(0xFFFFEBEE) else Color(0xFFE8F5E9),
+                    shape = RoundedCornerShape(6.dp),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = if (isExpired) "❌ Licencia Expirada: ${expiresAt.take(10)}" else "🛡️ Licencia hasta: ${expiresAt.take(10)}",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isExpired) Color(0xFFB71C1C) else Color(0xFF2E7D32)
+                        ),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
             Text(
                 text = "CIF: ${entity.cif}",

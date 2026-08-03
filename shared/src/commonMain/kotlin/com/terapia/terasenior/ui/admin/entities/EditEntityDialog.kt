@@ -5,8 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.admin.Entity
 
@@ -20,6 +18,7 @@ fun EditEntityDialog(
     var cif by remember { mutableStateOf(entity.cif) }
     var address by remember { mutableStateOf(entity.address ?: "") }
     var status by remember { mutableStateOf(entity.status) }
+    var licenseExpiry by remember { mutableStateOf(entity.licenseExpiresAt?.take(10) ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -53,7 +52,16 @@ fun EditEntityDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // Selector de Estado
+                OutlinedTextField(
+                    value = licenseExpiry,
+                    onValueChange = { licenseExpiry = it },
+                    label = { Text("Vencimiento Licencia (AAAA-MM-DD)") },
+                    placeholder = { Text("Ej: 2026-12-31") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -93,7 +101,14 @@ fun EditEntityDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onConfirm(entity.copy(name = name, cif = cif, address = address, status = status))
+                    val finalExpiry = if (licenseExpiry.isBlank()) null else licenseExpiry
+                    onConfirm(entity.copy(
+                        name = name, 
+                        cif = cif, 
+                        address = address, 
+                        status = status,
+                        licenseExpiresAt = finalExpiry
+                    ))
                 },
                 enabled = name.isNotBlank() && cif.isNotBlank()
             ) {
