@@ -5,9 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.ui.admin.AdminEntitiesUiState
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
@@ -27,6 +24,9 @@ fun AdminEntitiesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
+    var entityToEdit by remember { mutableStateOf<Entity?>(null) }
+    var entityToDelete by remember { mutableStateOf<Entity?>(null) }
+    var hasDependencies by remember { mutableStateOf<Boolean?>(null) }
 
     Scaffold(
         topBar = {
@@ -41,10 +41,7 @@ fun AdminEntitiesScreen(
                     IconButton(onClick = { viewModel.loadEntities() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Recargar")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                }
             )
         },
         floatingActionButton = {
@@ -80,8 +77,8 @@ fun AdminEntitiesScreen(
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             modifier = Modifier.padding(24.dp)
                         )
-                        Button(onClick = { viewModel.loadEntities() }) {
-                            Text("Reintentar")
+                        androidx.compose.material3.Button(onClick = { viewModel.loadEntities() }) {
+                            androidx.compose.material3.Text("Reintentar")
                         }
                     }
                 }
@@ -101,7 +98,14 @@ fun AdminEntitiesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(state.entities) { entity ->
-                                EntityCard(entity)
+                                EntityCard(
+                                    entity = entity,
+                                    onEdit = { entityToEdit = entity },
+                                    onDelete = { 
+                                        entityToDelete = entity
+                                        hasDependencies = null
+                                    }
+                                )
                             }
                         }
                     }
@@ -109,6 +113,7 @@ fun AdminEntitiesScreen(
             }
         }
 
+        // Diálogos
         if (showCreateDialog) {
             CreateEntityDialog(
                 onDismiss = { showCreateDialog = false },
@@ -118,11 +123,46 @@ fun AdminEntitiesScreen(
                 }
             )
         }
+
+        entityToEdit?.let { entity ->
+            EditEntityDialog(
+                entity = entity,
+                onDismiss = { entityToEdit = null },
+                onConfirm = { updated ->
+                    viewModel.updateEntity(updated)
+                    entityToEdit = null
+                }
+            )
+        }
+
+        entityToDelete?.let { entity ->
+            LaunchedEffect(entity.id) {
+                hasDependencies = viewModel.checkDependencies(entity.id)
+            }
+
+            DeleteEntityDialog(
+                entityName = entity.name,
+                hasDependencies = hasDependencies,
+                onDismiss = { entityToDelete = null },
+                onDelete = {
+                    viewModel.deleteEntity(entity.id)
+                    entityToDelete = null
+                },
+                onDeactivate = {
+                    viewModel.deactivateEntity(entity.id)
+                    entityToDelete = null
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun EntityCard(entity: Entity) {
+private fun EntityCard(
+    entity: Entity,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -142,23 +182,35 @@ private fun EntityCard(entity: Entity) {
                 Text(
                     text = entity.name,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
                 )
                 
-                // Badge de Estado
-                val isActive = entity.status == "active"
-                Surface(
-                    color = if (isActive) Color(0xFFC8E6C9) else Color(0xFFFFCDD2),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = if (isActive) "ACTIVO" else "INACTIVO",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = if (isActive) Color(0xFF1B5E20) else Color(0xFFB71C1C)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Badge de Estado
+                    val isActive = entity.status == "ACTIVE"
+                    Surface(
+                        color = if (isActive) Color(0xFFC8E6C9) else Color(0xFFFFCDD2),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = if (isActive) "ACTIVO" else "INACTIVO",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (isActive) Color(0xFF1B5E20) else Color(0xFFB71C1C)
+                            )
                         )
-                    )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.secondary)
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
 

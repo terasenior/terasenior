@@ -10,10 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
-import com.terapia.terasenior.domain.usecase.admin.CreateEntityUseCase
-import com.terapia.terasenior.domain.usecase.admin.CreateUserProfileUseCase
-import com.terapia.terasenior.domain.usecase.admin.GetEntitiesUseCase
-import com.terapia.terasenior.domain.usecase.admin.GetUserProfilesUseCase
+import com.terapia.terasenior.domain.usecase.admin.*
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
 import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
@@ -88,8 +85,12 @@ fun App() {
                             val repository = remember { SupabaseEntityRepository() }
                             val viewModel = remember { 
                                 AdminEntitiesViewModel(
-                                    GetEntitiesUseCase(repository),
-                                    CreateEntityUseCase(repository)
+                                    getEntitiesUseCase = GetEntitiesUseCase(repository),
+                                    createEntityUseCase = CreateEntityUseCase(repository),
+                                    updateEntityUseCase = UpdateEntityUseCase(repository),
+                                    deleteEntityUseCase = DeleteEntityUseCase(repository),
+                                    checkDependenciesUseCase = CheckEntityDependenciesUseCase(repository),
+                                    deactivateEntityUseCase = DeactivateEntityUseCase(repository)
                                 ) 
                             }
                             AdminEntitiesScreen(viewModel)
