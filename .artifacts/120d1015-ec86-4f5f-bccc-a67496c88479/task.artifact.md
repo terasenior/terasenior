@@ -6,4 +6,6 @@
 - [x] Rediseñar pantalla de Login
 - [x] Rediseñar menú de tratamientos
 - [x] Mejorar legibilidad en el juego de búsqueda de números
-- [ ] Desplegar en GitHub Pages (`git push`)
+- [x] Implementar navegación principal y acceso por roles en `App.kt`
+- [x] Crear pantalla base de Gestión de Usuarios (`AdminUsersScreen`)
+- [/] Desplegar en GitHub Pages (`git push`)

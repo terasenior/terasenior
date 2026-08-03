@@ -1,0 +1,172 @@
+package com.terapia.terasenior.ui.admin.users
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.terapia.terasenior.domain.model.admin.UserProfile
+import com.terapia.terasenior.domain.model.admin.UserRole
+import com.terapia.terasenior.ui.admin.AdminUsersUiState
+import com.terapia.terasenior.ui.admin.AdminUsersViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AdminUsersScreen(
+    viewModel: AdminUsersViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Gestión de Usuarios",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.loadUsers() }) {
+                        Text("🔄", fontSize = 20.sp)
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { /* Implementar diálogo de creación */ },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("➕", fontSize = 24.sp)
+            }
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when (val state = uiState) {
+                is AdminUsersUiState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+
+                is AdminUsersUiState.Error -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = state.message,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(24.dp)
+                        )
+                        Button(onClick = { viewModel.loadUsers() }) {
+                            Text("Reintentar")
+                        }
+                    }
+                }
+
+                is AdminUsersUiState.Success -> {
+                    if (state.users.isEmpty()) {
+                        Text(
+                            text = "No hay usuarios registrados.",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(state.users) { user ->
+                                UserCard(user)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UserCard(user: UserProfile) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Avatar con inicial
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = user.fullName.take(1).uppercase(),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.fullName,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Text(
+                    text = user.email,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Badge de Rol
+                Surface(
+                    color = when(user.role) {
+                        UserRole.SUPER_ADMIN -> Color(0xFFE1BEE7)
+                        UserRole.ADMIN_CENTRO -> Color(0xFFB2EBF2)
+                        UserRole.TERAPEUTA -> Color(0xFFC8E6C9)
+                        UserRole.AUXILIAR -> Color(0xFFF5F5F5)
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = user.role.name,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+            }
+            
+            if (!user.isActive) {
+                Text("Inactivo", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}

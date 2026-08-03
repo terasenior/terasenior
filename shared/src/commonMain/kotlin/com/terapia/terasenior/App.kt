@@ -1,44 +1,107 @@
 package com.terapia.terasenior
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
-import com.terapia.terasenior.models.Profile
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
+import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
+import com.terapia.terasenior.domain.usecase.admin.CreateEntityUseCase
+import com.terapia.terasenior.domain.usecase.admin.CreateUserProfileUseCase
+import com.terapia.terasenior.domain.usecase.admin.GetEntitiesUseCase
+import com.terapia.terasenior.domain.usecase.admin.GetUserProfilesUseCase
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
 import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
+import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
+import com.terapia.terasenior.ui.admin.AdminUsersViewModel
+import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
+import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
 import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 
 enum class Screen {
-    MENU, NUMBER_SEARCH
+    LOGIN, THERAPY_PANEL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
 @Composable
-@Preview
 fun App() {
     TeraseniorTheme {
-        // Estado para guardar el perfil del usuario autenticado
-        var currentUserProfile by remember { mutableStateOf<Profile?>(null) }
-        var currentScreen by remember { mutableStateOf(Screen.MENU) }
+        var currentUserProfile by remember { mutableStateOf<com.terapia.terasenior.models.Profile?>(null) }
+        var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
 
         if (currentUserProfile == null) {
-            // 1. Si no se ha iniciado sesión, mostramos la pantalla de Login
             LoginScreen { profile ->
                 currentUserProfile = profile
+                currentScreen = Screen.THERAPY_PANEL
             }
         } else {
-            // 2. Una vez autenticado, accede al menú y a los ejercicios/juegos
-            when (currentScreen) {
-                Screen.MENU -> TreatmentMenuScreen(
-                    onNumberSearchClick = { currentScreen = Screen.NUMBER_SEARCH }
-                )
-                Screen.NUMBER_SEARCH -> NumberSearchGame(
-                    onBack = { currentScreen = Screen.MENU }
-                )
+            val userRole = currentUserProfile?.role
+            val canAdmin = userRole == com.terapia.terasenior.models.UserRole.SUPER_ADMIN || 
+                         userRole == com.terapia.terasenior.models.UserRole.ENTITY_ADMIN
+
+            Scaffold(
+                bottomBar = {
+                    NavigationBar {
+                        NavigationBarItem(
+                            selected = currentScreen == Screen.THERAPY_PANEL || currentScreen == Screen.NUMBER_SEARCH,
+                            onClick = { currentScreen = Screen.THERAPY_PANEL },
+                            icon = { Text("🎯", fontSize = 20.sp) },
+                            label = { Text("Terapia") }
+                        )
+                        
+                        if (canAdmin) {
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.ADMIN_ENTITIES,
+                                onClick = { currentScreen = Screen.ADMIN_ENTITIES },
+                                icon = { Text("🏢", fontSize = 20.sp) },
+                                label = { Text("Centros") }
+                            )
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.ADMIN_USERS,
+                                onClick = { currentScreen = Screen.ADMIN_USERS },
+                                icon = { Text("👥", fontSize = 20.sp) },
+                                label = { Text("Usuarios") }
+                            )
+                        }
+                    }
+                }
+            ) { padding ->
+                Box(modifier = Modifier.padding(padding)) {
+                    when (currentScreen) {
+                        Screen.LOGIN -> { /* No accesible si logged in */ }
+                        
+                        Screen.THERAPY_PANEL -> TreatmentMenuScreen(
+                            onNumberSearchClick = { currentScreen = Screen.NUMBER_SEARCH }
+                        )
+                        
+                        Screen.NUMBER_SEARCH -> NumberSearchGame(
+                            onBack = { currentScreen = Screen.THERAPY_PANEL }
+                        )
+
+                        Screen.ADMIN_ENTITIES -> {
+                            val repository = remember { SupabaseEntityRepository() }
+                            val viewModel = remember { 
+                                AdminEntitiesViewModel(
+                                    GetEntitiesUseCase(repository),
+                                    CreateEntityUseCase(repository)
+                                ) 
+                            }
+                            AdminEntitiesScreen(viewModel)
+                        }
+
+                        Screen.ADMIN_USERS -> {
+                            val repository = remember { SupabaseUserProfileRepository() }
+                            val viewModel = remember { 
+                                AdminUsersViewModel(
+                                    GetUserProfilesUseCase(repository),
+                                    CreateUserProfileUseCase(repository)
+                                ) 
+                            }
+                            AdminUsersScreen(viewModel)
+                        }
+                    }
+                }
             }
         }
     }
