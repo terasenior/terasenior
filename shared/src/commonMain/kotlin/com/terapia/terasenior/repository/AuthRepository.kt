@@ -9,6 +9,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 
 class AuthRepository {
 
@@ -45,34 +46,35 @@ class AuthRepository {
         }
     }
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
     suspend fun checkLicenseAndRecordLogin(profile: Profile): Result<Unit> {
         return runCatching {
+            // 1. Ejecutar limpieza preventiva de licencias expiradas en el servidor
+            runCatching { supabase.postgrest.rpc("check_and_deactivate_expired_licenses") }
+
+            // 2. Si es SUPER_ADMIN, acceso perpetuo
             if (profile.role == UserRole.SUPER_ADMIN) {
                 recordLogin(profile.id)
                 return@runCatching
             }
 
-            val entityId = profile.entityId ?: throw Exception("Usuario sin centro asociado. Contacte con soporte.")
-
+            // 3. Obtener datos actualizados de la entidad (tras la limpieza)
+            val entityId = profile.entityId ?: throw Exception("Usuario sin centro asociado.")
             val entity = supabase.postgrest["entities"].select {
                 filter { eq("id", entityId) }
             }.decodeSingleOrNull<Entity>() ?: throw Exception("No se encontró la información de tu centro.")
 
+            // 4. Validar Estado (ya estará INACTIVE si la limpieza detectó expiración)
             if (entity.status != "ACTIVE") {
-                throw Exception("El acceso para tu centro está suspendido actualmente.")
+                val reason = if (entity.licenseExpiresAt != null && 
+                    Instant.parse(entity.licenseExpiresAt) < Clock.System.now()) {
+                    "La licencia de tu centro expiró el ${entity.licenseExpiresAt.take(10)} y el acceso ha sido revocado automáticamente."
+                } else {
+                    "El acceso para tu centro está suspendido actualmente."
+                }
+                throw Exception(reason)
             }
 
-            entity.licenseExpiresAt?.let { expiresAtStr ->
-                val expirationDate = Instant.parse(expiresAtStr)
-                val now = kotlin.time.Clock.System.now()
-                
-                if (now > expirationDate) {
-                    val formattedDate = expiresAtStr.take(10)
-                    throw Exception("La licencia de tu centro expiró el $formattedDate. Ponte en contacto con el administrador para renovarla.")
-                }
-            } ?: throw Exception("Tu centro no tiene una licencia configurada. Contacte con soporte.")
-
+            // 5. Registrar login
             recordLogin(profile.id)
         }
     }
