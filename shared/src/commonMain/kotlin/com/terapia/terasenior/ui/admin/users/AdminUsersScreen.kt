@@ -112,8 +112,8 @@ fun AdminUsersScreen(
                 CreateUserDialog(
                     entities = state.entities,
                     onDismiss = { showCreateDialog = false },
-                    onConfirm = { fullName, email, phone, role, entityId ->
-                        viewModel.createUser(fullName, email, role, entityId, phone)
+                    onConfirm = { fullName, email, password, phone, role, entityId, isActive ->
+                        viewModel.createUser(fullName, email, password, role, entityId, phone, isActive)
                         showCreateDialog = false
                     }
                 )

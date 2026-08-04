@@ -21,12 +21,38 @@ class AuthRepository {
         }
     }
 
-    suspend fun register(userEmail: String, userPassword: String): Result<Unit> {
+    // Nueva función para que un ADMIN cree un usuario completo
+    suspend fun adminCreateUser(
+        email: String,
+        password: String,
+        fullName: String,
+        role: UserRole,
+        entityId: String?,
+        phone: String?,
+        isActive: Boolean
+    ): Result<Unit> {
         return runCatching {
-            supabase.auth.signUpWith(Email) {
-                email = userEmail
-                password = userPassword
+            // 1. Crear el usuario en Supabase Auth
+            val authResponse = supabase.auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
             }
+
+            val newUserId = authResponse?.id ?: throw Exception("No se pudo generar el ID de autenticación")
+
+            // 2. Crear el perfil en la tabla public.user_profiles
+            // Usamos un mapa para incluir campos opcionales como 'phone' sin modificar el modelo Profile si no es necesario
+            val profileData = mapOf(
+                "id" to newUserId,
+                "email" to email,
+                "role_id" to role.name,
+                "full_name" to fullName,
+                "entity_id" to entityId,
+                "is_active" to isActive,
+                "phone" to phone
+            )
+
+            supabase.postgrest["user_profiles"].insert(profileData)
         }
     }
 
@@ -48,22 +74,18 @@ class AuthRepository {
     @OptIn(kotlin.time.ExperimentalTime::class)
     suspend fun checkLicenseAndRecordLogin(profile: Profile): Result<Unit> {
         return runCatching {
-            // 1. Ejecutar limpieza preventiva de licencias expiradas en el servidor
             runCatching { supabase.postgrest.rpc("check_and_deactivate_expired_licenses") }
 
-            // 2. Si es SUPER_ADMIN, acceso perpetuo
             if (profile.role == UserRole.SUPER_ADMIN) {
                 recordLogin(profile.id)
                 return@runCatching
             }
 
-            // 3. Obtener datos actualizados de la entidad (tras la limpieza)
             val entityId = profile.entityId ?: throw Exception("Usuario sin centro asociado.")
             val entity = supabase.postgrest["entities"].select {
                 filter { eq("id", entityId) }
             }.decodeSingleOrNull<Entity>() ?: throw Exception("No se encontró la información de tu centro.")
 
-            // 4. Validar Estado (ya estará INACTIVE si la limpieza detectó expiración)
             if (entity.status != "ACTIVE") {
                 val reason = if (entity.licenseExpiresAt != null && 
                     Instant.parse(entity.licenseExpiresAt) < kotlin.time.Clock.System.now()) {
@@ -74,7 +96,6 @@ class AuthRepository {
                 throw Exception(reason)
             }
 
-            // 5. Registrar login
             recordLogin(profile.id)
         }
     }

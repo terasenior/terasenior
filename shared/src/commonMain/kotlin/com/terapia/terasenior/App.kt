@@ -12,6 +12,7 @@ import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
 import com.terapia.terasenior.domain.usecase.admin.*
 import com.terapia.terasenior.models.UserRole
+import com.terapia.terasenior.repository.AuthRepository
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
 import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
@@ -99,11 +100,12 @@ fun App() {
                         Screen.ADMIN_USERS -> {
                             val profileRepository = remember { SupabaseUserProfileRepository() }
                             val entityRepository = remember { SupabaseEntityRepository() }
+                            val authRepository = remember { AuthRepository() }
                             val viewModel = remember { 
                                 AdminUsersViewModel(
-                                    GetUserProfilesUseCase(profileRepository),
-                                    CreateUserProfileUseCase(profileRepository),
-                                    GetEntitiesUseCase(entityRepository)
+                                    getUserProfilesUseCase = GetUserProfilesUseCase(profileRepository),
+                                    getEntitiesUseCase = GetEntitiesUseCase(entityRepository),
+                                    authRepository = authRepository
                                 ) 
                             }
                             AdminUsersScreen(viewModel)
