@@ -55,6 +55,32 @@ class AuthRepository {
         }
     }
 
+    suspend fun updateUserProfile(profile: Profile): Result<Unit> {
+        return runCatching {
+            supabase.postgrest["user_profiles"].update(profile) {
+                filter { eq("id", profile.id) }
+            }
+        }
+    }
+
+    suspend fun deleteUser(userId: String): Result<Unit> {
+        return runCatching {
+            supabase.postgrest["user_profiles"].delete {
+                filter { eq("id", userId) }
+            }
+        }
+    }
+
+    suspend fun changePassword(newPassword: String): Result<Unit> {
+        return runCatching {
+            // Nota: Supabase permite que el usuario logueado cambie su propia contraseña
+            // Para cambiar la de OTROS, se requiere el Admin SDK (Service Role)
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+        }
+    }
+
     suspend fun getCurrentProfile(): Result<Profile?> {
         return runCatching {
             val user = supabase.auth.currentUserOrNull()

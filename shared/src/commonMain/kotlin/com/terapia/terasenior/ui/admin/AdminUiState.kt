@@ -18,11 +18,18 @@ sealed interface AdminEntitiesUiState {
     data class Error(val message: String) : AdminEntitiesUiState
 }
 
+enum class UserStatusFilter {
+    ALL, ACTIVE, INACTIVE
+}
+
 sealed interface AdminUsersUiState {
     data object Loading : AdminUsersUiState
     data class Success(
         val users: List<UserProfile>,
-        val entities: List<Entity> = emptyList()
+        val entities: List<Entity> = emptyList(),
+        val searchQuery: String = "",
+        val selectedFilter: UserStatusFilter = UserStatusFilter.ALL,
+        val errorMessage: String? = null
     ) : AdminUsersUiState
     data class Error(val message: String) : AdminUsersUiState
 }

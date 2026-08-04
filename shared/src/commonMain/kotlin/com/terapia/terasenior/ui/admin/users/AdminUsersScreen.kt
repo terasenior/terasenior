@@ -7,8 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,11 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.admin.UserProfile
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.ui.admin.AdminUsersUiState
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
+import com.terapia.terasenior.ui.admin.UserStatusFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +29,9 @@ fun AdminUsersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
+    var userToEdit by remember { mutableStateOf<UserProfile?>(null) }
+    var userToDelete by remember { mutableStateOf<UserProfile?>(null) }
+    var userToChangePassword by remember { mutableStateOf<UserProfile?>(null) }
 
     Scaffold(
         topBar = {
@@ -58,14 +60,14 @@ fun AdminUsersScreen(
             }
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding)
         ) {
             when (val state = uiState) {
                 is AdminUsersUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
 
                 is AdminUsersUiState.Error -> {
@@ -74,23 +76,23 @@ fun AdminUsersScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(24.dp)
-                        )
-                        Button(onClick = { viewModel.loadUsers() }) {
-                            Text("Reintentar")
-                        }
+                        Text(text = state.message, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(24.dp))
+                        Button(onClick = { viewModel.loadUsers() }) { Text("Reintentar") }
                     }
                 }
 
                 is AdminUsersUiState.Success -> {
+                    UserSearchBarAndFilters(
+                        query = state.searchQuery,
+                        onQueryChange = viewModel::onSearchQueryChanged,
+                        selectedFilter = state.selectedFilter,
+                        onFilterChange = viewModel::onFilterChanged
+                    )
+
                     if (state.users.isEmpty()) {
-                        Text(
-                            text = "No hay usuarios registrados.",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("No se encontraron usuarios.")
+                        }
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -98,7 +100,12 @@ fun AdminUsersScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(state.users) { user ->
-                                UserCard(user)
+                                UserCard(
+                                    user = user,
+                                    onEdit = { userToEdit = user },
+                                    onDelete = { userToDelete = user },
+                                    onChangePassword = { userToChangePassword = user }
+                                )
                             }
                         }
                     }
@@ -106,6 +113,7 @@ fun AdminUsersScreen(
             }
         }
 
+        // Diálogos
         if (showCreateDialog) {
             val state = uiState
             if (state is AdminUsersUiState.Success) {
@@ -119,11 +127,90 @@ fun AdminUsersScreen(
                 )
             }
         }
+
+        userToEdit?.let { user ->
+            val state = uiState
+            if (state is AdminUsersUiState.Success) {
+                EditUserDialog(
+                    user = user,
+                    entities = state.entities,
+                    onDismiss = { userToEdit = null },
+                    onConfirm = { updated ->
+                        viewModel.updateUser(updated)
+                        userToEdit = null
+                    }
+                )
+            }
+        }
+
+        userToDelete?.let { user ->
+            AlertDialog(
+                onDismissRequest = { userToDelete = null },
+                title = { Text("Eliminar Usuario") },
+                text = { Text("¿Estás seguro de que deseas eliminar el perfil de ${user.fullName}?") },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.deleteUser(user.id); userToDelete = null },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) { Text("Eliminar") }
+                },
+                dismissButton = { TextButton(onClick = { userToDelete = null }) { Text("Cancelar") } }
+            )
+        }
+
+        userToChangePassword?.let { user ->
+            ChangePasswordDialog(
+                userEmail = user.email,
+                onDismiss = { userToChangePassword = null },
+                onConfirm = { newPass ->
+                    viewModel.changePassword(newPass)
+                    userToChangePassword = null
+                }
+            )
+        }
     }
 }
 
 @Composable
-private fun UserCard(user: UserProfile) {
+private fun UserSearchBarAndFilters(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    selectedFilter: UserStatusFilter,
+    onFilterChange: (UserStatusFilter) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Buscar usuario...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            shape = RoundedCornerShape(12.dp),
+            singleLine = true
+        )
+        Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            UserStatusFilter.entries.forEach { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { onFilterChange(filter) },
+                    label = { Text(when(filter) {
+                        UserStatusFilter.ALL -> "Todos"
+                        UserStatusFilter.ACTIVE -> "Activos"
+                        UserStatusFilter.INACTIVE -> "Inactivas"
+                    })}
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UserCard(
+    user: UserProfile,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onChangePassword: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -135,69 +222,41 @@ private fun UserCard(user: UserProfile) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = user.fullName.take(1).uppercase(),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Text(user.fullName.take(1).uppercase(), style = MaterialTheme.typography.headlineSmall)
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = user.fullName,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    text = user.email,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(user.fullName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                Text(user.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 
-                user.lastLoginAt?.let { lastLogin ->
-                    Text(
-                        text = "Último acceso: ${lastLogin.replace("T", " ").take(16)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                } ?: run {
-                    Text(
-                        text = "Sin accesos previos",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-                
-                Surface(
-                    color = when(user.role) {
-                        UserRole.SUPER_ADMIN -> Color(0xFFE1BEE7)
-                        UserRole.ADMIN_CENTRO -> Color(0xFFB2EBF2)
-                        UserRole.TERAPEUTA -> Color(0xFFC8E6C9)
-                        UserRole.AUXILIAR -> Color(0xFFF5F5F5)
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = user.role.name,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                    )
+                Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        color = when(user.role) {
+                            UserRole.SUPER_ADMIN -> Color(0xFFE1BEE7)
+                            UserRole.ADMIN_CENTRO -> Color(0xFFB2EBF2)
+                            else -> Color(0xFFC8E6C9)
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(user.role.name, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall)
+                    }
+                    if (!user.isActive) {
+                        Surface(color = Color(0xFFFFCDD2), shape = RoundedCornerShape(8.dp)) {
+                            Text("INACTIVO", modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color.Red)
+                        }
+                    }
                 }
             }
-            
-            if (!user.isActive) {
-                Text("Inactivo", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+
+            Row {
+                IconButton(onClick = onChangePassword) { Icon(Icons.Default.Lock, contentDescription = "Cambiar Contraseña", tint = MaterialTheme.colorScheme.primary) }
+                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.secondary) }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error) }
             }
         }
     }
