@@ -29,6 +29,7 @@ sealed interface AdminUsersUiState {
         val entities: List<Entity> = emptyList(),
         val searchQuery: String = "",
         val selectedFilter: UserStatusFilter = UserStatusFilter.ALL,
+        val selectedEntityFilter: String? = null,
         val errorMessage: String? = null
     ) : AdminUsersUiState
     data class Error(val message: String) : AdminUsersUiState

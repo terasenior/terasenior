@@ -2,12 +2,17 @@ package com.terapia.terasenior
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
 import com.terapia.terasenior.domain.usecase.admin.*
@@ -21,22 +26,25 @@ import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
 import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
 import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
+import kotlinx.coroutines.launch
 
 enum class Screen {
     LOGIN, THERAPY_PANEL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
     TeraseniorTheme {
         var currentUserProfile by remember { mutableStateOf<com.terapia.terasenior.models.Profile?>(null) }
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
+        val scope = rememberCoroutineScope()
+        val authRepository = remember { AuthRepository() }
 
         if (currentUserProfile == null) {
             LoginScreen { profile ->
                 currentUserProfile = profile
                 currentScreen = Screen.THERAPY_PANEL
-                println("Login exitoso: ${profile.email} con rol ${profile.role}")
             }
         } else {
             val userRole = currentUserProfile?.role
@@ -44,6 +52,43 @@ fun App() {
                          userRole == UserRole.ADMIN_CENTRO
 
             Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column {
+                                    Text(
+                                        text = currentUserProfile?.fullName ?: "Usuario",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    Text(
+                                        text = userRole?.name ?: "",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        },
+                        actions = {
+                            TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        authRepository.logout()
+                                        currentUserProfile = null
+                                        currentScreen = Screen.LOGIN
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Cerrar Sesión")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        )
+                    )
+                },
                 bottomBar = {
                     NavigationBar {
                         NavigationBarItem(
@@ -72,7 +117,7 @@ fun App() {
             ) { padding ->
                 Box(modifier = Modifier.padding(padding)) {
                     when (currentScreen) {
-                        Screen.LOGIN -> { /* No accesible si logged in */ }
+                        Screen.LOGIN -> { /* No accesible */ }
                         
                         Screen.THERAPY_PANEL -> TreatmentMenuScreen(
                             onNumberSearchClick = { currentScreen = Screen.NUMBER_SEARCH }
@@ -100,7 +145,6 @@ fun App() {
                         Screen.ADMIN_USERS -> {
                             val profileRepository = remember { SupabaseUserProfileRepository() }
                             val entityRepository = remember { SupabaseEntityRepository() }
-                            val authRepository = remember { AuthRepository() }
                             val viewModel = remember { 
                                 AdminUsersViewModel(
                                     getUserProfilesUseCase = GetUserProfilesUseCase(profileRepository),

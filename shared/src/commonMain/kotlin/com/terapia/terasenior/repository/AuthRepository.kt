@@ -81,6 +81,12 @@ class AuthRepository {
         }
     }
 
+    suspend fun logout(): Result<Unit> {
+        return runCatching {
+            supabase.auth.signOut()
+        }
+    }
+
     suspend fun getCurrentProfile(): Result<Profile?> {
         return runCatching {
             val user = supabase.auth.currentUserOrNull()

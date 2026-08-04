@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.domain.model.admin.UserProfile
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.ui.admin.AdminUsersUiState
@@ -86,7 +87,10 @@ fun AdminUsersScreen(
                         query = state.searchQuery,
                         onQueryChange = viewModel::onSearchQueryChanged,
                         selectedFilter = state.selectedFilter,
-                        onFilterChange = viewModel::onFilterChanged
+                        selectedEntityId = state.selectedEntityFilter,
+                        entities = state.entities,
+                        onFilterChange = viewModel::onFilterChanged,
+                        onEntityFilterChange = viewModel::onEntityFilterChanged
                     )
 
                     if (state.users.isEmpty()) {
@@ -102,6 +106,7 @@ fun AdminUsersScreen(
                             items(state.users) { user ->
                                 UserCard(
                                     user = user,
+                                    entityName = state.entities.find { it.id == user.entityId }?.name,
                                     onEdit = { userToEdit = user },
                                     onDelete = { userToDelete = user },
                                     onChangePassword = { userToChangePassword = user }
@@ -171,24 +176,49 @@ fun AdminUsersScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UserSearchBarAndFilters(
     query: String,
     onQueryChange: (String) -> Unit,
     selectedFilter: UserStatusFilter,
-    onFilterChange: (UserStatusFilter) -> Unit
+    selectedEntityId: String?,
+    entities: List<Entity>,
+    onFilterChange: (UserStatusFilter) -> Unit,
+    onEntityFilterChange: (String?) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    var entityExpanded by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Buscar usuario...") },
+            placeholder = { Text("Buscar por nombre o email...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             shape = RoundedCornerShape(12.dp),
             singleLine = true
         )
-        Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Filtro de Entidad
+            Box(modifier = Modifier.weight(1f)) {
+                val selectedEntityName = entities.find { it.id == selectedEntityId }?.name ?: "Todos los Centros"
+                FilterChip(
+                    selected = selectedEntityId != null,
+                    onClick = { entityExpanded = true },
+                    label = { Text(selectedEntityName) },
+                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) }
+                )
+                DropdownMenu(expanded = entityExpanded, onDismissRequest = { entityExpanded = false }) {
+                    DropdownMenuItem(text = { Text("Todos los Centros") }, onClick = { onEntityFilterChange(null); entityExpanded = false })
+                    entities.forEach { entity ->
+                        DropdownMenuItem(text = { Text(entity.name) }, onClick = { onEntityFilterChange(entity.id); entityExpanded = false })
+                    }
+                }
+            }
+
+            // Filtros de Estado
             UserStatusFilter.entries.forEach { filter ->
                 FilterChip(
                     selected = selectedFilter == filter,
@@ -196,7 +226,7 @@ private fun UserSearchBarAndFilters(
                     label = { Text(when(filter) {
                         UserStatusFilter.ALL -> "Todos"
                         UserStatusFilter.ACTIVE -> "Activos"
-                        UserStatusFilter.INACTIVE -> "Inactivas"
+                        UserStatusFilter.INACTIVE -> "Inactivos"
                     })}
                 )
             }
@@ -207,6 +237,7 @@ private fun UserSearchBarAndFilters(
 @Composable
 private fun UserCard(
     user: UserProfile,
+    entityName: String?,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onChangePassword: () -> Unit
@@ -232,8 +263,16 @@ private fun UserCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(user.fullName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                Text(user.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(user.email, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 
+                if (entityName != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                        Icon(Icons.Default.Business, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(entityName, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
+
                 Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(
                         color = when(user.role) {
@@ -254,9 +293,9 @@ private fun UserCard(
             }
 
             Row {
-                IconButton(onClick = onChangePassword) { Icon(Icons.Default.Lock, contentDescription = "Cambiar Contraseña", tint = MaterialTheme.colorScheme.primary) }
-                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.secondary) }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error) }
+                IconButton(onClick = onChangePassword) { Icon(Icons.Default.Lock, contentDescription = "Pass", tint = MaterialTheme.colorScheme.primary) }
+                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.secondary) }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Del", tint = MaterialTheme.colorScheme.error) }
             }
         }
     }

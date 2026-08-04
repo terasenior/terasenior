@@ -20,6 +20,7 @@ class AdminUsersViewModel(
     private val _allUsers = MutableStateFlow<List<UserProfile>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
     private val _statusFilter = MutableStateFlow(UserStatusFilter.ALL)
+    private val _entityFilter = MutableStateFlow<String?>(null)
     private val _isLoading = MutableStateFlow(true)
     private val _entities = MutableStateFlow<List<Entity>>(emptyList())
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -28,32 +29,55 @@ class AdminUsersViewModel(
         _allUsers, 
         _searchQuery, 
         _statusFilter, 
+        _entityFilter,
         _isLoading, 
-        combine(_entities, _errorMessage) { e, err -> e to err }
-    ) { users, query, filter, loading, extras ->
-        val (entities, error) = extras
-        if (loading) {
-            AdminUsersUiState.Loading
-        } else {
-            val filtered = users.filter { user ->
-                val matchesQuery = user.fullName.contains(query, ignoreCase = true) || 
-                                 user.email.contains(query, ignoreCase = true)
-                val matchesFilter = when (filter) {
-                    UserStatusFilter.ALL -> true
-                    UserStatusFilter.ACTIVE -> user.isActive
-                    UserStatusFilter.INACTIVE -> !user.isActive
-                }
-                matchesQuery && matchesFilter
-            }
-            AdminUsersUiState.Success(
-                users = filtered,
-                entities = entities,
-                searchQuery = query,
-                selectedFilter = filter,
-                errorMessage = error
-            )
-        }
+        _entities,
+        _errorMessage
+    ) { args ->
+        val users = args[0] as List<UserProfile>
+        val query = args[1] as String
+        val filter = args[2] as UserStatusFilter
+        val entityId = args[3] as String?
+        val loading = args[4] as Boolean
+        val entitiesList = args[5] as List<Entity>
+        val error = args[6] as String?
+        
+        buildUiState(users, query, filter, entityId, loading, entitiesList, error)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AdminUsersUiState.Loading)
+
+    private fun buildUiState(
+        users: List<UserProfile>,
+        query: String,
+        filter: UserStatusFilter,
+        entityId: String?,
+        loading: Boolean,
+        entities: List<Entity>,
+        error: String?
+    ): AdminUsersUiState {
+        if (loading) return AdminUsersUiState.Loading
+        
+        val filtered = users.filter { user ->
+            val matchesQuery = user.fullName.contains(query, ignoreCase = true) || 
+                             user.email.contains(query, ignoreCase = true)
+            val matchesStatus = when (filter) {
+                UserStatusFilter.ALL -> true
+                UserStatusFilter.ACTIVE -> user.isActive
+                UserStatusFilter.INACTIVE -> !user.isActive
+            }
+            val matchesEntity = entityId == null || user.entityId == entityId
+            
+            matchesQuery && matchesStatus && matchesEntity
+        }
+        
+        return AdminUsersUiState.Success(
+            users = filtered,
+            entities = entities,
+            searchQuery = query,
+            selectedFilter = filter,
+            selectedEntityFilter = entityId,
+            errorMessage = error
+        )
+    }
 
     private var currentEntityId: String? = null
 
@@ -99,6 +123,10 @@ class AdminUsersViewModel(
         _statusFilter.value = filter
     }
 
+    fun onEntityFilterChanged(entityId: String?) {
+        _entityFilter.value = entityId
+    }
+
     fun createUser(
         fullName: String,
         email: String,
@@ -138,14 +166,14 @@ class AdminUsersViewModel(
     fun updateUser(profile: UserProfile) {
         viewModelScope.launch {
             _isLoading.value = true
-            // Convertimos el perfil de dominio al de login para el repositorio
             val profileToUpdate = com.terapia.terasenior.models.Profile(
                 id = profile.id,
                 email = profile.email,
                 role = profile.role,
                 entityId = profile.entityId,
                 fullName = profile.fullName,
-                isActive = profile.isActive
+                isActive = profile.isActive,
+                phone = profile.phone
             )
             authRepository.updateUserProfile(profileToUpdate)
                 .onSuccess { loadUsers(currentEntityId) }
