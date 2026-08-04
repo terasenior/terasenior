@@ -28,7 +28,8 @@ data class Profile(
     @SerialName("is_active")
     val isActive: Boolean = true,
     @SerialName("last_login_at")
-    val lastLoginAt: String? = null
+    val lastLoginAt: String? = null,
+    val phone: String? = null
 )
 
 @Serializable

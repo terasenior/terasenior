@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.models.UserRole
 
@@ -62,15 +63,24 @@ fun CreateUserDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Contraseña") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
+                Column {
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Contraseña") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        supportingText = {
+                            if (password.isNotEmpty() && password.length < 6) {
+                                Text("Mínimo 6 caracteres", color = MaterialTheme.colorScheme.error)
+                            } else {
+                                Text("Mínimo 6 caracteres")
+                            }
+                        }
+                    )
+                }
 
                 OutlinedTextField(
                     value = confirmPassword,
