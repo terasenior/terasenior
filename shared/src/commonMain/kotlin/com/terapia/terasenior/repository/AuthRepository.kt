@@ -21,7 +21,6 @@ class AuthRepository {
         }
     }
 
-    // Nueva función para que un ADMIN cree un usuario completo
     suspend fun adminCreateUser(
         email: String,
         password: String,
@@ -40,19 +39,19 @@ class AuthRepository {
 
             val newUserId = authResponse?.id ?: throw Exception("No se pudo generar el ID de autenticación")
 
-            // 2. Crear el perfil en la tabla public.user_profiles
-            // Usamos un mapa para incluir campos opcionales como 'phone' sin modificar el modelo Profile si no es necesario
-            val profileData = mapOf(
-                "id" to newUserId,
-                "email" to email,
-                "role_id" to role.name,
-                "full_name" to fullName,
-                "entity_id" to entityId,
-                "is_active" to isActive,
-                "phone" to phone
+            // 2. Crear el objeto Profile (que ya es @Serializable)
+            val newProfile = Profile(
+                id = newUserId,
+                email = email,
+                role = role,
+                fullName = fullName,
+                entityId = entityId,
+                isActive = isActive,
+                phone = phone
             )
 
-            supabase.postgrest["user_profiles"].insert(profileData)
+            // 3. Insertar el objeto directamente
+            supabase.postgrest["user_profiles"].insert(newProfile)
         }
     }
 
