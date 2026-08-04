@@ -9,7 +9,6 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.datetime.Instant
-import kotlinx.datetime.Clock
 
 class AuthRepository {
 
@@ -46,6 +45,7 @@ class AuthRepository {
         }
     }
 
+    @OptIn(kotlin.time.ExperimentalTime::class)
     suspend fun checkLicenseAndRecordLogin(profile: Profile): Result<Unit> {
         return runCatching {
             // 1. Ejecutar limpieza preventiva de licencias expiradas en el servidor
@@ -66,7 +66,7 @@ class AuthRepository {
             // 4. Validar Estado (ya estará INACTIVE si la limpieza detectó expiración)
             if (entity.status != "ACTIVE") {
                 val reason = if (entity.licenseExpiresAt != null && 
-                    Instant.parse(entity.licenseExpiresAt) < Clock.System.now()) {
+                    Instant.parse(entity.licenseExpiresAt) < kotlin.time.Clock.System.now()) {
                     "La licencia de tu centro expiró el ${entity.licenseExpiresAt.take(10)} y el acceso ha sido revocado automáticamente."
                 } else {
                     "El acceso para tu centro está suspendido actualmente."

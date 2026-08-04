@@ -17,7 +17,6 @@ import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.ui.admin.AdminEntitiesUiState
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.EntityStatusFilter
-import kotlinx.datetime.Instant
 
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
@@ -315,7 +314,7 @@ private fun EntityCard(
 
             entity.licenseExpiresAt?.let { expiresAt ->
                 val isExpired = try {
-                    Instant.parse(expiresAt) < kotlin.time.Clock.System.now()
+                    kotlin.time.Instant.parse(expiresAt) < kotlin.time.Clock.System.now()
                 } catch (e: Exception) {
                     false
                 }
