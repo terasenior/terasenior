@@ -15,7 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
+import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
 import com.terapia.terasenior.domain.usecase.admin.*
+import com.terapia.terasenior.domain.usecase.patient.GetPatientsUseCase
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
@@ -25,11 +27,13 @@ import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
 import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
 import com.terapia.terasenior.ui.login.LoginScreen
+import com.terapia.terasenior.ui.patient.PatientListScreen
+import com.terapia.terasenior.ui.patient.PatientListViewModel
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
-    LOGIN, THERAPY_PANEL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
+    LOGIN, THERAPY_PANEL, PATIENTS, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,6 +101,13 @@ fun App() {
                             icon = { Icon(Icons.Default.Psychology, contentDescription = null) },
                             label = { Text("Terapia") }
                         )
+
+                        NavigationBarItem(
+                            selected = currentScreen == Screen.PATIENTS,
+                            onClick = { currentScreen = Screen.PATIENTS },
+                            icon = { Icon(Icons.Default.People, contentDescription = null) },
+                            label = { Text("Pacientes") }
+                        )
                         
                         if (canAdmin) {
                             NavigationBarItem(
@@ -126,6 +137,18 @@ fun App() {
                         Screen.NUMBER_SEARCH -> NumberSearchGame(
                             onBack = { currentScreen = Screen.THERAPY_PANEL }
                         )
+
+                        Screen.PATIENTS -> {
+                            val repository = remember { SupabasePatientRepository() }
+                            val viewModel = remember { 
+                                PatientListViewModel(GetPatientsUseCase(repository)) 
+                            }
+                            PatientListScreen(
+                                viewModel = viewModel,
+                                onPatientClick = { /* Próximamente Detalle */ },
+                                onAddPatientClick = { /* Próximamente Alta */ }
+                            )
+                        }
 
                         Screen.ADMIN_ENTITIES -> {
                             val repository = remember { SupabaseEntityRepository() }
