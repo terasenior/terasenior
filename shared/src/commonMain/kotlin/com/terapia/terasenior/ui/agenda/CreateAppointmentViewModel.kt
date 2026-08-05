@@ -6,8 +6,10 @@ import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
+import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.domain.model.admin.UserProfile
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
+import com.terapia.terasenior.domain.repository.admin.EntityRepository
 import com.terapia.terasenior.domain.repository.admin.UserProfileRepository
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import kotlinx.coroutines.flow.*
@@ -19,7 +21,8 @@ sealed interface CreateAppointmentUiState {
     data object Loading : CreateAppointmentUiState
     data class Success(
         val patients: List<Patient>,
-        val professionals: List<UserProfile>
+        val professionals: List<UserProfile>,
+        val entities: List<Entity> = emptyList()
     ) : CreateAppointmentUiState
     data class Error(val message: String) : CreateAppointmentUiState
     data object Created : CreateAppointmentUiState
@@ -28,27 +31,27 @@ sealed interface CreateAppointmentUiState {
 class CreateAppointmentViewModel(
     private val agendaRepository: AppointmentRepository,
     private val patientRepository: PatientRepository,
-    private val userRepository: UserProfileRepository
+    private val userRepository: UserProfileRepository,
+    private val entityRepository: EntityRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CreateAppointmentUiState>(CreateAppointmentUiState.Idle)
     val uiState: StateFlow<CreateAppointmentUiState> = _uiState.asStateFlow()
 
-    private var _patients = emptyList<Patient>()
-    private var _professionals = emptyList<UserProfile>()
-
     fun loadInitialData() {
         viewModelScope.launch {
             _uiState.value = CreateAppointmentUiState.Loading
             
-            // Cargamos pacientes y profesionales
             val patientsResult = patientRepository.getPatients().first()
             val professionalsResult = userRepository.getUserProfiles(null)
+            val entitiesResult = entityRepository.getEntities()
 
-            if (patientsResult.isSuccess && professionalsResult.isSuccess) {
-                _patients = patientsResult.getOrDefault(emptyList())
-                _professionals = professionalsResult.getOrDefault(emptyList())
-                _uiState.value = CreateAppointmentUiState.Success(_patients, _professionals)
+            if (patientsResult.isSuccess && professionalsResult.isSuccess && entitiesResult.isSuccess) {
+                _uiState.value = CreateAppointmentUiState.Success(
+                    patients = patientsResult.getOrDefault(emptyList()),
+                    professionals = professionalsResult.getOrDefault(emptyList()),
+                    entities = entitiesResult.getOrDefault(emptyList())
+                )
             } else {
                 _uiState.value = CreateAppointmentUiState.Error("No se pudieron cargar los datos necesarios.")
             }
@@ -66,6 +69,11 @@ class CreateAppointmentViewModel(
         selectedStaffIds: List<String>,
         selectedPatientIds: List<String>
     ) {
+        if (entityId.isBlank()) {
+            _uiState.value = CreateAppointmentUiState.Error("Error: El ID del centro no puede estar vacío.")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = CreateAppointmentUiState.Loading
             

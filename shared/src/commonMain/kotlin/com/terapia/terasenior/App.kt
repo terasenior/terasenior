@@ -152,10 +152,11 @@ fun App() {
                             val agendaRepo = remember { SupabaseAppointmentRepository() }
                             val patientRepo = remember { SupabasePatientRepository() }
                             val userRepo = remember { SupabaseUserProfileRepository() }
+                            val entityRepo = remember { SupabaseEntityRepository() }
                             
                             val viewModel = remember { AgendaViewModel(agendaRepo) }
                             val createViewModel = remember { 
-                                CreateAppointmentViewModel(agendaRepo, patientRepo, userRepo) 
+                                CreateAppointmentViewModel(agendaRepo, patientRepo, userRepo, entityRepo) 
                             }
                             
                             val createUiState by createViewModel.uiState.collectAsState()
@@ -183,24 +184,32 @@ fun App() {
                             if (showCreateDialog) {
                                 val state = createUiState
                                 if (state is CreateAppointmentUiState.Success || state is CreateAppointmentUiState.Loading) {
+                                    val currentDay = (agendaState as? AgendaUiState.Success)?.selectedDate ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                                     CreateAppointmentDialog(
-                                        selectedDate = (agendaState as? AgendaUiState.Success)?.selectedDate ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+                                        selectedDate = currentDay,
                                         patients = if (state is CreateAppointmentUiState.Success) state.patients else emptyList(),
                                         professionals = if (state is CreateAppointmentUiState.Success) state.professionals else emptyList(),
                                         onDismiss = { showCreateDialog = false },
                                         onConfirm = { t, d, s, e, type, staff, attendees ->
-                                            val currentDay = (agendaState as? AgendaUiState.Success)?.selectedDate ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                            createViewModel.createAppointment(
-                                                entityId = currentUserProfile?.entityId ?: "",
-                                                title = t,
-                                                description = d,
-                                                startDate = currentDay,
-                                                startTime = s,
-                                                endTime = e,
-                                                type = type,
-                                                selectedStaffIds = staff,
-                                                selectedPatientIds = attendees
-                                            )
+                                            scope.launch {
+                                                // BUSQUEDA ROBUSTA DE ID DE CENTRO
+                                                val entityId = currentUserProfile?.entityId 
+                                                    ?: (state as? CreateAppointmentUiState.Success)?.entities?.firstOrNull()?.id
+                                                    ?: entityRepo.getEntities().getOrNull()?.firstOrNull()?.id
+                                                    ?: ""
+                                                
+                                                createViewModel.createAppointment(
+                                                    entityId = entityId,
+                                                    title = t,
+                                                    description = d,
+                                                    startDate = currentDay,
+                                                    startTime = s,
+                                                    endTime = e,
+                                                    type = type,
+                                                    selectedStaffIds = staff,
+                                                    selectedPatientIds = attendees
+                                                )
+                                            }
                                         },
                                         isLoading = state is CreateAppointmentUiState.Loading
                                     )
