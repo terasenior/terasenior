@@ -80,6 +80,17 @@ class CreateAppointmentViewModel(
             val startInstant = startDate.atTime(startTime).toInstant(TimeZone.currentSystemDefault())
             val endInstant = startDate.atTime(endTime).toInstant(TimeZone.currentSystemDefault())
 
+            // 1. Validar solapamiento (Mismo centro, mismo día, mismas horas)
+            val existingResult = agendaRepository.getAppointments().first()
+            val hasOverlap = existingResult.getOrNull()?.any { 
+                it.startAt == startInstant.toString() && it.status != AppointmentStatus.CANCELLED
+            } ?: false
+
+            if (hasOverlap) {
+                _uiState.value = CreateAppointmentUiState.Error("Ya existe una sesión programada para esta hora.")
+                return@launch
+            }
+
             val appointment = Appointment(
                 id = "",
                 entityId = entityId,

@@ -62,7 +62,12 @@ fun AppointmentDetailScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Estado: ${state.appointment.status.name}", style = MaterialTheme.typography.labelMedium)
+                                    val statusLabel = when(state.appointment.status) {
+                                        AppointmentStatus.SCHEDULED -> "Programada"
+                                        AppointmentStatus.COMPLETED -> "Finalizada"
+                                        AppointmentStatus.CANCELLED -> "Cancelada"
+                                    }
+                                    Text("Estado: $statusLabel", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                         }

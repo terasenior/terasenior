@@ -116,18 +116,28 @@ class LoginViewModel(
                         }
                     }
                 }.onFailure { error ->
+                    val userFriendlyError = when {
+                        error.message?.contains("invalid_credentials") == true -> "Correo o contraseña incorrectos."
+                        error.message?.contains("rate_limit") == true -> "Demasiados intentos. Inténtalo más tarde."
+                        else -> error.message ?: "Credenciales incorrectas o error de conexión."
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = "Error al obtener perfil: ${error.message}"
+                            errorMessage = userFriendlyError
                         )
                     }
                 }
             }.onFailure { error ->
+                val userFriendlyError = when {
+                    error.message?.contains("invalid_credentials") == true -> "Correo o contraseña incorrectos."
+                    error.message?.contains("rate_limit") == true -> "Demasiados intentos. Inténtalo más tarde."
+                    else -> error.message ?: "Error al conectar con el servidor."
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = error.message ?: "Credenciales incorrectas o error de conexión."
+                        errorMessage = userFriendlyError
                     )
                 }
             }
