@@ -14,11 +14,14 @@ import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
 import com.terapia.terasenior.data.repository.agenda.SupabaseAppointmentRepository
 import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
+import com.terapia.terasenior.data.repository.results.SupabaseResultsRepository
 import com.terapia.terasenior.domain.usecase.admin.*
 import com.terapia.terasenior.domain.usecase.patient.*
+import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
+import com.terapia.terasenior.treatment.ui.NumberSearchViewModel
 import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
@@ -43,6 +46,7 @@ fun App() {
         var currentUserProfile by remember { mutableStateOf<com.terapia.terasenior.models.Profile?>(null) }
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
         var selectedPatientId by remember { mutableStateOf<String?>(null) }
+        var activeTherapyPatientId by remember { mutableStateOf<String?>(null) }
         var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
         var currentEntityName by remember { mutableStateOf<String?>(null) }
         
@@ -50,7 +54,7 @@ fun App() {
         val authRepository = remember { AuthRepository() }
         val entityRepository = remember { SupabaseEntityRepository() }
 
-        // Cargar nombre de la entidad cuando el perfil cambia
+        // Cargar nombre de la entidad
         LaunchedEffect(currentUserProfile) {
             currentUserProfile?.let { profile ->
                 if (profile.role != UserRole.SUPER_ADMIN && profile.entityId != null) {
@@ -163,13 +167,33 @@ fun App() {
                     when (currentScreen) {
                         Screen.LOGIN -> { /* No accesible */ }
                         
-                        Screen.THERAPY_PANEL -> TreatmentMenuScreen(
-                            onNumberSearchClick = { currentScreen = Screen.NUMBER_SEARCH }
-                        )
+                        Screen.THERAPY_PANEL -> {
+                            val patientRepository = remember { SupabasePatientRepository() }
+                            val patientsState = remember { 
+                                patientRepository.getPatients()
+                            }.collectAsState(initial = Result.success(emptyList()))
+                            
+                            TreatmentMenuScreen(
+                                patients = patientsState.value.getOrDefault(emptyList()),
+                                selectedPatientId = activeTherapyPatientId,
+                                onPatientSelected = { activeTherapyPatientId = it },
+                                onNumberSearchClick = { currentScreen = Screen.NUMBER_SEARCH }
+                            )
+                        }
                         
-                        Screen.NUMBER_SEARCH -> NumberSearchGame(
-                            onBack = { currentScreen = Screen.THERAPY_PANEL }
-                        )
+                        Screen.NUMBER_SEARCH -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { 
+                                NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
+                            }
+                            NumberSearchGame(
+                                viewModel = viewModel,
+                                patientId = activeTherapyPatientId,
+                                professionalId = currentUserProfile?.id,
+                                appointmentId = null, // Próximamente vincular con agenda
+                                onBack = { currentScreen = Screen.THERAPY_PANEL }
+                            )
+                        }
 
                         Screen.AGENDA -> {
                             val agendaRepo = remember { SupabaseAppointmentRepository() }

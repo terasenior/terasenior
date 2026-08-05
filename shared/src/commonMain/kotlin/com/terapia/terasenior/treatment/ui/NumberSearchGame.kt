@@ -21,21 +21,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.random.Random
 
-data class Cell(
-    val number: Int,
-    val isFound: Boolean = false,
-    val isWrong: Boolean = false
-)
-
 @Composable
 fun NumberSearchGame(
+    viewModel: NumberSearchViewModel,
+    patientId: String?,
+    professionalId: String?,
+    appointmentId: String?,
     onBack: () -> Unit
 ) {
-    var targetNumber by remember { mutableIntStateOf(Random.nextInt(10)) }
-    var grid by remember { mutableStateOf(generateGrid(targetNumber)) }
-    var foundCount by remember { mutableIntStateOf(0) }
-    var totalTargets by remember { mutableIntStateOf(countTargets(grid, targetNumber)) }
-    var isCompleted by remember { mutableStateOf(false) }
+    val state by viewModel.uiState.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -56,10 +50,15 @@ fun NumberSearchGame(
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.Close, contentDescription = "Cerrar")
                 }
-                Text(
-                    text = "Busca el Número",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Busca el Número",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    if (patientId == null) {
+                        Text("Modo Práctica", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
@@ -90,7 +89,7 @@ fun NumberSearchGame(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = targetNumber.toString(),
+                                text = state.targetNumber.toString(),
                                 fontSize = 64.sp,
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.primary
@@ -114,25 +113,11 @@ fun NumberSearchGame(
                     ) {
                         for (col in 0 until gridSize) {
                             val index = row * gridSize + col
-                            val cell = grid[index]
+                            val cell = state.grid.getOrNull(index) ?: Cell(0)
                             NumberCell(
                                 cell = cell,
                                 onClick = {
-                                    if (cell.isFound || isCompleted) return@NumberCell
-
-                                    if (cell.number == targetNumber) {
-                                        val newGrid = grid.toMutableList()
-                                        newGrid[index] = cell.copy(isFound = true)
-                                        grid = newGrid
-                                        foundCount++
-                                        if (foundCount >= totalTargets) {
-                                            isCompleted = true
-                                        }
-                                    } else {
-                                        val newGrid = grid.toMutableList()
-                                        newGrid[index] = cell.copy(isWrong = true)
-                                        grid = newGrid
-                                    }
+                                    viewModel.onCellClicked(index, patientId, professionalId, appointmentId)
                                 }
                             )
                         }
@@ -144,36 +129,32 @@ fun NumberSearchGame(
 
             // Estado y Botón
             AnimatedVisibility(
-                visible = isCompleted,
+                visible = state.isCompleted,
                 enter = fadeIn() + expandVertically()
             ) {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFC8E6C9)),
+                    colors = CardDefaults.cardColors(containerColor = if(state.isSaving) Color.LightGray else Color(0xFFC8E6C9)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
+                    val message = if (state.isSaving) "Guardando resultados..." else "¡Excelente! Has encontrado todos los números."
                     Text(
-                        text = "¡Excelente! Has encontrado todos los números.",
+                        text = message,
                         modifier = Modifier.padding(16.dp).fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        color = Color(0xFF1B5E20),
+                        color = if(state.isSaving) Color.DarkGray else Color(0xFF1B5E20),
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
             Button(
-                onClick = {
-                    targetNumber = Random.nextInt(10)
-                    grid = generateGrid(targetNumber)
-                    totalTargets = countTargets(grid, targetNumber)
-                    foundCount = 0
-                    isCompleted = false
-                },
+                onClick = { viewModel.startNewGame() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                enabled = !state.isSaving
             ) {
-                Text(if (isCompleted) "Siguiente Ejercicio" else "Reiniciar Ejercicio", fontSize = 18.sp)
+                Text(if (state.isCompleted) "Siguiente Ejercicio" else "Reiniciar Ejercicio", fontSize = 18.sp)
             }
         }
     }
@@ -200,7 +181,7 @@ private fun NumberCell(
             .scale(scale)
             .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
-            .clickable(enabled = !cell.isFound, onClick = onClick),
+            .clickable(enabled = !cell.isFound && !cell.isWrong, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -214,37 +195,4 @@ private fun NumberCell(
             }
         )
     }
-}
-
-private fun generateGrid(target: Int): List<Cell> {
-    val size = 25
-    val cells = mutableListOf<Cell>()
-    var targetCount = 0
-
-    repeat(size) {
-        val isTarget = Random.nextFloat() < 0.20f
-        val num = if (isTarget) {
-            targetCount++
-            target
-        } else {
-            var n = Random.nextInt(10)
-            while (n == target) n = Random.nextInt(10)
-            n
-        }
-        cells.add(Cell(number = num))
-    }
-
-    while (targetCount < 3) {
-        val idx = Random.nextInt(size)
-        if (cells[idx].number != target) {
-            cells[idx] = Cell(number = target)
-            targetCount++
-        }
-    }
-
-    return cells
-}
-
-private fun countTargets(grid: List<Cell>, target: Int): Int {
-    return grid.count { it.number == target }
 }
