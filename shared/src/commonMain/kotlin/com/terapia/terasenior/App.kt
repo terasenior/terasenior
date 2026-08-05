@@ -332,13 +332,15 @@ fun App() {
 
                         Screen.PATIENT_DETAIL -> {
                             val patientId = selectedPatientId ?: ""
-                            val repository = remember { SupabasePatientRepository() }
+                            val patientRepository = remember { SupabasePatientRepository() }
+                            val resultsRepository = remember { SupabaseResultsRepository() }
                             val viewModel = remember(patientId) { 
                                 PatientDetailViewModel(
                                     patientId = patientId, 
-                                    repository = repository,
-                                    updatePatientUseCase = UpdatePatientUseCase(repository),
-                                    updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(repository)
+                                    repository = patientRepository,
+                                    resultsRepository = resultsRepository,
+                                    updatePatientUseCase = UpdatePatientUseCase(patientRepository),
+                                    updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(patientRepository)
                                 ) 
                             }
                             PatientDetailScreen(

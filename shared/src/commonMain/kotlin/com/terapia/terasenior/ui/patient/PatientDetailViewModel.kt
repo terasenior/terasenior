@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
+import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
+import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 import com.terapia.terasenior.domain.usecase.patient.UpdatePatientUseCase
@@ -20,6 +23,7 @@ sealed interface PatientDetailUiState {
         val patient: Patient,
         val therapeuticProfile: TherapeuticProfile?,
         val consents: List<Consent> = emptyList(),
+        val results: List<ActivityResult> = emptyList(),
         val isUpdating: Boolean = false
     ) : PatientDetailUiState
     data class Error(val message: String) : PatientDetailUiState
@@ -28,6 +32,7 @@ sealed interface PatientDetailUiState {
 class PatientDetailViewModel(
     private val patientId: String,
     private val repository: PatientRepository,
+    private val resultsRepository: ResultsRepository,
     private val updatePatientUseCase: UpdatePatientUseCase,
     private val updateTherapeuticProfileUseCase: UpdateTherapeuticProfileUseCase
 ) : ViewModel() {
@@ -48,13 +53,15 @@ class PatientDetailViewModel(
             val patientResult = repository.getPatientById(patientId)
             val profileResult = repository.getTherapeuticProfile(patientId)
             val consentsResult = repository.getConsents(patientId)
+            val resultsResult = resultsRepository.getPatientResults(patientId).first()
 
             patientResult.onSuccess { patient ->
                 if (patient != null) {
                     _uiState.value = PatientDetailUiState.Success(
                         patient = patient,
                         therapeuticProfile = profileResult.getOrNull(),
-                        consents = consentsResult.getOrDefault(emptyList())
+                        consents = consentsResult.getOrDefault(emptyList()),
+                        results = resultsResult.getOrDefault(emptyList())
                     )
                 } else {
                     _uiState.value = PatientDetailUiState.Error("Paciente no encontrado")

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.AssignmentTurnedIn
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.patient.*
+import com.terapia.terasenior.domain.model.results.ActivityResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +33,7 @@ fun PatientDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Resumen", "Clínico", "Consentimientos")
+    val tabs = listOf("Resumen", "Clínico", "Evolución", "Privacidad")
     
     var showEditPatient by remember { mutableStateOf(false) }
     var showEditClinical by remember { mutableStateOf(false) }
@@ -74,7 +76,8 @@ fun PatientDetailScreen(
                             when (selectedTab) {
                                 0 -> SummaryTab(state.patient, onEdit = { showEditPatient = true })
                                 1 -> ClinicalTab(state.therapeuticProfile, onEdit = { showEditClinical = true })
-                                2 -> ConsentsTab(state.consents)
+                                2 -> EvolutionTab(state.results)
+                                3 -> ConsentsTab(state.consents)
                             }
                         }
                     }
@@ -178,6 +181,54 @@ private fun ClinicalTab(profile: TherapeuticProfile?, onEdit: () -> Unit) {
                 Text("Objetivos Terapéuticos:", fontWeight = FontWeight.Bold)
                 Text(profile.goals ?: "Sin datos", style = MaterialTheme.typography.bodyMedium)
             }
+        }
+    }
+}
+
+@Composable
+private fun EvolutionTab(results: List<ActivityResult>) {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        InfoCard(title = "Historial de Actividades", icon = Icons.Default.Timeline) {
+            if (results.isEmpty()) {
+                Text("No hay actividades registradas todavía.", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            } else {
+                results.forEach { result ->
+                    ResultRow(result)
+                    if (result != results.last()) HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultRow(result: ActivityResult) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            val activityName = when(result.activityType) {
+                "number_search" -> "Busca el Número"
+                else -> result.activityType
+            }
+            Text(activityName, fontWeight = FontWeight.Bold)
+            Text("Fecha: ${result.createdAt.take(10)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        }
+        
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "${result.score} pts",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                color = when {
+                    result.score >= 80 -> Color(0xFF2E7D32)
+                    result.score >= 50 -> Color(0xFFF57C00)
+                    else -> Color(0xFFD32F2F)
+                }
+            )
+            Text(
+                text = "${result.durationSeconds}s | ${result.errorsCount} err",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray
+            )
         }
     }
 }
