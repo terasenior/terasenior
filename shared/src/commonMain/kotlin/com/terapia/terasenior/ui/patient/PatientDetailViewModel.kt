@@ -2,6 +2,7 @@ package com.terapia.terasenior.ui.patient
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
@@ -14,7 +15,8 @@ sealed interface PatientDetailUiState {
     data object Loading : PatientDetailUiState
     data class Success(
         val patient: Patient,
-        val therapeuticProfile: TherapeuticProfile?
+        val therapeuticProfile: TherapeuticProfile?,
+        val consents: List<Consent> = emptyList()
     ) : PatientDetailUiState
     data class Error(val message: String) : PatientDetailUiState
 }
@@ -35,14 +37,19 @@ class PatientDetailViewModel(
         viewModelScope.launch {
             _uiState.value = PatientDetailUiState.Loading
             
+            // 1. Registrar el acceso en auditoría antes de cargar
+            repository.logAccess(patientId, "ACCESS_DETAIL")
+
             val patientResult = repository.getPatientById(patientId)
             val profileResult = repository.getTherapeuticProfile(patientId)
+            val consentsResult = repository.getConsents(patientId)
 
             patientResult.onSuccess { patient ->
                 if (patient != null) {
                     _uiState.value = PatientDetailUiState.Success(
                         patient = patient,
-                        therapeuticProfile = profileResult.getOrNull()
+                        therapeuticProfile = profileResult.getOrNull(),
+                        consents = consentsResult.getOrDefault(emptyList())
                     )
                 } else {
                     _uiState.value = PatientDetailUiState.Error("Paciente no encontrado")

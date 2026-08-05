@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
@@ -19,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.terapia.terasenior.domain.model.patient.Consent
+import com.terapia.terasenior.domain.model.patient.ConsentStatus
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 
@@ -30,7 +33,7 @@ fun PatientDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Resumen", "Perfil Clínico")
+    val tabs = listOf("Resumen", "Clínico", "Consentimientos")
 
     Scaffold(
         topBar = {
@@ -54,10 +57,8 @@ fun PatientDetailScreen(
                 }
                 is PatientDetailUiState.Success -> {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // Cabecera con Info Básica
                         PatientHeader(state.patient)
 
-                        // Pestañas
                         TabRow(selectedTabIndex = selectedTab) {
                             tabs.forEachIndexed { index, title ->
                                 Tab(
@@ -68,11 +69,11 @@ fun PatientDetailScreen(
                             }
                         }
 
-                        // Contenido según pestaña
                         Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             when (selectedTab) {
                                 0 -> SummaryTab(state.patient)
                                 1 -> ClinicalTab(state.therapeuticProfile)
+                                2 -> ConsentsTab(state.consents)
                             }
                         }
                     }
@@ -118,7 +119,7 @@ private fun SummaryTab(patient: Patient) {
             InfoRow("Nombre completo", patient.fullName)
             InfoRow("Nombre preferido", patient.preferredName ?: "No indicado")
             InfoRow("Fecha de nacimiento", patient.birthDate ?: "No indicada")
-            InfoRow("Fecha de alta", patient.createdAt.take(10))
+            InfoRow("ID Interno", patient.id.take(8).uppercase())
         }
     }
 }
@@ -127,27 +128,74 @@ private fun SummaryTab(patient: Patient) {
 private fun ClinicalTab(profile: TherapeuticProfile?) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         if (profile == null) {
-            Text("No se ha configurado el perfil terapéutico todavía.", style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = { /* Próximamente Editar */ }) {
-                Text("Configurar Perfil")
-            }
+            Text("Perfil terapéutico no configurado.", style = MaterialTheme.typography.bodyLarge)
+            Button(onClick = { }) { Text("Configurar Perfil") }
         } else {
             InfoCard(title = "Evaluación Terapéutica", icon = Icons.Default.Psychology) {
                 InfoRow("Nivel de apoyo", profile.supportLevel.name)
                 InfoRow("Dominancia manual", profile.manualDominance ?: "No determinada")
                 
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Capacidades Preservadas:", fontWeight = FontWeight.Bold)
-                Text(profile.preservedCapacities ?: "Sin datos", style = MaterialTheme.typography.bodyMedium)
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Dificultades Observadas:", fontWeight = FontWeight.Bold)
-                Text(profile.observedDifficulties ?: "Sin datos", style = MaterialTheme.typography.bodyMedium)
-
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text("Objetivos Terapéuticos:", fontWeight = FontWeight.Bold)
                 Text(profile.goals ?: "Sin datos", style = MaterialTheme.typography.bodyMedium)
             }
+        }
+    }
+}
+
+@Composable
+private fun ConsentsTab(consents: List<Consent>) {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        InfoCard(title = "Gestión de Privacidad", icon = Icons.Default.AssignmentTurnedIn) {
+            if (consents.isEmpty()) {
+                Text("No hay registros de consentimiento.", style = MaterialTheme.typography.bodyMedium)
+            } else {
+                consents.forEach { consent ->
+                    ConsentRow(consent)
+                    if (consent != consents.last()) HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(onClick = { }, modifier = Modifier.fillMaxWidth()) {
+                Text("Registrar Nuevo Consentimiento")
+            }
+        }
+        
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f))
+        ) {
+            Text(
+                text = "🛡️ Esta información es sensible. Cada acceso a esta ficha está siendo registrado en la auditoría de seguridad.",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConsentRow(consent: Consent) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(consent.type.name.replace("_", " "), fontWeight = FontWeight.SemiBold)
+            Text("Versión: ${consent.version}", style = MaterialTheme.typography.labelSmall)
+        }
+        Surface(
+            color = when(consent.status) {
+                ConsentStatus.ACCEPTED -> Color(0xFFC8E6C9)
+                ConsentStatus.REVOKED -> Color(0xFFFFCDD2)
+                else -> Color(0xFFF5F5F5)
+            },
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = consent.status.name,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = if (consent.status == ConsentStatus.ACCEPTED) Color(0xFF1B5E20) else Color.DarkGray
+                )
+            )
         }
     }
 }
