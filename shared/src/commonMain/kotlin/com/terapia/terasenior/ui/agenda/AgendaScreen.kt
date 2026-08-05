@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
+import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,25 +112,65 @@ private fun DateSelector(
     val today = remember {
         kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
+    
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    
+    // Generamos un rango amplio de días para navegar
     val days = remember {
-        (-3..10).map { today.plus(it, DateTimeUnit.DAY) }
+        (-15..45).map { today.plus(it, DateTimeUnit.DAY) }
     }
 
-    Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
+    // Scroll automático al día seleccionado al iniciar
+    LaunchedEffect(Unit) {
+        val index = days.indexOf(selectedDate)
+        if (index != -1) {
+            listState.scrollToItem(maxOf(0, index - 2))
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = {
+            scope.launch {
+                listState.animateScrollToItem(maxOf(0, listState.firstVisibleItemIndex - 4))
+            }
+        }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Anterior")
+        }
+
         LazyRow(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            state = listState,
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp)
         ) {
             items(days) { date ->
                 val isSelected = date == selectedDate
                 val isToday = date == today
+                val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
                 
                 Card(
-                    modifier = Modifier.width(60.dp).height(80.dp).clickable { onDateSelected(date) },
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp)
+                        .clickable { onDateSelected(date) },
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                        containerColor = when {
+                            isSelected -> MaterialTheme.colorScheme.primary
+                            isWeekend -> Color(0xFFFFEBEE)
+                            else -> MaterialTheme.colorScheme.surface
+                        },
+                        contentColor = when {
+                            isSelected -> MaterialTheme.colorScheme.onPrimary
+                            isWeekend -> Color.Red
+                            else -> MaterialTheme.colorScheme.onSurface
+                        }
                     ),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
@@ -144,7 +188,6 @@ private fun DateSelector(
                             DayOfWeek.FRIDAY -> "Vie"
                             DayOfWeek.SATURDAY -> "Sáb"
                             DayOfWeek.SUNDAY -> "Dom"
-                            else -> date.dayOfWeek.name.take(3)
                         }
                         Text(
                             text = dayLabel,
@@ -162,6 +205,14 @@ private fun DateSelector(
                     }
                 }
             }
+        }
+
+        IconButton(onClick = {
+            scope.launch {
+                listState.animateScrollToItem(minOf(days.size - 1, listState.firstVisibleItemIndex + 4))
+            }
+        }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Siguiente")
         }
     }
 }
