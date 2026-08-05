@@ -19,6 +19,8 @@ import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
 import com.terapia.terasenior.domain.usecase.admin.*
 import com.terapia.terasenior.domain.usecase.patient.CreatePatientUseCase
 import com.terapia.terasenior.domain.usecase.patient.GetPatientsUseCase
+import com.terapia.terasenior.domain.usecase.patient.UpdatePatientUseCase
+import com.terapia.terasenior.domain.usecase.patient.UpdateTherapeuticProfileUseCase
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
@@ -181,7 +183,12 @@ fun App() {
                             val patientId = selectedPatientId ?: ""
                             val repository = remember { SupabasePatientRepository() }
                             val viewModel = remember(patientId) { 
-                                PatientDetailViewModel(patientId, repository) 
+                                PatientDetailViewModel(
+                                    patientId = patientId, 
+                                    repository = repository,
+                                    updatePatientUseCase = UpdatePatientUseCase(repository),
+                                    updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(repository)
+                                ) 
                             }
                             PatientDetailScreen(
                                 viewModel = viewModel,

@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 
@@ -63,20 +62,41 @@ fun PatientListScreen(
                     }
                 }
                 is PatientListUiState.Success -> {
-                    // Barra de búsqueda
-                    OutlinedTextField(
-                        value = state.searchQuery,
-                        onValueChange = viewModel::onSearchQueryChanged,
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        placeholder = { Text("Buscar paciente por nombre...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true
-                    )
+                    // Barra de búsqueda y Filtros
+                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = state.searchQuery,
+                            onValueChange = viewModel::onSearchQueryChanged,
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Buscar paciente...") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true
+                        )
+                        
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = state.statusFilter == null,
+                                onClick = { viewModel.onStatusFilterChanged(null) },
+                                label = { Text("Todos") }
+                            )
+                            PatientStatus.entries.forEach { s ->
+                                FilterChip(
+                                    selected = state.statusFilter == s,
+                                    onClick = { viewModel.onStatusFilterChanged(s) },
+                                    label = { Text(s.name) }
+                                )
+                            }
+                        }
+                    }
 
                     if (state.patients.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No se encontraron pacientes.")
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.SearchOff, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("No se encontraron pacientes.", color = Color.Gray)
+                            }
                         }
                     } else {
                         LazyColumn(
@@ -108,7 +128,6 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar con Inicial
             Box(
                 modifier = Modifier
                     .size(50.dp)
@@ -130,19 +149,13 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
                     text = patient.fullName,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
-                if (!patient.preferredName.isNullOrBlank()) {
-                    Text(
-                        text = "Conocido como: ${patient.preferredName}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
                 
-                // Badge de Estado
                 Surface(
                     color = when(patient.status) {
                         PatientStatus.ACTIVE -> Color(0xFFC8E6C9)
-                        else -> Color(0xFFF5F5F5)
+                        PatientStatus.INACTIVE -> Color(0xFFFFF9C4)
+                        PatientStatus.DECEASED -> Color(0xFFBDBDBD)
+                        PatientStatus.DISCHARGED -> Color(0xFFB2EBF2)
                     },
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.padding(top = 4.dp)
@@ -152,7 +165,7 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = if (patient.status == PatientStatus.ACTIVE) Color(0xFF1B5E20) else Color.Gray
+                            color = if (patient.status == PatientStatus.ACTIVE) Color(0xFF1B5E20) else Color.DarkGray
                         )
                     )
                 }

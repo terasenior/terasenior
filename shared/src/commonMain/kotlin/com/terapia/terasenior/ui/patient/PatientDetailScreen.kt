@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
@@ -34,6 +35,9 @@ fun PatientDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Resumen", "Clínico", "Consentimientos")
+    
+    var showEditPatient by remember { mutableStateOf(false) }
+    var showEditClinical by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -71,11 +75,35 @@ fun PatientDetailScreen(
 
                         Box(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             when (selectedTab) {
-                                0 -> SummaryTab(state.patient)
-                                1 -> ClinicalTab(state.therapeuticProfile)
+                                0 -> SummaryTab(state.patient, onEdit = { showEditPatient = true })
+                                1 -> ClinicalTab(state.therapeuticProfile, onEdit = { showEditClinical = true })
                                 2 -> ConsentsTab(state.consents)
                             }
                         }
+                    }
+
+                    if (showEditPatient) {
+                        EditPatientDialog(
+                            patient = state.patient,
+                            onDismiss = { showEditPatient = false },
+                            onConfirm = { updated ->
+                                viewModel.updatePatient(updated)
+                                showEditPatient = false
+                            },
+                            isLoading = state.isUpdating
+                        )
+                    }
+
+                    if (showEditClinical) {
+                        EditClinicalProfileDialog(
+                            profile = state.therapeuticProfile,
+                            patientId = state.patient.id,
+                            onDismiss = { showEditClinical = false },
+                            onConfirm = { updated ->
+                                viewModel.updateClinicalProfile(updated)
+                                showEditClinical = false
+                            }
+                        )
                     }
                 }
             }
@@ -113,9 +141,9 @@ private fun PatientHeader(patient: Patient) {
 }
 
 @Composable
-private fun SummaryTab(patient: Patient) {
+private fun SummaryTab(patient: Patient, onEdit: () -> Unit) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        InfoCard(title = "Datos Identificativos", icon = Icons.Default.Info) {
+        InfoCard(title = "Datos Identificativos", icon = Icons.Default.Info, onEdit = onEdit) {
             InfoRow("Nombre completo", patient.fullName)
             InfoRow("Nombre preferido", patient.preferredName ?: "No indicado")
             InfoRow("Fecha de nacimiento", patient.birthDate ?: "No indicada")
@@ -125,13 +153,13 @@ private fun SummaryTab(patient: Patient) {
 }
 
 @Composable
-private fun ClinicalTab(profile: TherapeuticProfile?) {
+private fun ClinicalTab(profile: TherapeuticProfile?, onEdit: () -> Unit) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         if (profile == null) {
             Text("Perfil terapéutico no configurado.", style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = { }) { Text("Configurar Perfil") }
+            Button(onClick = onEdit) { Text("Configurar Perfil") }
         } else {
-            InfoCard(title = "Evaluación Terapéutica", icon = Icons.Default.Psychology) {
+            InfoCard(title = "Evaluación Terapéutica", icon = Icons.Default.Psychology, onEdit = onEdit) {
                 InfoRow("Nivel de apoyo", profile.supportLevel.name)
                 InfoRow("Dominancia manual", profile.manualDominance ?: "No determinada")
                 
@@ -201,17 +229,29 @@ private fun ConsentRow(consent: Consent) {
 }
 
 @Composable
-private fun InfoCard(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
+private fun InfoCard(
+    title: String, 
+    icon: ImageVector, 
+    onEdit: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                }
+                if (onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar", modifier = Modifier.size(20.dp))
+                    }
+                }
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             content()
