@@ -1,5 +1,6 @@
 package com.terapia.terasenior.ui.patient
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,7 +19,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -188,6 +193,15 @@ private fun ClinicalTab(profile: TherapeuticProfile?, onEdit: () -> Unit) {
 @Composable
 private fun EvolutionTab(results: List<ActivityResult>) {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Gráfica de Tendencia
+        InfoCard(title = "Tendencia de Puntuación", icon = Icons.Default.Timeline) {
+            if (results.size < 2) {
+                Text("Se necesitan al menos 2 sesiones para mostrar la tendencia.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            } else {
+                ScoreTrendChart(results = results.sortedBy { it.createdAt }.takeLast(10))
+            }
+        }
+
         InfoCard(title = "Historial de Actividades", icon = Icons.Default.Timeline) {
             if (results.isEmpty()) {
                 Text("No hay actividades registradas todavía.", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
@@ -198,6 +212,74 @@ private fun EvolutionTab(results: List<ActivityResult>) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ScoreTrendChart(results: List<ActivityResult>) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .padding(vertical = 8.dp)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val width = size.width
+            val height = size.height
+            val spacing = width / (results.size - 1)
+            
+            val points = results.mapIndexed { index, result ->
+                val x = index * spacing
+                val y = height - (result.score.toFloat() / 100f * height)
+                Offset(x, y)
+            }
+            
+            // Dibujar líneas de fondo (guías)
+            for (i in 0..4) {
+                val y = height - (i * 0.25f * height)
+                drawLine(
+                    color = Color.LightGray.copy(alpha = 0.5f),
+                    start = Offset(0f, y),
+                    end = Offset(width, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            // Dibujar el camino de la gráfica
+            val path = Path().apply {
+                moveTo(points.first().x, points.first().y)
+                points.forEach { offset ->
+                    lineTo(offset.x, offset.y)
+                }
+            }
+            
+            drawPath(
+                path = path,
+                color = primaryColor,
+                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+            )
+            
+            // Dibujar puntos
+            points.forEach { offset ->
+                drawCircle(
+                    color = primaryColor,
+                    radius = 4.dp.toPx(),
+                    center = offset
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = 2.dp.toPx(),
+                    center = offset
+                )
+            }
+        }
+    }
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("Inicio", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        Text("Progreso de las últimas 10 sesiones", style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontWeight = FontWeight.Bold)
+        Text("Actual", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
     }
 }
 
