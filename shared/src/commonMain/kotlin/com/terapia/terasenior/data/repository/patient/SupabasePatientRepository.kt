@@ -1,9 +1,11 @@
 package com.terapia.terasenior.data.repository.patient
 
 import com.terapia.terasenior.data.model.patient.PatientDto
+import com.terapia.terasenior.data.model.patient.TherapeuticProfileDto
 import com.terapia.terasenior.data.model.patient.toData
 import com.terapia.terasenior.data.model.patient.toDomain
 import com.terapia.terasenior.domain.model.patient.Patient
+import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.supabase
 import io.github.jan.supabase.postgrest.postgrest
@@ -36,5 +38,16 @@ class SupabasePatientRepository : PatientRepository {
         supabase.postgrest["patients"].update(patient.toData()) {
             filter { eq("id", patient.id) }
         }
+    }
+
+    override suspend fun getTherapeuticProfile(patientId: String): Result<TherapeuticProfile?> = runCatching {
+        supabase.postgrest["patient_therapeutic_profiles"]
+            .select { filter { eq("patient_id", patientId) } }
+            .decodeSingleOrNull<TherapeuticProfileDto>()
+            ?.toDomain()
+    }
+
+    override suspend fun updateTherapeuticProfile(profile: TherapeuticProfile): Result<Unit> = runCatching {
+        supabase.postgrest["patient_therapeutic_profiles"].upsert(profile.toData())
     }
 }

@@ -17,6 +17,7 @@ import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
 import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
 import com.terapia.terasenior.domain.usecase.admin.*
+import com.terapia.terasenior.domain.usecase.patient.CreatePatientUseCase
 import com.terapia.terasenior.domain.usecase.patient.GetPatientsUseCase
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
@@ -27,13 +28,12 @@ import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
 import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
 import com.terapia.terasenior.ui.login.LoginScreen
-import com.terapia.terasenior.ui.patient.PatientListScreen
-import com.terapia.terasenior.ui.patient.PatientListViewModel
+import com.terapia.terasenior.ui.patient.*
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
-    LOGIN, THERAPY_PANEL, PATIENTS, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
+    LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +42,8 @@ fun App() {
     TeraseniorTheme {
         var currentUserProfile by remember { mutableStateOf<com.terapia.terasenior.models.Profile?>(null) }
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
+        var selectedPatientId by remember { mutableStateOf<String?>(null) }
+        
         val scope = rememberCoroutineScope()
         val authRepository = remember { AuthRepository() }
 
@@ -139,14 +141,51 @@ fun App() {
                         )
 
                         Screen.PATIENTS -> {
-                            val repository = remember { SupabasePatientRepository() }
-                            val viewModel = remember { 
-                                PatientListViewModel(GetPatientsUseCase(repository)) 
+                            val patientRepository = remember { SupabasePatientRepository() }
+                            val listViewModel = remember { 
+                                PatientListViewModel(GetPatientsUseCase(patientRepository)) 
                             }
+                            val createViewModel = remember {
+                                CreatePatientViewModel(CreatePatientUseCase(patientRepository))
+                            }
+                            val createUiState by createViewModel.uiState.collectAsState()
+                            var showCreateDialog by remember { mutableStateOf(false) }
+
+                            if (createUiState is CreatePatientUiState.Success) {
+                                showCreateDialog = false
+                                createViewModel.resetState()
+                                listViewModel.loadPatients()
+                            }
+
                             PatientListScreen(
+                                viewModel = listViewModel,
+                                onPatientClick = { id -> 
+                                    selectedPatientId = id
+                                    currentScreen = Screen.PATIENT_DETAIL 
+                                },
+                                onAddPatientClick = { showCreateDialog = true }
+                            )
+
+                            if (showCreateDialog) {
+                                CreatePatientDialog(
+                                    onDismiss = { showCreateDialog = false },
+                                    onConfirm = { f, l, p, b -> 
+                                        createViewModel.createPatient(currentUserProfile?.entityId ?: "", f, l, p, b)
+                                    },
+                                    isLoading = createUiState is CreatePatientUiState.Loading
+                                )
+                            }
+                        }
+
+                        Screen.PATIENT_DETAIL -> {
+                            val patientId = selectedPatientId ?: ""
+                            val repository = remember { SupabasePatientRepository() }
+                            val viewModel = remember(patientId) { 
+                                PatientDetailViewModel(patientId, repository) 
+                            }
+                            PatientDetailScreen(
                                 viewModel = viewModel,
-                                onPatientClick = { /* Próximamente Detalle */ },
-                                onAddPatientClick = { /* Próximamente Alta */ }
+                                onBack = { currentScreen = Screen.PATIENTS }
                             )
                         }
 
