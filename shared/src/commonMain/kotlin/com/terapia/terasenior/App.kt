@@ -154,6 +154,7 @@ fun App() {
 
                         Screen.PATIENTS -> {
                             val patientRepository = remember { SupabasePatientRepository() }
+                            val entityRepository = remember { SupabaseEntityRepository() }
                             val listViewModel = remember { 
                                 PatientListViewModel(GetPatientsUseCase(patientRepository)) 
                             }
@@ -180,11 +181,22 @@ fun App() {
 
                             if (showCreateDialog) {
                                 CreatePatientDialog(
-                                    onDismiss = { showCreateDialog = false },
-                                    onConfirm = { f, l, p, b -> 
-                                        createViewModel.createPatient(currentUserProfile?.entityId ?: "", f, l, p, b)
+                                    onDismiss = { 
+                                        showCreateDialog = false
+                                        createViewModel.resetState()
                                     },
-                                    isLoading = createUiState is CreatePatientUiState.Loading
+                                    onConfirm = { f, l, p, b -> 
+                                        // MEJORA: Buscar un ID de centro válido si el admin no tiene uno asignado
+                                        scope.launch {
+                                            val entityId = currentUserProfile?.entityId 
+                                                ?: entityRepository.getEntities().getOrNull()?.firstOrNull()?.id
+                                                ?: ""
+                                            
+                                            createViewModel.createPatient(entityId, f, l, p, b)
+                                        }
+                                    },
+                                    isLoading = createUiState is CreatePatientUiState.Loading,
+                                    errorMessage = (createUiState as? CreatePatientUiState.Error)?.message
                                 )
                             }
                         }

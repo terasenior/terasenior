@@ -13,7 +13,8 @@ import androidx.compose.ui.unit.dp
 fun CreatePatientDialog(
     onDismiss: () -> Unit,
     onConfirm: (firstName: String, lastName: String, preferredName: String, birthDate: String) -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    errorMessage: String? = null
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -31,6 +32,19 @@ fun CreatePatientDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (errorMessage != null) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
+
                 OutlinedTextField(
                     value = firstName,
                     onValueChange = { firstName = it },

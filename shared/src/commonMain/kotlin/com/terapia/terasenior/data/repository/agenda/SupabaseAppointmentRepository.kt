@@ -21,8 +21,36 @@ class SupabaseAppointmentRepository : AppointmentRepository {
         })
     }
 
-    override suspend fun createAppointment(appointment: Appointment): Result<Unit> = runCatching {
-        supabase.postgrest["appointments"].insert(appointment.toData())
+    override suspend fun getAppointmentById(id: String): Result<Appointment?> = runCatching {
+        supabase.postgrest["appointments"]
+            .select { filter { eq("id", id) } }
+            .decodeSingleOrNull<AppointmentDto>()
+            ?.toDomain()
+    }
+
+    override suspend fun createFullAppointment(
+        appointment: Appointment,
+        staffIds: List<String>,
+        patientIds: List<String>
+    ): Result<Unit> = runCatching {
+        // 1. Insertar la cita principal y obtener el ID generado
+        val inserted = supabase.postgrest["appointments"].insert(appointment.toData()) {
+            select()
+        }.decodeSingle<AppointmentDto>()
+        
+        val appointmentId = inserted.id ?: throw Exception("Error al obtener ID de la cita")
+
+        // 2. Insertar personal asignado
+        if (staffIds.isNotEmpty()) {
+            val staffData = staffIds.map { mapOf("appointment_id" to appointmentId, "professional_id" to it) }
+            supabase.postgrest["appointment_staff"].insert(staffData)
+        }
+
+        // 3. Insertar asistentes (pacientes)
+        if (patientIds.isNotEmpty()) {
+            val attendeesData = patientIds.map { mapOf("appointment_id" to appointmentId, "patient_id" to it) }
+            supabase.postgrest["appointment_attendees"].insert(attendeesData)
+        }
     }
 
     override suspend fun updateAppointment(appointment: Appointment): Result<Unit> = runCatching {
@@ -31,10 +59,9 @@ class SupabaseAppointmentRepository : AppointmentRepository {
         }
     }
 
-    override suspend fun getAppointmentById(id: String): Result<Appointment?> = runCatching {
-        supabase.postgrest["appointments"]
-            .select { filter { eq("id", id) } }
-            .decodeSingleOrNull<AppointmentDto>()
-            ?.toDomain()
+    override suspend fun deleteAppointment(id: String): Result<Unit> = runCatching {
+        supabase.postgrest["appointments"].delete {
+            filter { eq("id", id) }
+        }
     }
 }
