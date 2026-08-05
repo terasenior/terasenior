@@ -26,7 +26,8 @@ import kotlinx.datetime.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgendaScreen(
-    viewModel: AgendaViewModel
+    viewModel: AgendaViewModel,
+    onAddAppointmentClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -43,7 +44,7 @@ fun AgendaScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* Próximamente Fase 3 */ },
+                onClick = onAddAppointmentClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -131,13 +132,23 @@ private fun DateSelector(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        val dayLabel = when(date.dayOfWeek) {
+                            DayOfWeek.MONDAY -> "Lun"
+                            DayOfWeek.TUESDAY -> "Mar"
+                            DayOfWeek.WEDNESDAY -> "Mié"
+                            DayOfWeek.THURSDAY -> "Jue"
+                            DayOfWeek.FRIDAY -> "Vie"
+                            DayOfWeek.SATURDAY -> "Sáb"
+                            DayOfWeek.SUNDAY -> "Dom"
+                            else -> date.dayOfWeek.name.take(3)
+                        }
                         Text(
-                            text = date.dayOfWeek.name.take(3),
+                            text = dayLabel,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Normal
                         )
                         Text(
-                            text = date.dayOfMonth.toString(),
+                            text = date.day.toString(),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -202,8 +213,9 @@ private fun AppointmentCard(appointment: Appointment) {
                     val icon = if (appointment.type == AppointmentType.INDIVIDUAL) Icons.Default.Person else Icons.Default.Groups
                     Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
                     Spacer(modifier = Modifier.width(4.dp))
+                    val typeLabel = if (appointment.type == AppointmentType.INDIVIDUAL) "Sesión Individual" else "Taller Grupal"
                     Text(
-                        text = if (appointment.type == AppointmentType.INDIVIDUAL) "Sesión Individual" else "Sesión Grupal",
+                        text = typeLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )

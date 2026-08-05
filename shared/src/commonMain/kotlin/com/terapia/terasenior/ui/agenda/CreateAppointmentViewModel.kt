@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 
 sealed interface CreateAppointmentUiState {
+    data object Idle : CreateAppointmentUiState
     data object Loading : CreateAppointmentUiState
     data class Success(
         val patients: List<Patient>,
@@ -30,21 +31,17 @@ class CreateAppointmentViewModel(
     private val userRepository: UserProfileRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<CreateAppointmentUiState>(CreateAppointmentUiState.Loading)
+    private val _uiState = MutableStateFlow<CreateAppointmentUiState>(CreateAppointmentUiState.Idle)
     val uiState: StateFlow<CreateAppointmentUiState> = _uiState.asStateFlow()
 
     private var _patients = emptyList<Patient>()
     private var _professionals = emptyList<UserProfile>()
 
-    init {
-        loadData()
-    }
-
-    private fun loadData() {
+    fun loadInitialData() {
         viewModelScope.launch {
             _uiState.value = CreateAppointmentUiState.Loading
             
-            // Cargamos pacientes y profesionales en paralelo
+            // Cargamos pacientes y profesionales
             val patientsResult = patientRepository.getPatients().first()
             val professionalsResult = userRepository.getUserProfiles(null)
 
@@ -53,7 +50,7 @@ class CreateAppointmentViewModel(
                 _professionals = professionalsResult.getOrDefault(emptyList())
                 _uiState.value = CreateAppointmentUiState.Success(_patients, _professionals)
             } else {
-                _uiState.value = CreateAppointmentUiState.Error("No se pudieron cargar los datos para la sesión.")
+                _uiState.value = CreateAppointmentUiState.Error("No se pudieron cargar los datos necesarios.")
             }
         }
     }
@@ -91,8 +88,12 @@ class CreateAppointmentViewModel(
                     _uiState.value = CreateAppointmentUiState.Created
                 }
                 .onFailure { error ->
-                    _uiState.value = CreateAppointmentUiState.Error(error.message ?: "Error al crear la sesión")
+                    _uiState.value = CreateAppointmentUiState.Error(error.message ?: "Error al programar la sesión")
                 }
         }
+    }
+
+    fun resetState() {
+        _uiState.value = CreateAppointmentUiState.Idle
     }
 }

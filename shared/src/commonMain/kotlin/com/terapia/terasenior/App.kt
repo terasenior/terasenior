@@ -24,18 +24,19 @@ import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
 import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
-import com.terapia.terasenior.ui.agenda.AgendaScreen
-import com.terapia.terasenior.ui.agenda.AgendaViewModel
+import com.terapia.terasenior.ui.agenda.*
 import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.patient.*
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
     LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, AGENDA, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
     TeraseniorTheme {
@@ -147,9 +148,66 @@ fun App() {
                         )
 
                         Screen.AGENDA -> {
-                            val repository = remember { SupabaseAppointmentRepository() }
-                            val viewModel = remember { AgendaViewModel(repository) }
-                            AgendaScreen(viewModel)
+                            val agendaRepo = remember { SupabaseAppointmentRepository() }
+                            val patientRepo = remember { SupabasePatientRepository() }
+                            val userRepo = remember { SupabaseUserProfileRepository() }
+                            
+                            val viewModel = remember { AgendaViewModel(agendaRepo) }
+                            val createViewModel = remember { 
+                                CreateAppointmentViewModel(agendaRepo, patientRepo, userRepo) 
+                            }
+                            
+                            val createUiState by createViewModel.uiState.collectAsState()
+                            var showCreateDialog by remember { mutableStateOf(false) }
+                            val agendaState by viewModel.uiState.collectAsState()
+
+                            if (createUiState is CreateAppointmentUiState.Created) {
+                                showCreateDialog = false
+                                createViewModel.resetState()
+                                viewModel.loadAppointments()
+                            }
+
+                            AgendaScreen(
+                                viewModel = viewModel,
+                                onAddAppointmentClick = { 
+                                    createViewModel.loadInitialData()
+                                    showCreateDialog = true 
+                                }
+                            )
+
+                            if (showCreateDialog) {
+                                val state = createUiState
+                                if (state is CreateAppointmentUiState.Success || state is CreateAppointmentUiState.Loading) {
+                                    CreateAppointmentDialog(
+                                        selectedDate = (agendaState as? AgendaUiState.Success)?.selectedDate ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+                                        patients = if (state is CreateAppointmentUiState.Success) state.patients else emptyList(),
+                                        professionals = if (state is CreateAppointmentUiState.Success) state.professionals else emptyList(),
+                                        onDismiss = { showCreateDialog = false },
+                                        onConfirm = { t, d, s, e, type, staff, attendees ->
+                                            val currentDay = (agendaState as? AgendaUiState.Success)?.selectedDate ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                            createViewModel.createAppointment(
+                                                entityId = currentUserProfile?.entityId ?: "",
+                                                title = t,
+                                                description = d,
+                                                startDate = currentDay,
+                                                startTime = s,
+                                                endTime = e,
+                                                type = type,
+                                                selectedStaffIds = staff,
+                                                selectedPatientIds = attendees
+                                            )
+                                        },
+                                        isLoading = state is CreateAppointmentUiState.Loading
+                                    )
+                                } else if (state is CreateAppointmentUiState.Error) {
+                                    AlertDialog(
+                                        onDismissRequest = { createViewModel.resetState() },
+                                        title = { Text("Error") },
+                                        text = { Text(state.message) },
+                                        confirmButton = { TextButton(onClick = { createViewModel.resetState() }) { Text("OK") } }
+                                    )
+                                }
+                            }
                         }
 
                         Screen.PATIENTS -> {
@@ -186,7 +244,6 @@ fun App() {
                                         createViewModel.resetState()
                                     },
                                     onConfirm = { f, l, p, b -> 
-                                        // MEJORA: Buscar un ID de centro válido si el admin no tiene uno asignado
                                         scope.launch {
                                             val entityId = currentUserProfile?.entityId 
                                                 ?: entityRepository.getEntities().getOrNull()?.firstOrNull()?.id
