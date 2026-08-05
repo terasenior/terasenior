@@ -16,6 +16,9 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val userProfile: Profile? = null,
+    val showResetDialog: Boolean = false,
+    val resetMessage: String? = null,
+    val isResetLoading: Boolean = false
 )
 
 class LoginViewModel(
@@ -31,6 +34,38 @@ class LoginViewModel(
 
     fun onPasswordChanged(newPassword: String) {
         _uiState.update { it.copy(password = newPassword, errorMessage = null) }
+    }
+
+    fun onShowResetDialog(show: Boolean) {
+        _uiState.update { it.copy(showResetDialog = show, resetMessage = null) }
+    }
+
+    fun sendPasswordReset(email: String) {
+        if (email.isBlank()) {
+            _uiState.update { it.copy(resetMessage = "Introduce un correo válido") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isResetLoading = true, resetMessage = null) }
+            authRepository.resetPassword(email)
+                .onSuccess {
+                    _uiState.update { 
+                        it.copy(
+                            isResetLoading = false, 
+                            resetMessage = "Se ha enviado un enlace de recuperación a tu correo."
+                        ) 
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { 
+                        it.copy(
+                            isResetLoading = false, 
+                            resetMessage = "Error: ${error.message}"
+                        ) 
+                    }
+                }
+        }
     }
 
     fun login() {

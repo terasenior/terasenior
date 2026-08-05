@@ -87,6 +87,12 @@ class AuthRepository {
         }
     }
 
+    suspend fun resetPassword(email: String): Result<Unit> {
+        return runCatching {
+            supabase.auth.resetPasswordForEmail(email)
+        }
+    }
+
     suspend fun getCurrentProfile(): Result<Profile?> {
         return runCatching {
             val user = supabase.auth.currentUserOrNull()

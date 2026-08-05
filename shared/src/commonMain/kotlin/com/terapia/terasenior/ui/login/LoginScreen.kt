@@ -170,9 +170,18 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
             
-            TextButton(onClick = { /* Próximamente */ }) {
+            TextButton(onClick = { viewModel.onShowResetDialog(true) }) {
                 Text("¿Olvidaste tu contraseña?", color = MaterialTheme.colorScheme.secondary)
             }
         }
+    }
+
+    if (state.showResetDialog) {
+        ForgotPasswordDialog(
+            onDismiss = { viewModel.onShowResetDialog(false) },
+            onConfirm = { email -> viewModel.sendPasswordReset(email) },
+            isLoading = state.isResetLoading,
+            message = state.resetMessage
+        )
     }
 }
