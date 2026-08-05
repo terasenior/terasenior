@@ -3,24 +3,19 @@ package com.terapia.terasenior
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.data.repository.admin.SupabaseEntityRepository
 import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
+import com.terapia.terasenior.data.repository.agenda.SupabaseAppointmentRepository
 import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
 import com.terapia.terasenior.domain.usecase.admin.*
-import com.terapia.terasenior.domain.usecase.patient.CreatePatientUseCase
-import com.terapia.terasenior.domain.usecase.patient.GetPatientsUseCase
-import com.terapia.terasenior.domain.usecase.patient.UpdatePatientUseCase
-import com.terapia.terasenior.domain.usecase.patient.UpdateTherapeuticProfileUseCase
+import com.terapia.terasenior.domain.usecase.patient.*
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
@@ -29,13 +24,15 @@ import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
 import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
+import com.terapia.terasenior.ui.agenda.AgendaScreen
+import com.terapia.terasenior.ui.agenda.AgendaViewModel
 import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.patient.*
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import kotlinx.coroutines.launch
 
 enum class Screen {
-    LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
+    LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, AGENDA, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,7 +104,14 @@ fun App() {
                         )
 
                         NavigationBarItem(
-                            selected = currentScreen == Screen.PATIENTS,
+                            selected = currentScreen == Screen.AGENDA,
+                            onClick = { currentScreen = Screen.AGENDA },
+                            icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                            label = { Text("Agenda") }
+                        )
+
+                        NavigationBarItem(
+                            selected = currentScreen == Screen.PATIENTS || currentScreen == Screen.PATIENT_DETAIL,
                             onClick = { currentScreen = Screen.PATIENTS },
                             icon = { Icon(Icons.Default.People, contentDescription = null) },
                             label = { Text("Pacientes") }
@@ -141,6 +145,12 @@ fun App() {
                         Screen.NUMBER_SEARCH -> NumberSearchGame(
                             onBack = { currentScreen = Screen.THERAPY_PANEL }
                         )
+
+                        Screen.AGENDA -> {
+                            val repository = remember { SupabaseAppointmentRepository() }
+                            val viewModel = remember { AgendaViewModel(repository) }
+                            AgendaScreen(viewModel)
+                        }
 
                         Screen.PATIENTS -> {
                             val patientRepository = remember { SupabasePatientRepository() }
