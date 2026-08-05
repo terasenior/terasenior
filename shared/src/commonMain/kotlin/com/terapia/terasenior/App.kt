@@ -33,7 +33,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
-    LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, AGENDA, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
+    LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
@@ -43,6 +43,7 @@ fun App() {
         var currentUserProfile by remember { mutableStateOf<com.terapia.terasenior.models.Profile?>(null) }
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
         var selectedPatientId by remember { mutableStateOf<String?>(null) }
+        var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
         
         val scope = rememberCoroutineScope()
         val authRepository = remember { AuthRepository() }
@@ -105,7 +106,7 @@ fun App() {
                         )
 
                         NavigationBarItem(
-                            selected = currentScreen == Screen.AGENDA,
+                            selected = currentScreen == Screen.AGENDA || currentScreen == Screen.APPOINTMENT_DETAIL,
                             onClick = { currentScreen = Screen.AGENDA },
                             icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
                             label = { Text("Agenda") }
@@ -172,6 +173,10 @@ fun App() {
                                 onAddAppointmentClick = { 
                                     createViewModel.loadInitialData()
                                     showCreateDialog = true 
+                                },
+                                onAppointmentClick = { id ->
+                                    selectedAppointmentId = id
+                                    currentScreen = Screen.APPOINTMENT_DETAIL
                                 }
                             )
 
@@ -208,6 +213,18 @@ fun App() {
                                     )
                                 }
                             }
+                        }
+
+                        Screen.APPOINTMENT_DETAIL -> {
+                            val appointmentId = selectedAppointmentId ?: ""
+                            val repository = remember { SupabaseAppointmentRepository() }
+                            val viewModel = remember(appointmentId) { 
+                                AppointmentDetailViewModel(appointmentId, repository) 
+                            }
+                            AppointmentDetailScreen(
+                                viewModel = viewModel,
+                                onBack = { currentScreen = Screen.AGENDA }
+                            )
                         }
 
                         Screen.PATIENTS -> {

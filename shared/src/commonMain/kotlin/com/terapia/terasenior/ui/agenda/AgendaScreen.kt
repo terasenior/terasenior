@@ -27,7 +27,8 @@ import kotlinx.datetime.*
 @Composable
 fun AgendaScreen(
     viewModel: AgendaViewModel,
-    onAddAppointmentClick: () -> Unit
+    onAddAppointmentClick: () -> Unit,
+    onAppointmentClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -85,7 +86,10 @@ fun AgendaScreen(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(state.filteredAppointments) { appointment ->
-                                AppointmentCard(appointment)
+                                AppointmentCard(
+                                    appointment = appointment,
+                                    onClick = { onAppointmentClick(appointment.id) }
+                                )
                             }
                         }
                     }
@@ -163,7 +167,10 @@ private fun DateSelector(
 }
 
 @Composable
-private fun AppointmentCard(appointment: Appointment) {
+private fun AppointmentCard(
+    appointment: Appointment,
+    onClick: () -> Unit
+) {
     val statusColor = when(appointment.status) {
         AppointmentStatus.SCHEDULED -> MaterialTheme.colorScheme.primary
         AppointmentStatus.COMPLETED -> Color(0xFF2E7D32)
@@ -171,6 +178,7 @@ private fun AppointmentCard(appointment: Appointment) {
     }
 
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
