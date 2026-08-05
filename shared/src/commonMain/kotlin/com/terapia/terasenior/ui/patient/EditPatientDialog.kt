@@ -57,12 +57,21 @@ fun EditPatientDialog(
                 )
 
                 Text("Estado del Paciente", style = MaterialTheme.typography.labelLarge)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     PatientStatus.entries.forEach { s ->
+                        val label = when(s) {
+                            PatientStatus.ACTIVE -> "Activo"
+                            PatientStatus.INACTIVE -> "Inactivo"
+                            PatientStatus.DECEASED -> "Fallecido"
+                            PatientStatus.DISCHARGED -> "Alta"
+                        }
                         FilterChip(
                             selected = status == s,
                             onClick = { status = s },
-                            label = { Text(s.name) }
+                            label = { Text(label) }
                         )
                     }
                 }

@@ -21,10 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.terapia.terasenior.domain.model.patient.Consent
-import com.terapia.terasenior.domain.model.patient.ConsentStatus
-import com.terapia.terasenior.domain.model.patient.Patient
-import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
+import com.terapia.terasenior.domain.model.patient.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,7 +131,13 @@ private fun PatientHeader(patient: Patient) {
             Spacer(modifier = Modifier.width(20.dp))
             Column {
                 Text(patient.fullName, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-                Text("Estado: ${patient.status.name}", style = MaterialTheme.typography.bodyMedium)
+                val statusLabel = when(patient.status) {
+                    PatientStatus.ACTIVE -> "Activo"
+                    PatientStatus.INACTIVE -> "Inactivo"
+                    PatientStatus.DECEASED -> "Fallecido"
+                    PatientStatus.DISCHARGED -> "Alta Terapéutica"
+                }
+                Text("Estado: $statusLabel", style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -159,8 +162,16 @@ private fun ClinicalTab(profile: TherapeuticProfile?, onEdit: () -> Unit) {
             Text("Perfil terapéutico no configurado.", style = MaterialTheme.typography.bodyLarge)
             Button(onClick = onEdit) { Text("Configurar Perfil") }
         } else {
+            val supportLabel = when(profile.supportLevel) {
+                SupportLevel.NONE -> "Sin apoyo"
+                SupportLevel.PUNCTUAL -> "Apoyo puntual"
+                SupportLevel.VERBAL -> "Apoyo verbal"
+                SupportLevel.VISUAL -> "Apoyo visual"
+                SupportLevel.PARTIAL_PHYSICAL -> "Apoyo físico parcial"
+                SupportLevel.FULL_PHYSICAL -> "Apoyo físico completo"
+            }
             InfoCard(title = "Evaluación Terapéutica", icon = Icons.Default.Psychology, onEdit = onEdit) {
-                InfoRow("Nivel de apoyo", profile.supportLevel.name)
+                InfoRow("Nivel de apoyo", supportLabel)
                 InfoRow("Dominancia manual", profile.manualDominance ?: "No determinada")
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -205,7 +216,13 @@ private fun ConsentsTab(consents: List<Consent>) {
 private fun ConsentRow(consent: Consent) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(consent.type.name.replace("_", " "), fontWeight = FontWeight.SemiBold)
+            val typeLabel = when(consent.type) {
+                ConsentType.RESULTS -> "Resultados de actividades"
+                ConsentType.IMAGES -> "Uso de imágenes"
+                ConsentType.DATA_EXPORT -> "Exportación de datos"
+                ConsentType.THIRD_PARTY -> "Compartir con terceros"
+            }
+            Text(typeLabel, fontWeight = FontWeight.SemiBold)
             Text("Versión: ${consent.version}", style = MaterialTheme.typography.labelSmall)
         }
         Surface(
@@ -216,8 +233,14 @@ private fun ConsentRow(consent: Consent) {
             },
             shape = RoundedCornerShape(8.dp)
         ) {
+            val statusLabel = when(consent.status) {
+                ConsentStatus.PENDING -> "Pendiente"
+                ConsentStatus.ACCEPTED -> "Aceptado"
+                ConsentStatus.REJECTED -> "Rechazado"
+                ConsentStatus.REVOKED -> "Revocado"
+            }
             Text(
-                text = consent.status.name,
+                text = statusLabel,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,

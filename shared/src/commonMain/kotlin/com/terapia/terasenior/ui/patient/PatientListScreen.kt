@@ -81,10 +81,16 @@ fun PatientListScreen(
                                 label = { Text("Todos") }
                             )
                             PatientStatus.entries.forEach { s ->
+                                val label = when(s) {
+                                    PatientStatus.ACTIVE -> "Activo"
+                                    PatientStatus.INACTIVE -> "Inactivo"
+                                    PatientStatus.DECEASED -> "Fallecido"
+                                    PatientStatus.DISCHARGED -> "Alta"
+                                }
                                 FilterChip(
                                     selected = state.statusFilter == s,
                                     onClick = { viewModel.onStatusFilterChanged(s) },
-                                    label = { Text(s.name) }
+                                    label = { Text(label) }
                                 )
                             }
                         }
@@ -160,8 +166,14 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
+                    val label = when(patient.status) {
+                        PatientStatus.ACTIVE -> "Activo"
+                        PatientStatus.INACTIVE -> "Inactivo"
+                        PatientStatus.DECEASED -> "Fallecido"
+                        PatientStatus.DISCHARGED -> "Alta Terapéutica"
+                    }
                     Text(
-                        text = patient.status.name,
+                        text = label,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,

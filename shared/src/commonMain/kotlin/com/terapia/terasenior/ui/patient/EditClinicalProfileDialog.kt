@@ -34,13 +34,21 @@ fun EditClinicalProfileDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text("Nivel de Apoyo", style = MaterialTheme.typography.labelLarge)
-                // Versión simplificada para el diálogo
+                
                 ScrollableTabRow(selectedTabIndex = supportLevel.ordinal, edgePadding = 0.dp) {
                     SupportLevel.entries.forEach { level ->
+                        val label = when(level) {
+                            SupportLevel.NONE -> "Ninguno"
+                            SupportLevel.PUNCTUAL -> "Puntual"
+                            SupportLevel.VERBAL -> "Verbal"
+                            SupportLevel.VISUAL -> "Visual"
+                            SupportLevel.PARTIAL_PHYSICAL -> "Físico Parcial"
+                            SupportLevel.FULL_PHYSICAL -> "Físico Total"
+                        }
                         Tab(
                             selected = supportLevel == level,
                             onClick = { supportLevel = level },
-                            text = { Text(level.name, style = MaterialTheme.typography.labelSmall) }
+                            text = { Text(label, style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                 }
