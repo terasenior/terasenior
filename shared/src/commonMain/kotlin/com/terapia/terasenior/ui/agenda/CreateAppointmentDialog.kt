@@ -4,13 +4,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
@@ -30,13 +32,15 @@ fun CreateAppointmentDialog(
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var startTime by remember { mutableStateOf(LocalTime(10, 0)) }
-    var endTime by remember { mutableStateOf(LocalTime(11, 0)) }
-    var appointmentType by remember { mutableStateOf(AppointmentType.INDIVIDUAL) }
     
-    // Selección múltiple simplificada para este diálogo
+    // Gestión de horas como texto para facilitar la edición manual en Web
+    var startHour by remember { mutableStateOf("10") }
+    var startMin by remember { mutableStateOf("00") }
+    var endHour by remember { mutableStateOf("11") }
+    var endMin by remember { mutableStateOf("00") }
+    
+    var appointmentType by remember { mutableStateOf(AppointmentType.INDIVIDUAL) }
     val selectedPatients = remember { mutableStateListOf<String>() }
-    val selectedStaff = remember { mutableStateListOf<String>() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -53,26 +57,51 @@ fun CreateAppointmentDialog(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Título de la sesión") },
-                    placeholder = { Text("Ej: Taller de Memoria") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Horario (HH:MM)", style = MaterialTheme.typography.labelLarge)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // Hora Inicio
                     OutlinedTextField(
-                        value = "${startTime.hour}:${startTime.minute.toString().padStart(2, '0')}",
-                        onValueChange = { },
-                        label = { Text("Inicio") },
+                        value = startHour,
+                        onValueChange = { if(it.length <= 2) startHour = it },
                         modifier = Modifier.weight(1f),
-                        readOnly = true,
+                        label = { Text("Hora") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp)
                     )
+                    Text(":")
                     OutlinedTextField(
-                        value = "${endTime.hour}:${endTime.minute.toString().padStart(2, '0')}",
-                        onValueChange = { },
-                        label = { Text("Fin") },
+                        value = startMin,
+                        onValueChange = { if(it.length <= 2) startMin = it },
                         modifier = Modifier.weight(1f),
-                        readOnly = true,
+                        label = { Text("Min") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.AccessTime, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Hora Fin
+                    OutlinedTextField(
+                        value = endHour,
+                        onValueChange = { if(it.length <= 2) endHour = it },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Hora") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Text(":")
+                    OutlinedTextField(
+                        value = endMin,
+                        onValueChange = { if(it.length <= 2) endMin = it },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Min") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp)
                     )
                 }
@@ -91,12 +120,13 @@ fun CreateAppointmentDialog(
                     )
                 }
 
-                // Selección de Paciente (Simplificada como lista de checkboxes para demo)
                 Text("Asistentes (Pacientes)", style = MaterialTheme.typography.labelLarge)
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
-                    Column(modifier = Modifier.padding(8.dp)) {
+                    Column(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
                         patients.forEach { patient ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { 
+                                if (selectedPatients.contains(patient.id)) selectedPatients.remove(patient.id) else selectedPatients.add(patient.id)
+                            }) {
                                 Checkbox(
                                     checked = selectedPatients.contains(patient.id),
                                     onCheckedChange = { 
@@ -113,7 +143,9 @@ fun CreateAppointmentDialog(
         confirmButton = {
             Button(
                 onClick = { 
-                    onConfirm(title, description, startTime, endTime, appointmentType, selectedStaff, selectedPatients) 
+                    val start = LocalTime(startHour.toIntOrNull() ?: 10, startMin.toIntOrNull() ?: 0)
+                    val end = LocalTime(endHour.toIntOrNull() ?: 11, endMin.toIntOrNull() ?: 0)
+                    onConfirm(title, description, start, end, appointmentType, emptyList(), selectedPatients) 
                 },
                 enabled = title.isNotBlank() && selectedPatients.isNotEmpty() && !isLoading
             ) {
