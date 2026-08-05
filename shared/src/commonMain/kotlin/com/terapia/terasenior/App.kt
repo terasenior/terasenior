@@ -44,9 +44,23 @@ fun App() {
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
         var selectedPatientId by remember { mutableStateOf<String?>(null) }
         var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
+        var currentEntityName by remember { mutableStateOf<String?>(null) }
         
         val scope = rememberCoroutineScope()
         val authRepository = remember { AuthRepository() }
+        val entityRepository = remember { SupabaseEntityRepository() }
+
+        // Cargar nombre de la entidad cuando el perfil cambia
+        LaunchedEffect(currentUserProfile) {
+            currentUserProfile?.let { profile ->
+                if (profile.role != UserRole.SUPER_ADMIN && profile.entityId != null) {
+                    entityRepository.getEntityById(profile.entityId)
+                        .onSuccess { entity -> currentEntityName = entity?.name }
+                } else {
+                    currentEntityName = "Administración Global"
+                }
+            }
+        }
 
         if (currentUserProfile == null) {
             LoginScreen { profile ->
@@ -68,11 +82,19 @@ fun App() {
                                         text = currentUserProfile?.fullName ?: "Usuario",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                     )
-                                    Text(
-                                        text = userRole?.name ?: "",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = userRole?.name ?: "",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(" • ", style = MaterialTheme.typography.labelSmall)
+                                        Text(
+                                            text = currentEntityName ?: "Cargando centro...",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
                         },
@@ -82,6 +104,7 @@ fun App() {
                                     scope.launch {
                                         authRepository.logout()
                                         currentUserProfile = null
+                                        currentEntityName = null
                                         currentScreen = Screen.LOGIN
                                     }
                                 }
@@ -192,7 +215,6 @@ fun App() {
                                         onDismiss = { showCreateDialog = false },
                                         onConfirm = { t, d, s, e, type, staff, attendees ->
                                             scope.launch {
-                                                // BUSQUEDA ROBUSTA DE ID DE CENTRO
                                                 val entityId = currentUserProfile?.entityId 
                                                     ?: (state as? CreateAppointmentUiState.Success)?.entities?.firstOrNull()?.id
                                                     ?: entityRepo.getEntities().getOrNull()?.firstOrNull()?.id
