@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 import kotlin.random.Random
 
 @Composable
@@ -27,9 +29,22 @@ fun NumberSearchGame(
     patientId: String?,
     professionalId: String?,
     appointmentId: String?,
+    description: String = "Busca el número indicado en la cuadrícula.",
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    
+    // Motor de Voz
+    val speechManager = remember { SpeechManager() }
+    
+    // Leer instrucción al iniciar
+    LaunchedEffect(Unit) {
+        speechManager.speak(description)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { speechManager.stop() }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -41,15 +56,19 @@ fun NumberSearchGame(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Barra de Navegación
+            // Barra de Navegación con botón de salida destacado
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                IconButton(
+                    onClick = onBack,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Finalizar", tint = MaterialTheme.colorScheme.error)
                 }
+                
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "Busca el Número",
@@ -59,7 +78,10 @@ fun NumberSearchGame(
                         Text("Modo Práctica", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     }
                 }
-                Spacer(modifier = Modifier.width(48.dp))
+
+                IconButton(onClick = { speechManager.speak(description) }) {
+                    Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Repetir instrucción")
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

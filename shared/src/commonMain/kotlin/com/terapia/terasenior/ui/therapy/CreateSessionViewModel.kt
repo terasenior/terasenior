@@ -16,12 +16,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 enum class WizardStep {
-    MODE_SELECTION, PATIENT_SELECTION, EXERCISE_SELECTION, LEVEL_SELECTION, SUMMARY
+    MODE_SELECTION, PATIENT_SELECTION, CATEGORY_SELECTION, EXERCISE_SELECTION, LEVEL_SELECTION, SUMMARY
 }
 
 data class ExerciseConfig(
     val type: String,
-    val level: Int = 1
+    val name: String,
+    val category: String,
+    val level: Int = 1,
+    val description: String = ""
 )
 
 data class CreateSessionUiState(
@@ -29,6 +32,7 @@ data class CreateSessionUiState(
     val mode: SessionMode? = null,
     val selectedPatient: Patient? = null,
     val selectedAppointmentId: String? = null,
+    val selectedCategory: String? = null,
     val selectedExercises: List<ExerciseConfig> = emptyList(),
     val patients: List<Patient> = emptyList(),
     val isLoading: Boolean = false,
@@ -47,7 +51,7 @@ class CreateSessionViewModel(
     fun onModeSelected(mode: SessionMode) {
         _uiState.update { it.copy(
             mode = mode,
-            currentStep = if (mode == SessionMode.WITHOUT_PATIENT) WizardStep.EXERCISE_SELECTION else WizardStep.PATIENT_SELECTION
+            currentStep = if (mode == SessionMode.WITHOUT_PATIENT) WizardStep.CATEGORY_SELECTION else WizardStep.PATIENT_SELECTION
         ) }
         
         if (mode == SessionMode.WITH_PATIENT) {
@@ -69,7 +73,7 @@ class CreateSessionViewModel(
     }
 
     fun onPatientSelected(patient: Patient) {
-        _uiState.update { it.copy(selectedPatient = patient, currentStep = WizardStep.EXERCISE_SELECTION) }
+        _uiState.update { it.copy(selectedPatient = patient, currentStep = WizardStep.CATEGORY_SELECTION) }
     }
 
     fun startFromAppointment(appointmentId: String, patient: Patient?) {
@@ -77,25 +81,28 @@ class CreateSessionViewModel(
             mode = SessionMode.FROM_APPOINTMENT,
             selectedAppointmentId = appointmentId,
             selectedPatient = patient,
-            currentStep = if (patient != null) WizardStep.EXERCISE_SELECTION else WizardStep.PATIENT_SELECTION
+            currentStep = if (patient != null) WizardStep.CATEGORY_SELECTION else WizardStep.PATIENT_SELECTION
         ) }
         if (patient == null) loadPatients()
     }
 
-    fun toggleExercise(type: String) {
+    fun onCategorySelected(category: String) {
+        _uiState.update { it.copy(selectedCategory = category, currentStep = WizardStep.EXERCISE_SELECTION) }
+    }
+
+    fun toggleExercise(type: String, name: String, category: String, description: String) {
         _uiState.update { state ->
             val current = state.selectedExercises
             val updated = if (current.any { it.type == type }) {
                 current.filter { it.type != type }
             } else {
-                current + ExerciseConfig(type)
+                current + ExerciseConfig(type, name, category, description = description)
             }
             state.copy(selectedExercises = updated)
         }
     }
 
     fun onLevelSelected(level: Int) {
-        // En esta fase simplificada, aplicamos el mismo nivel a todos los seleccionados
         _uiState.update { state ->
             val updated = state.selectedExercises.map { it.copy(level = level) }
             state.copy(selectedExercises = updated, currentStep = WizardStep.SUMMARY)
@@ -113,7 +120,8 @@ class CreateSessionViewModel(
         val previousStep = when (currentState.currentStep) {
             WizardStep.MODE_SELECTION -> WizardStep.MODE_SELECTION
             WizardStep.PATIENT_SELECTION -> WizardStep.MODE_SELECTION
-            WizardStep.EXERCISE_SELECTION -> if (currentState.mode == SessionMode.WITHOUT_PATIENT) WizardStep.MODE_SELECTION else WizardStep.PATIENT_SELECTION
+            WizardStep.CATEGORY_SELECTION -> if (currentState.mode == SessionMode.WITHOUT_PATIENT) WizardStep.MODE_SELECTION else WizardStep.PATIENT_SELECTION
+            WizardStep.EXERCISE_SELECTION -> WizardStep.CATEGORY_SELECTION
             WizardStep.LEVEL_SELECTION -> WizardStep.EXERCISE_SELECTION
             WizardStep.SUMMARY -> WizardStep.LEVEL_SELECTION
         }

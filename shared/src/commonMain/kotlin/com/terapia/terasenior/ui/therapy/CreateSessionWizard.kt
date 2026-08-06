@@ -40,7 +40,7 @@ fun CreateSessionWizard(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Configurar Sesión") },
+                title = { Text("Nueva Sesión") },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (uiState.currentStep == WizardStep.MODE_SELECTION) onCancel()
@@ -60,7 +60,9 @@ fun CreateSessionWizard(
                     isLoading = uiState.isLoading,
                     onPatientSelected = viewModel::onPatientSelected
                 )
+                WizardStep.CATEGORY_SELECTION -> CategorySelectionStep(onCategorySelected = viewModel::onCategorySelected)
                 WizardStep.EXERCISE_SELECTION -> ExerciseSelectionStep(
+                    category = uiState.selectedCategory ?: "",
                     selectedExercises = uiState.selectedExercises,
                     onToggle = viewModel::toggleExercise,
                     onNext = viewModel::goNextFromExercises
@@ -83,17 +85,15 @@ private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Modalidad de trabajo", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        
         SelectionCard(
             title = "Con Paciente",
-            description = "Registro clínico y seguimiento de evolución.",
+            description = "Registro clínico y seguimiento.",
             icon = Icons.Default.Person,
             onClick = { onModeSelected(SessionMode.WITH_PATIENT) }
         )
-        
         SelectionCard(
             title = "Sin Paciente",
-            description = "Uso libre, demostración o entrenamiento.",
+            description = "Uso libre o demostración.",
             icon = Icons.Default.PersonOff,
             onClick = { onModeSelected(SessionMode.WITHOUT_PATIENT) }
         )
@@ -101,27 +101,16 @@ private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
 }
 
 @Composable
-private fun PatientSelectionStep(
-    patients: List<Patient>,
-    isLoading: Boolean,
-    onPatientSelected: (Patient) -> Unit
-) {
+private fun PatientSelectionStep(patients: List<Patient>, isLoading: Boolean, onPatientSelected: (Patient) -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Selecciona el paciente", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
-        
         if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(patients) { patient ->
-                    Card(
-                        onClick = { onPatientSelected(patient) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
+                    Card(onClick = { onPatientSelected(patient) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
                                 Text(patient.firstName.take(1))
@@ -137,53 +126,58 @@ private fun PatientSelectionStep(
 }
 
 @Composable
+private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("Área Cognitiva", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        SelectionCard(title = "Atención", description = "Focalización y mantenimiento visual.", icon = Icons.Default.Visibility, onClick = { onCategorySelected("Atención") })
+        SelectionCard(title = "Memoria", description = "Codificación y recuperación.", icon = Icons.Default.Psychology, onClick = { onCategorySelected("Memoria") })
+        SelectionCard(title = "Lenguaje", description = "Fluidez y comprensión.", icon = Icons.Default.RecordVoiceOver, onClick = { onCategorySelected("Lenguaje") })
+        SelectionCard(title = "Cálculo", description = "Operaciones y razonamiento.", icon = Icons.Default.Calculate, onClick = { onCategorySelected("Cálculo") })
+    }
+}
+
+@Composable
 private fun ExerciseSelectionStep(
+    category: String,
     selectedExercises: List<ExerciseConfig>,
-    onToggle: (String) -> Unit,
+    onToggle: (type: String, name: String, category: String, desc: String) -> Unit,
     onNext: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-        Text("Plan de Trabajo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text("Selecciona uno o varios ejercicios.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        
+        Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            ExerciseItem(
-                title = "Atención: Busca el Número",
-                type = "number_search",
-                isSelected = selectedExercises.any { it.type == "number_search" },
-                onToggle = { onToggle("number_search") }
-            )
-            
-            ExerciseItem(
-                title = "Memoria: Parejas (Próximamente)",
-                type = "pairs",
-                isSelected = false,
-                onToggle = { },
-                enabled = false
-            )
+            when(category) {
+                "Atención" -> {
+                    ExerciseItem(
+                        title = "Busca el Número",
+                        isSelected = selectedExercises.any { it.type == "number_search" },
+                        onToggle = { onToggle("number_search", "Busca el Número", "Atención", "Busca el número indicado en la cuadrícula.") }
+                    )
+                }
+                "Memoria" -> {
+                    ExerciseItem(
+                        title = "Parejas (Próximamente)",
+                        isSelected = false,
+                        onToggle = { },
+                        enabled = false
+                    )
+                }
+                else -> {
+                    Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
+                }
+            }
         }
         
-        Button(
-            onClick = onNext,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            enabled = selectedExercises.isNotEmpty()
-        ) {
+        Button(onClick = onNext, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), enabled = selectedExercises.isNotEmpty()) {
             Text("Siguiente")
         }
     }
 }
 
 @Composable
-private fun ExerciseItem(
-    title: String,
-    type: String,
-    isSelected: Boolean,
-    onToggle: () -> Unit,
-    enabled: Boolean = true
-) {
+private fun ExerciseItem(title: String, isSelected: Boolean, onToggle: () -> Unit, enabled: Boolean = true) {
     Surface(
         onClick = if(enabled) onToggle else ({}),
         shape = RoundedCornerShape(16.dp),
@@ -204,14 +198,8 @@ private fun ExerciseItem(
 private fun LevelSelectionStep(onLevelSelected: (Int) -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Nivel de Dificultad", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text("Se aplicará a todos los ejercicios seleccionados.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        
         (1..5).forEach { level ->
-            Card(
-                onClick = { onLevelSelected(level) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
+            Card(onClick = { onLevelSelected(level) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("Nivel $level", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Icon(Icons.Default.ChevronRight, contentDescription = null)
@@ -222,34 +210,18 @@ private fun LevelSelectionStep(onLevelSelected: (Int) -> Unit) {
 }
 
 @Composable
-private fun SessionSummaryStep(
-    uiState: CreateSessionUiState,
-    onCreateSession: () -> Unit
-) {
+private fun SessionSummaryStep(uiState: CreateSessionUiState, onCreateSession: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Confirmar Sesión", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-        ) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SummaryRow("Paciente", uiState.selectedPatient?.fullName ?: "Sesión Libre")
                 SummaryRow("Ejercicios", "${uiState.selectedExercises.size} seleccionados")
-                SummaryRow("Nivel General", "Nivel ${uiState.selectedExercises.firstOrNull()?.level ?: 1}")
             }
         }
-
         Spacer(modifier = Modifier.weight(1f))
-        
-        Button(
-            onClick = onCreateSession,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            enabled = !uiState.isLoading
-        ) {
-            if (uiState.isLoading) CircularProgressIndicator(color = Color.White)
-            else Text("Iniciar Sesión", fontSize = 18.sp)
+        Button(onClick = onCreateSession, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), enabled = !uiState.isLoading) {
+            if (uiState.isLoading) CircularProgressIndicator(color = Color.White) else Text("Iniciar Sesión", fontSize = 18.sp)
         }
     }
 }
@@ -263,23 +235,11 @@ private fun SummaryRow(label: String, value: String) {
 }
 
 @Composable
-private fun SelectionCard(
-    title: String,
-    description: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
+private fun SelectionCard(title: String, description: String, icon: ImageVector, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(modifier = Modifier.size(48.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
+                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
