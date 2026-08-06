@@ -164,6 +164,13 @@ private fun ExerciseSelectionStep(
                         onToggle = { onToggle("memory_pairs", "Parejas", "Memoria", "Encuentra todas las parejas de figuras ocultas.") }
                     )
                 }
+                "Lenguaje" -> {
+                    ExerciseItem(
+                        title = "Vocabulario: Palabra-Imagen",
+                        isSelected = selectedExercises.any { config -> config.type == "language_word_image" },
+                        onToggle = { onToggle("language_word_image", "Vocabulario", "Lenguaje", "Identifica la imagen que corresponde a la palabra.") }
+                    )
+                }
                 else -> {
                     Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
                 }

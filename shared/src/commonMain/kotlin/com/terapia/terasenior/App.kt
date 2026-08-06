@@ -208,27 +208,58 @@ fun App() {
                                 SessionRunnerViewModel(sessionId, therapyRepo) 
                             }
                             val runnerState by runnerViewModel.uiState.collectAsState()
-
-                            val numberSearchViewModel = remember { 
-                                NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
-                            }
                             
-                            // Cargamos el juego (Fase demo)
-                            LaunchedEffect(Unit) {
-                                numberSearchViewModel.startNewGame(3)
-                            }
+                            // Determinar qué ejercicio toca
+                            // Para esta fase 2 del catálogo, lo forzamos según lo seleccionado en el wizard
+                            val selectedType = remember { mutableStateOf("number_search") }
 
                             Box {
-                                NumberSearchGame(
-                                    viewModel = numberSearchViewModel,
-                                    patientId = activeTherapyPatientId,
-                                    professionalId = currentUserProfile?.id,
-                                    appointmentId = null,
-                                    onBack = { 
-                                        runnerViewModel.finishSession()
-                                        currentScreen = Screen.THERAPY_DASHBOARD 
+                                when (selectedType.value) {
+                                    "language_word_image" -> {
+                                        val viewModel = remember { WordImageViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                                        LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                                        WordImageGame(
+                                            viewModel = viewModel,
+                                            patientId = activeTherapyPatientId,
+                                            professionalId = currentUserProfile?.id,
+                                            appointmentId = null,
+                                            onBack = { 
+                                                runnerViewModel.finishSession()
+                                                currentScreen = Screen.THERAPY_DASHBOARD 
+                                            }
+                                        )
                                     }
-                                )
+                                    "memory_pairs" -> {
+                                        val viewModel = remember { PairsViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                                        LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                                        PairsGame(
+                                            viewModel = viewModel,
+                                            patientId = activeTherapyPatientId,
+                                            professionalId = currentUserProfile?.id,
+                                            appointmentId = null,
+                                            onBack = { 
+                                                runnerViewModel.finishSession()
+                                                currentScreen = Screen.THERAPY_DASHBOARD 
+                                            }
+                                        )
+                                    }
+                                    else -> {
+                                        val numberSearchViewModel = remember { 
+                                            NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
+                                        }
+                                        LaunchedEffect(Unit) { numberSearchViewModel.startNewGame(3) }
+                                        NumberSearchGame(
+                                            viewModel = numberSearchViewModel,
+                                            patientId = activeTherapyPatientId,
+                                            professionalId = currentUserProfile?.id,
+                                            appointmentId = null,
+                                            onBack = { 
+                                                runnerViewModel.finishSession()
+                                                currentScreen = Screen.THERAPY_DASHBOARD 
+                                            }
+                                        )
+                                    }
+                                }
 
                                 // Botón discreto para el Terapeuta
                                 Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomStart) {
