@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,16 +153,15 @@ private fun ExerciseSelectionStep(
                 "Atención" -> {
                     ExerciseItem(
                         title = "Busca el Número",
-                        isSelected = selectedExercises.any { it.type == "number_search" },
+                        isSelected = selectedExercises.any { config -> config.type == "number_search" },
                         onToggle = { onToggle("number_search", "Busca el Número", "Atención", "Busca el número indicado en la cuadrícula.") }
                     )
                 }
                 "Memoria" -> {
                     ExerciseItem(
-                        title = "Parejas (Próximamente)",
-                        isSelected = false,
-                        onToggle = { },
-                        enabled = false
+                        title = "Parejas de Figuras",
+                        isSelected = selectedExercises.any { config -> config.type == "memory_pairs" },
+                        onToggle = { onToggle("memory_pairs", "Parejas", "Memoria", "Encuentra todas las parejas de figuras ocultas.") }
                     )
                 }
                 else -> {

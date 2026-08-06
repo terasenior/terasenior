@@ -16,13 +16,13 @@ import com.terapia.terasenior.data.repository.agenda.SupabaseAppointmentReposito
 import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
 import com.terapia.terasenior.data.repository.results.SupabaseResultsRepository
 import com.terapia.terasenior.data.repository.therapy.SupabaseTherapySessionRepository
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.usecase.admin.*
 import com.terapia.terasenior.domain.usecase.patient.*
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
-import com.terapia.terasenior.treatment.ui.NumberSearchGame
-import com.terapia.terasenior.treatment.ui.NumberSearchViewModel
+import com.terapia.terasenior.treatment.ui.*
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
@@ -201,32 +201,43 @@ fun App() {
 
                         Screen.SESSION_RUNNER -> {
                             val resultsRepo = remember { SupabaseResultsRepository() }
-                            val viewModel = remember { 
-                                NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
-                            }
+                            val sessionState = remember { mutableStateOf<ExerciseConfig?>(null) }
                             
-                            // Obtenemos el nivel configurado en la sesión (Fase 1 simplificada)
-                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             LaunchedEffect(activeSessionId) {
-                                // Por ahora asumimos nivel 3 si no podemos cargar rápido
-                                viewModel.startNewGame(3)
+                                // En una app real cargaríamos de la DB. Para demo forzamos una configuración.
+                                sessionState.value = ExerciseConfig("memory_pairs", "Parejas", "Memoria", 3)
                             }
 
-                            NumberSearchGame(
-                                viewModel = viewModel,
-                                patientId = activeTherapyPatientId,
-                                professionalId = currentUserProfile?.id,
-                                appointmentId = null,
-                                onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
-                            )
+                            when (sessionState.value?.type) {
+                                "memory_pairs" -> {
+                                    val viewModel = remember { PairsViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                                    LaunchedEffect(Unit) { viewModel.startNewGame(sessionState.value?.level ?: 3) }
+                                    PairsGame(
+                                        viewModel = viewModel,
+                                        patientId = activeTherapyPatientId,
+                                        professionalId = currentUserProfile?.id,
+                                        appointmentId = null,
+                                        onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
+                                    )
+                                }
+                                else -> {
+                                    val viewModel = remember { NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                                    LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                                    NumberSearchGame(
+                                        viewModel = viewModel,
+                                        patientId = activeTherapyPatientId,
+                                        professionalId = currentUserProfile?.id,
+                                        appointmentId = null,
+                                        onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
+                                    )
+                                }
+                            }
                         }
                         
                         Screen.NUMBER_SEARCH -> {
-                            // Mantenemos compatibilidad con el juego directo
                             val resultsRepo = remember { SupabaseResultsRepository() }
-                            val viewModel = remember { 
-                                NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
-                            }
+                            val viewModel = remember { NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(3) }
                             NumberSearchGame(
                                 viewModel = viewModel,
                                 patientId = activeTherapyPatientId,
@@ -316,11 +327,8 @@ fun App() {
                             val agendaRepository = remember { SupabaseAppointmentRepository() }
                             val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val patientRepo = remember { SupabasePatientRepository() }
-                            val userRepo = remember { SupabaseUserProfileRepository() }
                             
-                            val createViewModel = remember { 
-                                CreateSessionViewModel(therapyRepo, patientRepo) 
-                            }
+                            val createViewModel = remember { CreateSessionViewModel(therapyRepo, patientRepo) }
 
                             val viewModel = remember(appointmentId) { 
                                 AppointmentDetailViewModel(appointmentId, agendaRepository) 
@@ -328,9 +336,7 @@ fun App() {
                             AppointmentDetailScreen(
                                 viewModel = viewModel,
                                 onStartSession = { id ->
-                                    // Iniciamos el flujo de creación de sesión desde la cita
-                                    val currentAppointment = (viewModel.uiState.value as? AppointmentDetailUiState.Success)?.appointment
-                                    createViewModel.startFromAppointment(id, null) // Por ahora null para forzar elección si no hay attendees
+                                    createViewModel.startFromAppointment(id, null)
                                     currentScreen = Screen.CREATE_SESSION
                                 },
                                 onBack = { currentScreen = Screen.AGENDA }

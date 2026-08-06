@@ -3,6 +3,7 @@ package com.terapia.terasenior.ui.therapy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.patient.Patient
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
 import com.terapia.terasenior.domain.model.therapy.SessionStatus
 import com.terapia.terasenior.domain.model.therapy.TherapySession
@@ -18,14 +19,6 @@ import kotlinx.coroutines.launch
 enum class WizardStep {
     MODE_SELECTION, PATIENT_SELECTION, CATEGORY_SELECTION, EXERCISE_SELECTION, LEVEL_SELECTION, SUMMARY
 }
-
-data class ExerciseConfig(
-    val type: String,
-    val name: String,
-    val category: String,
-    val level: Int = 1,
-    val description: String = ""
-)
 
 data class CreateSessionUiState(
     val currentStep: WizardStep = WizardStep.MODE_SELECTION,
