@@ -1,6 +1,7 @@
 package com.terapia.terasenior.data.repository.therapy
 
 import com.terapia.terasenior.data.model.therapy.TherapySessionDto
+import com.terapia.terasenior.data.model.therapy.TherapySessionExerciseDto
 import com.terapia.terasenior.data.model.therapy.toData
 import com.terapia.terasenior.data.model.therapy.toDomain
 import com.terapia.terasenior.domain.model.therapy.AssistanceEvent
@@ -67,6 +68,16 @@ class SupabaseTherapySessionRepository : TherapySessionRepository {
             .select { filter { eq("id", sessionId) } }
             .decodeSingleOrNull<TherapySessionDto>()
             ?.toDomain()
+    }
+
+    override suspend fun getExercisesForSession(sessionId: String): Result<List<TherapySessionExercise>> = runCatching {
+        supabase.postgrest["therapy_session_exercises"]
+            .select {
+                filter { eq("session_id", sessionId) }
+                order("position", io.github.jan.supabase.postgrest.query.Order.ASCENDING)
+            }
+            .decodeList<TherapySessionExerciseDto>()
+            .map { it.toDomain() }
     }
 
     override suspend fun getTherapistSummary(therapistId: String): Result<Map<String, Int>> = runCatching {

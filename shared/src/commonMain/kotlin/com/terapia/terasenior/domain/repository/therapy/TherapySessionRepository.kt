@@ -16,6 +16,7 @@ interface TherapySessionRepository {
     suspend fun logAssistance(event: AssistanceEvent): Result<Unit>
     suspend fun logIncident(incident: SessionIncident): Result<Unit>
     suspend fun getSessionDetails(sessionId: String): Result<TherapySession?>
+    suspend fun getExercisesForSession(sessionId: String): Result<List<TherapySessionExercise>>
     
     // Métodos de estadísticas y resumen
     suspend fun getTherapistSummary(therapistId: String): Result<Map<String, Int>>

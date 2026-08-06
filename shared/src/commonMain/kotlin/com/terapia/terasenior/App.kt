@@ -200,85 +200,17 @@ fun App() {
                         }
 
                         Screen.SESSION_RUNNER -> {
-                            val resultsRepo = remember { SupabaseResultsRepository() }
                             val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val sessionId = activeSessionId ?: ""
                             
                             val runnerViewModel = remember(sessionId) { 
                                 SessionRunnerViewModel(sessionId, therapyRepo) 
                             }
-                            val runnerState by runnerViewModel.uiState.collectAsState()
                             
-                            // Determinar qué ejercicio toca
-                            // Para esta fase 2 del catálogo, lo forzamos según lo seleccionado en el wizard
-                            val selectedType = remember { mutableStateOf("number_search") }
-
-                            Box {
-                                when (selectedType.value) {
-                                    "language_word_image" -> {
-                                        val viewModel = remember { WordImageViewModel(SaveActivityResultUseCase(resultsRepo)) }
-                                        LaunchedEffect(Unit) { viewModel.startNewGame(3) }
-                                        WordImageGame(
-                                            viewModel = viewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id,
-                                            appointmentId = null,
-                                            onBack = { 
-                                                runnerViewModel.finishSession()
-                                                currentScreen = Screen.THERAPY_DASHBOARD 
-                                            }
-                                        )
-                                    }
-                                    "memory_pairs" -> {
-                                        val viewModel = remember { PairsViewModel(SaveActivityResultUseCase(resultsRepo)) }
-                                        LaunchedEffect(Unit) { viewModel.startNewGame(3) }
-                                        PairsGame(
-                                            viewModel = viewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id,
-                                            appointmentId = null,
-                                            onBack = { 
-                                                runnerViewModel.finishSession()
-                                                currentScreen = Screen.THERAPY_DASHBOARD 
-                                            }
-                                        )
-                                    }
-                                    else -> {
-                                        val numberSearchViewModel = remember { 
-                                            NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
-                                        }
-                                        LaunchedEffect(Unit) { numberSearchViewModel.startNewGame(3) }
-                                        NumberSearchGame(
-                                            viewModel = numberSearchViewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id,
-                                            appointmentId = null,
-                                            onBack = { 
-                                                runnerViewModel.finishSession()
-                                                currentScreen = Screen.THERAPY_DASHBOARD 
-                                            }
-                                        )
-                                    }
-                                }
-
-                                // Botón discreto para el Terapeuta
-                                Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomStart) {
-                                    SmallFloatingActionButton(
-                                        onClick = { runnerViewModel.toggleProfessionalPanel() },
-                                        containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                                    ) {
-                                        Icon(Icons.Default.Settings, contentDescription = "Panel Terapeuta")
-                                    }
-                                }
-
-                                if ((runnerState as? SessionRunnerUiState.Playing)?.showProfessionalPanel == true) {
-                                    ProfessionalControlPanel(
-                                        onLogAssistance = { runnerViewModel.logAssistance(it, null) },
-                                        onLogIncident = { runnerViewModel.logIncident(it, null) },
-                                        onDismiss = { runnerViewModel.toggleProfessionalPanel() }
-                                    )
-                                }
-                            }
+                            SessionRunnerScreen(
+                                viewModel = runnerViewModel,
+                                onFinished = { currentScreen = Screen.THERAPY_DASHBOARD }
+                            )
                         }
                         
                         Screen.NUMBER_SEARCH -> {

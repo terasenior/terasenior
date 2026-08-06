@@ -9,9 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 sealed interface SessionRunnerUiState {
     data object Loading : SessionRunnerUiState
@@ -22,7 +19,12 @@ sealed interface SessionRunnerUiState {
         val isPaused: Boolean = false,
         val showProfessionalPanel: Boolean = false
     ) : SessionRunnerUiState
-    data class Transition(val nextExerciseName: String) : SessionRunnerUiState
+    data class Transition(
+        val nextExerciseName: String,
+        val nextIndex: Int,
+        val isFirst: Boolean = false
+    ) : SessionRunnerUiState
+    data class Summary(val session: TherapySession) : SessionRunnerUiState
     data object Finished : SessionRunnerUiState
     data class Error(val message: String) : SessionRunnerUiState
 }
@@ -41,16 +43,55 @@ class SessionRunnerViewModel(
 
     private fun loadSession() {
         viewModelScope.launch {
-            repository.getSessionDetails(sessionId).onSuccess { session ->
-                if (session != null) {
-                    // En una app real, cargaríamos los ejercicios de la tabla exercises.
-                    // Para esta fase, simulamos la carga de la configuración guardada.
-                    _uiState.value = SessionRunnerUiState.Playing(
-                        session = session,
-                        exercises = emptyList() // Se llenará con la lógica de base de datos
+            _uiState.value = SessionRunnerUiState.Loading
+            
+            val sessionResult = repository.getSessionDetails(sessionId)
+            val exercisesResult = repository.getExercisesForSession(sessionId)
+
+            if (sessionResult.isSuccess && exercisesResult.isSuccess) {
+                val session = sessionResult.getOrThrow()
+                val exercises = exercisesResult.getOrThrow()
+
+                if (session != null && exercises.isNotEmpty()) {
+                    _uiState.value = SessionRunnerUiState.Transition(
+                        nextExerciseName = getExerciseDisplayName(exercises.first().exerciseType),
+                        nextIndex = 0,
+                        isFirst = true
                     )
+                } else {
+                    _uiState.value = SessionRunnerUiState.Error("No se encontraron ejercicios configurados.")
                 }
+            } else {
+                _uiState.value = SessionRunnerUiState.Error("Error al cargar la sesión.")
             }
+        }
+    }
+
+    fun startExercise(index: Int) {
+        viewModelScope.launch {
+            val session = repository.getSessionDetails(sessionId).getOrNull() ?: return@launch
+            val exercises = repository.getExercisesForSession(sessionId).getOrDefault(emptyList())
+            
+            _uiState.value = SessionRunnerUiState.Playing(
+                session = session,
+                exercises = exercises,
+                currentIndex = index
+            )
+            repository.updateSessionStatus(sessionId, SessionStatus.IN_PROGRESS.name)
+        }
+    }
+
+    fun nextExercise() {
+        val state = _uiState.value as? SessionRunnerUiState.Playing ?: return
+        val nextIndex = state.currentIndex + 1
+
+        if (nextIndex < state.exercises.size) {
+            _uiState.value = SessionRunnerUiState.Transition(
+                nextExerciseName = getExerciseDisplayName(state.exercises[nextIndex].exerciseType),
+                nextIndex = nextIndex
+            )
+        } else {
+            finishSession()
         }
     }
 
@@ -64,12 +105,14 @@ class SessionRunnerViewModel(
 
     fun logAssistance(type: AssistanceType, desc: String?) {
         val state = _uiState.value as? SessionRunnerUiState.Playing ?: return
+        val exerciseId = state.exercises.getOrNull(state.currentIndex)?.id
+        
         viewModelScope.launch {
             repository.logAssistance(
                 AssistanceEvent(
                     id = "",
                     sessionId = sessionId,
-                    exerciseId = null,
+                    exerciseId = exerciseId,
                     type = type,
                     description = desc,
                     occurredAt = ""
@@ -80,12 +123,14 @@ class SessionRunnerViewModel(
 
     fun logIncident(type: IncidentType, desc: String?) {
         val state = _uiState.value as? SessionRunnerUiState.Playing ?: return
+        val exerciseId = state.exercises.getOrNull(state.currentIndex)?.id
+
         viewModelScope.launch {
             repository.logIncident(
                 SessionIncident(
                     id = "",
                     sessionId = sessionId,
-                    exerciseId = null,
+                    exerciseId = exerciseId,
                     type = type,
                     description = desc,
                     severity = "MEDIUM",
@@ -98,7 +143,19 @@ class SessionRunnerViewModel(
     fun finishSession() {
         viewModelScope.launch {
             repository.updateSessionStatus(sessionId, SessionStatus.COMPLETED.name)
-            _uiState.value = SessionRunnerUiState.Finished
+            val session = repository.getSessionDetails(sessionId).getOrNull()
+            if (session != null) {
+                _uiState.value = SessionRunnerUiState.Summary(session)
+            } else {
+                _uiState.value = SessionRunnerUiState.Finished
+            }
         }
+    }
+
+    private fun getExerciseDisplayName(type: String): String = when(type) {
+        "number_search" -> "Busca el Número"
+        "memory_pairs" -> "Parejas de Figuras"
+        "language_word_image" -> "Vocabulario"
+        else -> type
     }
 }
