@@ -29,6 +29,9 @@ sealed interface SessionRunnerUiState {
     data class Error(val message: String) : SessionRunnerUiState
 }
 
+/**
+ * SessionRunnerViewModel (v1.0.2 - Resync Trigger).
+ */
 class SessionRunnerViewModel(
     private val sessionId: String,
     private val repository: TherapySessionRepository
