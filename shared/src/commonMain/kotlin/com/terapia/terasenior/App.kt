@@ -173,9 +173,15 @@ fun App() {
                     when (currentScreen) {
                         Screen.LOGIN -> { /* No accesible */ }
                         
-                        Screen.THERAPY_DASHBOARD -> TherapyDashboardScreen(
-                            onNewSessionClick = { currentScreen = Screen.CREATE_SESSION }
-                        )
+                        Screen.THERAPY_DASHBOARD -> {
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
+                            val dashboardViewModel = remember { TherapyDashboardViewModel(therapyRepo) }
+                            TherapyDashboardScreen(
+                                viewModel = dashboardViewModel,
+                                therapistId = currentUserProfile?.id ?: "",
+                                onNewSessionClick = { currentScreen = Screen.CREATE_SESSION }
+                            )
+                        }
 
                         Screen.CREATE_SESSION -> {
                             val therapyRepo = remember { SupabaseTherapySessionRepository() }
@@ -198,7 +204,14 @@ fun App() {
                             val viewModel = remember { 
                                 NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
                             }
-                            // Por ahora solo el buscador de números como primer ejercicio
+                            
+                            // Obtenemos el nivel configurado en la sesión (Fase 1 simplificada)
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
+                            LaunchedEffect(activeSessionId) {
+                                // Por ahora asumimos nivel 3 si no podemos cargar rápido
+                                viewModel.startNewGame(3)
+                            }
+
                             NumberSearchGame(
                                 viewModel = viewModel,
                                 patientId = activeTherapyPatientId,

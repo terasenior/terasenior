@@ -102,14 +102,14 @@ fun NumberSearchGame(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Cuadrícula de Juego
-            val gridSize = 5
+            val gridSize = state.gridSize
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 for (row in 0 until gridSize) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         for (col in 0 until gridSize) {
                             val index = row * gridSize + col
@@ -149,7 +149,7 @@ fun NumberSearchGame(
             }
 
             Button(
-                onClick = { viewModel.startNewGame() },
+                onClick = { viewModel.startNewGame(state.currentLevel) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 enabled = !state.isSaving

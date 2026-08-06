@@ -20,12 +20,14 @@ data class Cell(
 data class NumberSearchUiState(
     val targetNumber: Int = Random.nextInt(10),
     val grid: List<Cell> = emptyList(),
+    val gridSize: Int = 5,
     val foundCount: Int = 0,
     val totalTargets: Int = 0,
     val isCompleted: Boolean = false,
     val isSaving: Boolean = false,
     val startTimeMs: Long = 0,
-    val errorsCount: Int = 0
+    val errorsCount: Int = 0,
+    val currentLevel: Int = 3
 )
 
 class NumberSearchViewModel(
@@ -35,17 +37,23 @@ class NumberSearchViewModel(
     private val _uiState = MutableStateFlow(NumberSearchUiState())
     val uiState: StateFlow<NumberSearchUiState> = _uiState.asStateFlow()
 
-    init {
-        startNewGame()
-    }
-
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame() {
+    fun startNewGame(level: Int = 3) {
         val target = Random.nextInt(10)
-        val grid = generateGrid(target)
+        val size = when(level) {
+            1 -> 3
+            2 -> 4
+            3 -> 5
+            4 -> 6
+            5 -> 8
+            else -> 5
+        }
+        val grid = generateGrid(target, size * size, level)
         _uiState.value = NumberSearchUiState(
             targetNumber = target,
             grid = grid,
+            gridSize = size,
+            currentLevel = level,
             totalTargets = grid.count { it.number == target },
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
@@ -100,7 +108,7 @@ class NumberSearchViewModel(
                 score = (100 - (currentState.errorsCount * 5)).coerceAtLeast(0),
                 durationSeconds = duration,
                 errorsCount = currentState.errorsCount,
-                difficultyLevel = "NORMAL",
+                difficultyLevel = "NIVEL_${currentState.currentLevel}",
                 createdAt = ""
             )
 
@@ -109,13 +117,21 @@ class NumberSearchViewModel(
         }
     }
 
-    private fun generateGrid(target: Int): List<Cell> {
-        val size = 25
+    private fun generateGrid(target: Int, totalCells: Int, level: Int): List<Cell> {
         val cells = mutableListOf<Cell>()
         var targetCount = 0
+        
+        val minTargets = when(level) {
+            1 -> 1
+            2 -> 2
+            3 -> 3
+            4 -> 5
+            5 -> 8
+            else -> 3
+        }
 
-        repeat(size) {
-            val isTarget = Random.nextFloat() < 0.20f
+        repeat(totalCells) {
+            val isTarget = Random.nextFloat() < (0.10f + (level * 0.02f))
             val num = if (isTarget) {
                 targetCount++
                 target
@@ -127,8 +143,8 @@ class NumberSearchViewModel(
             cells.add(Cell(number = num))
         }
 
-        while (targetCount < 3) {
-            val idx = Random.nextInt(size)
+        while (targetCount < minTargets) {
+            val idx = Random.nextInt(totalCells)
             if (cells[idx].number != target) {
                 cells[idx] = Cell(number = target)
                 targetCount++

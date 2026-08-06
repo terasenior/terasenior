@@ -68,4 +68,29 @@ class SupabaseTherapySessionRepository : TherapySessionRepository {
             .decodeSingleOrNull<TherapySessionDto>()
             ?.toDomain()
     }
+
+    override suspend fun getTherapistSummary(therapistId: String): Result<Map<String, Int>> = runCatching {
+        val sessions = supabase.postgrest["therapy_sessions"]
+            .select { filter { eq("therapist_id", therapistId) } }
+            .decodeList<TherapySessionDto>()
+        
+        mapOf(
+            "total_sessions" to sessions.size,
+            "completed_sessions" to sessions.count { it.status == "COMPLETED" },
+            "pending_sessions" to sessions.count { it.status == "DRAFT" || it.status == "READY" }
+        )
+    }
+
+    override fun getRecentSessions(therapistId: String, limit: Int): Flow<Result<List<TherapySession>>> = flow {
+        emit(runCatching {
+            supabase.postgrest["therapy_sessions"]
+                .select {
+                    filter { eq("therapist_id", therapistId) }
+                    order("created_at", io.github.jan.supabase.postgrest.query.Order.DESCENDING)
+                    limit(limit.toLong())
+                }
+                .decodeList<TherapySessionDto>()
+                .map { it.toDomain() }
+        })
+    }
 }
