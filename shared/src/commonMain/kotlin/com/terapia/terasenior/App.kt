@@ -228,6 +228,17 @@ fun App() {
                                             onBack = { runnerViewModel.finishSession(); currentScreen = Screen.THERAPY_DASHBOARD }
                                         )
                                     }
+                                    "calculation_simple" -> {
+                                        val viewModel = remember { CalculationViewModel(saveUseCase) }
+                                        LaunchedEffect(currentExercise.id) { viewModel.startNewGame(currentExercise.level) }
+                                        CalculationGame(
+                                            viewModel = viewModel,
+                                            patientId = activeTherapyPatientId,
+                                            professionalId = currentUserProfile?.id ?: "",
+                                            appointmentId = null,
+                                            onBack = { runnerViewModel.finishSession(); currentScreen = Screen.THERAPY_DASHBOARD }
+                                        )
+                                    }
                                     "language_word_image" -> {
                                         val viewModel = remember { WordImageViewModel(saveUseCase) }
                                         LaunchedEffect(currentExercise.id) { viewModel.startNewGame(currentExercise.level) }

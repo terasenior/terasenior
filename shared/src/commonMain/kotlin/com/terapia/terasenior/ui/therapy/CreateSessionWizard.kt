@@ -177,6 +177,13 @@ private fun ExerciseSelectionStep(
                         onToggle = { onToggle("language_semantic_category", "Clasificación Semántica", "Lenguaje", "Agrupa los objetos según su familia o categoría.") }
                     )
                 }
+                "Cálculo" -> {
+                    ExerciseItem(
+                        title = "Cálculos Sencillos",
+                        isSelected = selectedExercises.any { config -> config.type == "calculation_simple" },
+                        onToggle = { onToggle("calculation_simple", "Cálculo Mental", "Cálculo", "Resuelve operaciones aritméticas básicas.") }
+                    )
+                }
                 else -> {
                     Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
                 }
