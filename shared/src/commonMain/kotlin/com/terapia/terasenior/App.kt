@@ -15,6 +15,7 @@ import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepositor
 import com.terapia.terasenior.data.repository.agenda.SupabaseAppointmentRepository
 import com.terapia.terasenior.data.repository.patient.SupabasePatientRepository
 import com.terapia.terasenior.data.repository.results.SupabaseResultsRepository
+import com.terapia.terasenior.data.repository.therapy.SupabaseTherapySessionRepository
 import com.terapia.terasenior.domain.usecase.admin.*
 import com.terapia.terasenior.domain.usecase.patient.*
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
@@ -22,7 +23,6 @@ import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.repository.AuthRepository
 import com.terapia.terasenior.treatment.ui.NumberSearchGame
 import com.terapia.terasenior.treatment.ui.NumberSearchViewModel
-import com.terapia.terasenior.treatment.ui.TreatmentMenuScreen
 import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.AdminUsersViewModel
 import com.terapia.terasenior.ui.admin.entities.AdminEntitiesScreen
@@ -30,13 +30,14 @@ import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
 import com.terapia.terasenior.ui.agenda.*
 import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.patient.*
+import com.terapia.terasenior.ui.therapy.*
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
-    LOGIN, THERAPY_PANEL, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
+    LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
@@ -49,6 +50,7 @@ fun App() {
         var activeTherapyPatientId by remember { mutableStateOf<String?>(null) }
         var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
         var currentEntityName by remember { mutableStateOf<String?>(null) }
+        var activeSessionId by remember { mutableStateOf<String?>(null) }
         
         val scope = rememberCoroutineScope()
         val authRepository = remember { AuthRepository() }
@@ -69,7 +71,7 @@ fun App() {
         if (currentUserProfile == null) {
             LoginScreen { profile ->
                 currentUserProfile = profile
-                currentScreen = Screen.THERAPY_PANEL
+                currentScreen = Screen.THERAPY_DASHBOARD
             }
         } else {
             val userRole = currentUserProfile?.role
@@ -78,110 +80,136 @@ fun App() {
 
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Column {
-                                    Text(
-                                        text = currentUserProfile?.fullName ?: "Usuario",
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (currentScreen != Screen.SESSION_RUNNER) {
+                        TopAppBar(
+                            title = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
                                         Text(
-                                            text = userRole?.name ?: "",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.primary
+                                            text = currentUserProfile?.fullName ?: "Usuario",
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                         )
-                                        Text(" • ", style = MaterialTheme.typography.labelSmall)
-                                        Text(
-                                            text = currentEntityName ?: "Cargando centro...",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = userRole?.name ?: "",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(" • ", style = MaterialTheme.typography.labelSmall)
+                                            Text(
+                                                text = currentEntityName ?: "Cargando centro...",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                        },
-                        actions = {
-                            TextButton(
-                                onClick = {
-                                    scope.launch {
-                                        authRepository.logout()
-                                        currentUserProfile = null
-                                        currentEntityName = null
-                                        currentScreen = Screen.LOGIN
+                            },
+                            actions = {
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            authRepository.logout()
+                                            currentUserProfile = null
+                                            currentEntityName = null
+                                            currentScreen = Screen.LOGIN
+                                        }
                                     }
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Cerrar Sesión")
                                 }
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Cerrar Sesión")
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            )
                         )
-                    )
+                    }
                 },
                 bottomBar = {
-                    NavigationBar {
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.THERAPY_PANEL || currentScreen == Screen.NUMBER_SEARCH,
-                            onClick = { currentScreen = Screen.THERAPY_PANEL },
-                            icon = { Icon(Icons.Default.Psychology, contentDescription = null) },
-                            label = { Text("Terapia") }
-                        )
-
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.AGENDA || currentScreen == Screen.APPOINTMENT_DETAIL,
-                            onClick = { currentScreen = Screen.AGENDA },
-                            icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-                            label = { Text("Agenda") }
-                        )
-
-                        NavigationBarItem(
-                            selected = currentScreen == Screen.PATIENTS || currentScreen == Screen.PATIENT_DETAIL,
-                            onClick = { currentScreen = Screen.PATIENTS },
-                            icon = { Icon(Icons.Default.People, contentDescription = null) },
-                            label = { Text("Pacientes") }
-                        )
-                        
-                        if (canAdmin) {
+                    if (currentScreen != Screen.SESSION_RUNNER && currentScreen != Screen.CREATE_SESSION) {
+                        NavigationBar {
                             NavigationBarItem(
-                                selected = currentScreen == Screen.ADMIN_ENTITIES,
-                                onClick = { currentScreen = Screen.ADMIN_ENTITIES },
-                                icon = { Icon(Icons.Default.Business, contentDescription = null) },
-                                label = { Text("Centros") }
+                                selected = currentScreen == Screen.THERAPY_DASHBOARD,
+                                onClick = { currentScreen = Screen.THERAPY_DASHBOARD },
+                                icon = { Icon(Icons.Default.Psychology, contentDescription = null) },
+                                label = { Text("Terapia") }
                             )
+
                             NavigationBarItem(
-                                selected = currentScreen == Screen.ADMIN_USERS,
-                                onClick = { currentScreen = Screen.ADMIN_USERS },
+                                selected = currentScreen == Screen.AGENDA || currentScreen == Screen.APPOINTMENT_DETAIL,
+                                onClick = { currentScreen = Screen.AGENDA },
+                                icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                                label = { Text("Agenda") }
+                            )
+
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.PATIENTS || currentScreen == Screen.PATIENT_DETAIL,
+                                onClick = { currentScreen = Screen.PATIENTS },
                                 icon = { Icon(Icons.Default.People, contentDescription = null) },
-                                label = { Text("Usuarios") }
+                                label = { Text("Pacientes") }
                             )
+                            
+                            if (canAdmin) {
+                                NavigationBarItem(
+                                    selected = currentScreen == Screen.ADMIN_ENTITIES,
+                                    onClick = { currentScreen = Screen.ADMIN_ENTITIES },
+                                    icon = { Icon(Icons.Default.Business, contentDescription = null) },
+                                    label = { Text("Centros") }
+                                )
+                                NavigationBarItem(
+                                    selected = currentScreen == Screen.ADMIN_USERS,
+                                    onClick = { currentScreen = Screen.ADMIN_USERS },
+                                    icon = { Icon(Icons.Default.People, contentDescription = null) },
+                                    label = { Text("Usuarios") }
+                                )
+                            }
                         }
                     }
                 }
             ) { padding ->
-                Box(modifier = Modifier.padding(padding)) {
+                Box(modifier = Modifier.padding(if (currentScreen == Screen.SESSION_RUNNER) PaddingValues(0.dp) else padding)) {
                     when (currentScreen) {
                         Screen.LOGIN -> { /* No accesible */ }
                         
-                        Screen.THERAPY_PANEL -> {
-                            val patientRepository = remember { SupabasePatientRepository() }
-                            val patientsState = remember { 
-                                patientRepository.getPatients()
-                            }.collectAsState(initial = Result.success(emptyList()))
+                        Screen.THERAPY_DASHBOARD -> TherapyDashboardScreen(
+                            onNewSessionClick = { currentScreen = Screen.CREATE_SESSION }
+                        )
+
+                        Screen.CREATE_SESSION -> {
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
+                            val patientRepo = remember { SupabasePatientRepository() }
+                            val viewModel = remember { CreateSessionViewModel(therapyRepo, patientRepo) }
                             
-                            TreatmentMenuScreen(
-                                patients = patientsState.value.getOrDefault(emptyList()),
-                                selectedPatientId = activeTherapyPatientId,
-                                onPatientSelected = { activeTherapyPatientId = it },
-                                onNumberSearchClick = { currentScreen = Screen.NUMBER_SEARCH }
+                            CreateSessionWizard(
+                                viewModel = viewModel,
+                                therapistId = currentUserProfile?.id ?: "",
+                                onSessionCreated = { sessionId ->
+                                    activeSessionId = sessionId
+                                    currentScreen = Screen.SESSION_RUNNER
+                                },
+                                onCancel = { currentScreen = Screen.THERAPY_DASHBOARD }
+                            )
+                        }
+
+                        Screen.SESSION_RUNNER -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { 
+                                NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
+                            }
+                            // Por ahora solo el buscador de números como primer ejercicio
+                            NumberSearchGame(
+                                viewModel = viewModel,
+                                patientId = activeTherapyPatientId,
+                                professionalId = currentUserProfile?.id,
+                                appointmentId = null,
+                                onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
                             )
                         }
                         
                         Screen.NUMBER_SEARCH -> {
+                            // Mantenemos compatibilidad con el juego directo
                             val resultsRepo = remember { SupabaseResultsRepository() }
                             val viewModel = remember { 
                                 NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
@@ -190,8 +218,8 @@ fun App() {
                                 viewModel = viewModel,
                                 patientId = activeTherapyPatientId,
                                 professionalId = currentUserProfile?.id,
-                                appointmentId = null, // Próximamente vincular con agenda
-                                onBack = { currentScreen = Screen.THERAPY_PANEL }
+                                appointmentId = null,
+                                onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
                             )
                         }
 
@@ -332,15 +360,15 @@ fun App() {
 
                         Screen.PATIENT_DETAIL -> {
                             val patientId = selectedPatientId ?: ""
-                            val patientRepository = remember { SupabasePatientRepository() }
+                            val repository = remember { SupabasePatientRepository() }
                             val resultsRepository = remember { SupabaseResultsRepository() }
                             val viewModel = remember(patientId) { 
                                 PatientDetailViewModel(
                                     patientId = patientId, 
-                                    repository = patientRepository,
+                                    repository = repository,
                                     resultsRepository = resultsRepository,
-                                    updatePatientUseCase = UpdatePatientUseCase(patientRepository),
-                                    updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(patientRepository)
+                                    updatePatientUseCase = UpdatePatientUseCase(repository),
+                                    updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(repository)
                                 ) 
                             }
                             PatientDetailScreen(
