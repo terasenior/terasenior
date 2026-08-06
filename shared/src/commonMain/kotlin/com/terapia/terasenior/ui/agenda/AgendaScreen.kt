@@ -224,8 +224,11 @@ private fun AppointmentCard(
 ) {
     val statusColor = when(appointment.status) {
         AppointmentStatus.SCHEDULED -> MaterialTheme.colorScheme.primary
+        AppointmentStatus.CONFIRMED -> Color(0xFF2E7D32)
+        AppointmentStatus.IN_PROGRESS -> Color(0xFFF57C00)
         AppointmentStatus.COMPLETED -> Color(0xFF2E7D32)
         AppointmentStatus.CANCELLED -> MaterialTheme.colorScheme.error
+        AppointmentStatus.MISSED -> Color.Gray
     }
 
     Card(
@@ -285,12 +288,16 @@ private fun AppointmentCard(
                 color = statusColor.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(8.dp)
             ) {
+                val label = when(appointment.status) {
+                    AppointmentStatus.SCHEDULED -> "Pte"
+                    AppointmentStatus.CONFIRMED -> "Ok"
+                    AppointmentStatus.IN_PROGRESS -> ">>"
+                    AppointmentStatus.COMPLETED -> "Ok"
+                    AppointmentStatus.CANCELLED -> "X"
+                    AppointmentStatus.MISSED -> "No"
+                }
                 Text(
-                    text = when(appointment.status) {
-                        AppointmentStatus.SCHEDULED -> "Pte"
-                        AppointmentStatus.COMPLETED -> "Ok"
-                        AppointmentStatus.CANCELLED -> "X"
-                    },
+                    text = label,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = statusColor

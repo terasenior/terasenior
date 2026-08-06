@@ -23,6 +23,7 @@ import com.terapia.terasenior.domain.model.agenda.AttendanceStatus
 @Composable
 fun AppointmentDetailScreen(
     viewModel: AppointmentDetailViewModel,
+    onStartSession: (String) -> Unit,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -64,10 +65,41 @@ fun AppointmentDetailScreen(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     val statusLabel = when(state.appointment.status) {
                                         AppointmentStatus.SCHEDULED -> "Programada"
+                                        AppointmentStatus.CONFIRMED -> "Confirmada"
+                                        AppointmentStatus.IN_PROGRESS -> "En curso"
                                         AppointmentStatus.COMPLETED -> "Finalizada"
                                         AppointmentStatus.CANCELLED -> "Cancelada"
+                                        AppointmentStatus.MISSED -> "No presentado"
                                     }
                                     Text("Estado: $statusLabel", style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // ACCIONES CLÍNICAS
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (state.appointment.status == AppointmentStatus.SCHEDULED || state.appointment.status == AppointmentStatus.CONFIRMED) {
+                                Button(
+                                    onClick = { onStartSession(state.appointment.id) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Preparar e Iniciar")
+                                }
+                                
+                                OutlinedButton(
+                                    onClick = { viewModel.markAsMissed() },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Icon(Icons.Default.PersonOff, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("No presentado")
                                 }
                             }
                         }
@@ -80,7 +112,7 @@ fun AppointmentDetailScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("Asistencia de Pacientes", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            if (state.appointment.status == AppointmentStatus.SCHEDULED) {
+                            if (state.appointment.status == AppointmentStatus.IN_PROGRESS) {
                                 Button(onClick = { viewModel.completeSession() }) {
                                     Text("Finalizar Sesión")
                                 }

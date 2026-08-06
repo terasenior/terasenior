@@ -59,6 +59,17 @@ class AppointmentDetailViewModel(
         }
     }
 
+    fun markAsMissed() {
+        val currentState = _uiState.value
+        if (currentState is AppointmentDetailUiState.Success) {
+            viewModelScope.launch {
+                val updated = currentState.appointment.copy(status = AppointmentStatus.MISSED)
+                repository.updateAppointment(updated)
+                    .onSuccess { loadData() }
+            }
+        }
+    }
+
     fun completeSession() {
         val currentState = _uiState.value
         if (currentState is AppointmentDetailUiState.Success) {

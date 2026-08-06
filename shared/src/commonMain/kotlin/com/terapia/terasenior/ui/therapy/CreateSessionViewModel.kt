@@ -28,6 +28,7 @@ data class CreateSessionUiState(
     val currentStep: WizardStep = WizardStep.MODE_SELECTION,
     val mode: SessionMode? = null,
     val selectedPatient: Patient? = null,
+    val selectedAppointmentId: String? = null,
     val selectedExercises: List<ExerciseConfig> = emptyList(),
     val patients: List<Patient> = emptyList(),
     val isLoading: Boolean = false,
@@ -69,6 +70,16 @@ class CreateSessionViewModel(
 
     fun onPatientSelected(patient: Patient) {
         _uiState.update { it.copy(selectedPatient = patient, currentStep = WizardStep.EXERCISE_SELECTION) }
+    }
+
+    fun startFromAppointment(appointmentId: String, patient: Patient?) {
+        _uiState.update { it.copy(
+            mode = SessionMode.FROM_APPOINTMENT,
+            selectedAppointmentId = appointmentId,
+            selectedPatient = patient,
+            currentStep = if (patient != null) WizardStep.EXERCISE_SELECTION else WizardStep.PATIENT_SELECTION
+        ) }
+        if (patient == null) loadPatients()
     }
 
     fun toggleExercise(type: String) {

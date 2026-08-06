@@ -4,12 +4,12 @@ enum class AppointmentType {
     INDIVIDUAL, GROUP
 }
 
-enum class AppointmentStatus {
-    SCHEDULED, COMPLETED, CANCELLED
-}
-
 enum class AttendanceStatus {
     PENDING, PRESENT, ABSENT
+}
+
+enum class AppointmentStatus {
+    SCHEDULED, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, MISSED
 }
 
 data class Appointment(
@@ -20,5 +20,8 @@ data class Appointment(
     val startAt: String,
     val endAt: String,
     val type: AppointmentType,
-    val status: AppointmentStatus
+    val status: AppointmentStatus,
+    val sessionId: String? = null,
+    val interventionType: String? = "ESTIMULACION",
+    val notes: String? = null
 )

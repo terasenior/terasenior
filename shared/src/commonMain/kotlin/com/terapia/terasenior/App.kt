@@ -300,12 +300,26 @@ fun App() {
 
                         Screen.APPOINTMENT_DETAIL -> {
                             val appointmentId = selectedAppointmentId ?: ""
-                            val repository = remember { SupabaseAppointmentRepository() }
+                            val agendaRepository = remember { SupabaseAppointmentRepository() }
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
+                            val patientRepo = remember { SupabasePatientRepository() }
+                            val userRepo = remember { SupabaseUserProfileRepository() }
+                            
+                            val createViewModel = remember { 
+                                CreateSessionViewModel(therapyRepo, patientRepo) 
+                            }
+
                             val viewModel = remember(appointmentId) { 
-                                AppointmentDetailViewModel(appointmentId, repository) 
+                                AppointmentDetailViewModel(appointmentId, agendaRepository) 
                             }
                             AppointmentDetailScreen(
                                 viewModel = viewModel,
+                                onStartSession = { id ->
+                                    // Iniciamos el flujo de creación de sesión desde la cita
+                                    val currentAppointment = (viewModel.uiState.value as? AppointmentDetailUiState.Success)?.appointment
+                                    createViewModel.startFromAppointment(id, null) // Por ahora null para forzar elección si no hay attendees
+                                    currentScreen = Screen.CREATE_SESSION
+                                },
                                 onBack = { currentScreen = Screen.AGENDA }
                             )
                         }
