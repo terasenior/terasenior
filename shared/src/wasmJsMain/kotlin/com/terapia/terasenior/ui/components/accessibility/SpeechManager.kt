@@ -5,7 +5,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 /**
  * Implementación de Voz para Web (WASM) usando la Web Speech API.
  */
-actual class SpeechManager {
+actual class SpeechManager actual constructor() {
     @OptIn(ExperimentalWasmJsInterop::class)
     actual fun speak(text: String) {
         speakJs(text)

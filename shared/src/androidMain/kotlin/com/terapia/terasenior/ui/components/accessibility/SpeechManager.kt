@@ -1,29 +1,14 @@
 package com.terapia.terasenior.ui.components.accessibility
 
-import android.content.Context
-import android.speech.tts.TextToSpeech
-import java.util.Locale
-
 /**
- * Implementación de Voz para Android.
- * Nota: En una app real esto se inyectaría como Singleton.
+ * Implementación dummy para Android para cumplir con el contrato expect/actual.
+ * TODO: Integrar con TextToSpeech usando un contexto inyectado.
  */
-actual class SpeechManager(context: Context) {
-    private var tts: TextToSpeech? = null
-    
-    init {
-        tts = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                tts?.language = Locale("es", "ES")
-            }
-        }
-    }
-
+actual class SpeechManager actual constructor() {
     actual fun speak(text: String) {
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        // En Android requiere Context, se implementará vía CompositionLocal o Inyección
     }
 
     actual fun stop() {
-        tts?.stop()
     }
 }
