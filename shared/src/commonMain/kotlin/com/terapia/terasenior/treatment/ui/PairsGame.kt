@@ -82,19 +82,26 @@ fun PairsGame(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Cuadrícula de Cartas
+            // Cuadrícula de Cartas (Tamaño máximo controlado para Web/Tablets)
             val columns = when(state.currentLevel) {
                 1 -> 2
+                2 -> 3
                 else -> 4
             }
 
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(max = 800.dp) // Limita el ancho en pantallas grandes
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columns),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxHeight()
                 ) {
                     itemsIndexed(state.cards) { index, card ->
                         CardItem(

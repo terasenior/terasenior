@@ -170,6 +170,12 @@ private fun ExerciseSelectionStep(
                         isSelected = selectedExercises.any { config -> config.type == "language_word_image" },
                         onToggle = { onToggle("language_word_image", "Vocabulario", "Lenguaje", "Identifica la imagen que corresponde a la palabra.") }
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ExerciseItem(
+                        title = "Clasificación Semántica",
+                        isSelected = selectedExercises.any { config -> config.type == "language_semantic_category" },
+                        onToggle = { onToggle("language_semantic_category", "Clasificación Semántica", "Lenguaje", "Agrupa los objetos según su familia o categoría.") }
+                    )
                 }
                 else -> {
                     Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
