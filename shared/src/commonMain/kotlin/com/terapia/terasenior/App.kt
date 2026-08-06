@@ -201,34 +201,50 @@ fun App() {
 
                         Screen.SESSION_RUNNER -> {
                             val resultsRepo = remember { SupabaseResultsRepository() }
-                            val sessionState = remember { mutableStateOf<ExerciseConfig?>(null) }
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
+                            val sessionId = activeSessionId ?: ""
                             
-                            LaunchedEffect(activeSessionId) {
-                                // En una app real cargaríamos de la DB. Para demo forzamos una configuración.
-                                sessionState.value = ExerciseConfig("memory_pairs", "Parejas", "Memoria", 3)
+                            val runnerViewModel = remember(sessionId) { 
+                                SessionRunnerViewModel(sessionId, therapyRepo) 
+                            }
+                            val runnerState by runnerViewModel.uiState.collectAsState()
+
+                            val numberSearchViewModel = remember { 
+                                NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) 
+                            }
+                            
+                            // Cargamos el juego (Fase demo)
+                            LaunchedEffect(Unit) {
+                                numberSearchViewModel.startNewGame(3)
                             }
 
-                            when (sessionState.value?.type) {
-                                "memory_pairs" -> {
-                                    val viewModel = remember { PairsViewModel(SaveActivityResultUseCase(resultsRepo)) }
-                                    LaunchedEffect(Unit) { viewModel.startNewGame(sessionState.value?.level ?: 3) }
-                                    PairsGame(
-                                        viewModel = viewModel,
-                                        patientId = activeTherapyPatientId,
-                                        professionalId = currentUserProfile?.id,
-                                        appointmentId = null,
-                                        onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
-                                    )
+                            Box {
+                                NumberSearchGame(
+                                    viewModel = numberSearchViewModel,
+                                    patientId = activeTherapyPatientId,
+                                    professionalId = currentUserProfile?.id,
+                                    appointmentId = null,
+                                    onBack = { 
+                                        runnerViewModel.finishSession()
+                                        currentScreen = Screen.THERAPY_DASHBOARD 
+                                    }
+                                )
+
+                                // Botón discreto para el Terapeuta
+                                Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomStart) {
+                                    SmallFloatingActionButton(
+                                        onClick = { runnerViewModel.toggleProfessionalPanel() },
+                                        containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                                    ) {
+                                        Icon(Icons.Default.Settings, contentDescription = "Panel Terapeuta")
+                                    }
                                 }
-                                else -> {
-                                    val viewModel = remember { NumberSearchViewModel(SaveActivityResultUseCase(resultsRepo)) }
-                                    LaunchedEffect(Unit) { viewModel.startNewGame(3) }
-                                    NumberSearchGame(
-                                        viewModel = viewModel,
-                                        patientId = activeTherapyPatientId,
-                                        professionalId = currentUserProfile?.id,
-                                        appointmentId = null,
-                                        onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
+
+                                if ((runnerState as? SessionRunnerUiState.Playing)?.showProfessionalPanel == true) {
+                                    ProfessionalControlPanel(
+                                        onLogAssistance = { runnerViewModel.logAssistance(it, null) },
+                                        onLogIncident = { runnerViewModel.logIncident(it, null) },
+                                        onDismiss = { runnerViewModel.toggleProfessionalPanel() }
                                     )
                                 }
                             }
