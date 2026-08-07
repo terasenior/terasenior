@@ -40,6 +40,7 @@ enum class Screen {
     LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
 }
 
+// Terasenior App Entry Point (v1.0.3 - Global Sync)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
