@@ -1,5 +1,8 @@
 package com.terapia.terasenior.treatment.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
@@ -10,17 +13,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
-data class Card(
+data class MemoryCard(
     val id: Int,
-    val content: String,
+    val icon: ImageVector,
     val isFlipped: Boolean = false,
     val isMatched: Boolean = false
 )
 
 data class PairsUiState(
-    val cards: List<Card> = emptyList(),
+    val cards: List<MemoryCard> = emptyList(),
     val firstSelectedCardIndex: Int? = null,
     val isProcessing: Boolean = false,
     val pairsFound: Int = 0,
@@ -39,24 +41,37 @@ class PairsViewModel(
     private val _uiState = MutableStateFlow(PairsUiState())
     val uiState: StateFlow<PairsUiState> = _uiState.asStateFlow()
 
-    private val icons = listOf("🍎", "🍌", "🍇", "🍉", "🍓", "🍍", "🥑", "🥕", "🌽", "🍔", "🍕", "🍦")
+    private val availableIcons = listOf(
+        Icons.Default.MedicalServices,
+        Icons.Default.Medication,
+        Icons.Default.Favorite,
+        Icons.Default.WatchLater,
+        Icons.Default.Bed,
+        Icons.Default.Chair,
+        Icons.Default.Phone,
+        Icons.Default.Light,
+        Icons.Default.Build,
+        Icons.Default.Work,
+        Icons.Default.MenuBook,
+        Icons.Default.PhotoCamera
+    )
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(level: Int = 3) {
         val numPairs = when(level) {
             1 -> 2
-            2 -> 3
-            3 -> 4
-            4 -> 6
-            5 -> 8
-            else -> 4
+            2 -> 4
+            3 -> 6
+            4 -> 8
+            5 -> 10
+            else -> 6
         }
         
-        val selectedIcons = icons.shuffled().take(numPairs)
+        val selectedIcons = availableIcons.shuffled().take(numPairs)
         val gameIcons = (selectedIcons + selectedIcons).shuffled()
         
         val cards = gameIcons.mapIndexed { index, icon ->
-            Card(id = index, content = icon)
+            MemoryCard(id = index, icon = icon)
         }
 
         _uiState.value = PairsUiState(
@@ -88,7 +103,7 @@ class PairsViewModel(
                 val firstCard = newCards[firstIndex]
                 val secondCard = newCards[index]
 
-                if (firstCard.content == secondCard.content) {
+                if (firstCard.icon == secondCard.icon) {
                     // ¡Pareja encontrada!
                     newCards[firstIndex] = firstCard.copy(isMatched = true)
                     newCards[index] = secondCard.copy(isMatched = true)

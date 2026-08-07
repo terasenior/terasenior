@@ -54,7 +54,7 @@ fun PairsGame(
             modifier = Modifier.fillMaxSize().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Barra de Navegación
+            // Barra de Navegación Profesional
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -82,26 +82,26 @@ fun PairsGame(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Cuadrícula de Cartas (Tamaño máximo controlado para Web/Tablets)
-            val columns = when(state.currentLevel) {
-                1 -> 2
-                2 -> 3
-                else -> 4
+            // Cuadrícula de Cartas (Adaptativa y con límites de tamaño)
+            val columns = when {
+                state.currentLevel <= 2 -> 2
+                state.currentLevel <= 4 -> 4
+                else -> 5
             }
 
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .widthIn(max = 800.dp) // Limita el ancho en pantallas grandes
-                    .padding(vertical = 16.dp),
+                    .widthIn(max = 700.dp) // Ancho máximo para que no se estire demasiado en horizontal
+                    .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columns),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(16.dp),
-                    modifier = Modifier.fillMaxHeight()
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(8.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     itemsIndexed(state.cards) { index, card ->
                         CardItem(
@@ -113,21 +113,17 @@ fun PairsGame(
             }
 
             // Estado y Botón
-            AnimatedVisibility(
-                visible = state.isCompleted,
-                enter = fadeIn() + expandVertically()
-            ) {
+            AnimatedVisibility(visible = state.isCompleted) {
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = if(state.isSaving) Color.LightGray else Color(0xFFC8E6C9)),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 500.dp).padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFC8E6C9)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    val message = if (state.isSaving) "Guardando resultados..." else "¡Fantástico! Has encontrado todas las parejas."
                     Text(
-                        text = message,
+                        text = "¡Fantástico! Has encontrado todas las parejas.",
                         modifier = Modifier.padding(16.dp).fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        color = if(state.isSaving) Color.DarkGray else Color(0xFF1B5E20),
+                        color = Color(0xFF1B5E20),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -135,8 +131,8 @@ fun PairsGame(
 
             Button(
                 onClick = { viewModel.startNewGame(state.currentLevel) },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(64.dp).widthIn(max = 400.dp),
+                shape = RoundedCornerShape(20.dp),
                 enabled = !state.isSaving
             ) {
                 Text(if (state.isCompleted) "Siguiente Ejercicio" else "Reiniciar Ejercicio", fontSize = 18.sp)
@@ -146,43 +142,46 @@ fun PairsGame(
 }
 
 @Composable
-private fun CardItem(card: Card, onClick: () -> Unit) {
+private fun CardItem(card: MemoryCard, onClick: () -> Unit) {
     val rotation by animateFloatAsState(
         targetValue = if (card.isFlipped || card.isMatched) 180f else 0f,
         animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
     )
 
-    Box(
+    Surface(
         modifier = Modifier
             .aspectRatio(1f)
             .graphicsLayer {
                 rotationY = rotation
                 cameraDistance = 12f * density
             }
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (rotation <= 90f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
             .clickable(enabled = !card.isFlipped && !card.isMatched, onClick = onClick),
-        contentAlignment = Alignment.Center
+        shape = RoundedCornerShape(16.dp),
+        color = if (rotation <= 90f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp
     ) {
-        if (rotation > 90f) {
-            Text(
-                text = card.content,
-                fontSize = 40.sp,
-                modifier = Modifier.graphicsLayer { rotationY = 180f }
-            )
-        } else {
-            Text(
-                text = "?",
-                fontSize = 32.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        
-        if (card.isMatched) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.3f))
-            )
+        Box(contentAlignment = Alignment.Center) {
+            if (rotation > 90f) {
+                Icon(
+                    imageVector = card.icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp).graphicsLayer { rotationY = 180f },
+                    tint = if (card.isMatched) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary
+                )
+            } else {
+                Text(
+                    text = "?",
+                    fontSize = 32.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            if (card.isMatched) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.2f))
+                )
+            }
         }
     }
 }
