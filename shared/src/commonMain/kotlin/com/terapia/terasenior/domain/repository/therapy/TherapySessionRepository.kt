@@ -22,4 +22,5 @@ interface TherapySessionRepository {
     // Métodos de estadísticas y resumen
     suspend fun getTherapistSummary(therapistId: String): Result<Map<String, Int>>
     fun getRecentSessions(therapistId: String, limit: Int = 5): Flow<Result<List<TherapySession>>>
+    fun getPatientSessions(patientId: String): Flow<Result<List<TherapySession>>>
 }

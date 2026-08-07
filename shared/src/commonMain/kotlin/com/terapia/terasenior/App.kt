@@ -37,7 +37,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
-    LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS, NUMBER_SEARCH
+    LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS,
+    NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
 // Terasenior App Entry Point (v1.0.3 - Global Sync)
@@ -227,6 +228,74 @@ fun App() {
                             )
                         }
 
+                        Screen.ATTENTION_GAME -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { VisualAttentionViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame("attention_different", 3) }
+                            VisualAttentionGame(
+                                viewModel = viewModel,
+                                patientId = activeTherapyPatientId,
+                                professionalId = currentUserProfile?.id,
+                                appointmentId = null,
+                                onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
+                            )
+                        }
+
+                        Screen.LANGUAGE_GAME -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { LanguageViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame("language_denomination", 3) }
+                            LanguageGame(viewModel = viewModel, patientId = activeTherapyPatientId, professionalId = currentUserProfile?.id, appointmentId = null, onBack = { currentScreen = Screen.THERAPY_DASHBOARD })
+                        }
+
+                        Screen.COLOR_SHAPE_SEQUENCE -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { ColorShapeSequenceViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                            ColorShapeSequenceGame(viewModel = viewModel, patientId = activeTherapyPatientId, professionalId = currentUserProfile?.id, appointmentId = null, onBack = { currentScreen = Screen.THERAPY_DASHBOARD })
+                        }
+
+                        Screen.COLOR_IDENTIFICATION -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { ColorIdentificationViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                            ColorIdentificationGame(viewModel = viewModel, patientId = activeTherapyPatientId, professionalId = currentUserProfile?.id, appointmentId = null, onBack = { currentScreen = Screen.THERAPY_DASHBOARD })
+                        }
+
+                        Screen.SIZE_ORDERING -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { SizeOrderingViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                            SizeOrderingGame(viewModel = viewModel, patientId = activeTherapyPatientId, professionalId = currentUserProfile?.id, appointmentId = null, onBack = { currentScreen = Screen.THERAPY_DASHBOARD })
+                        }
+
+                        Screen.TRACING -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { TracingViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                            TracingGame(viewModel = viewModel, patientId = activeTherapyPatientId, professionalId = currentUserProfile?.id, appointmentId = null, onBack = { currentScreen = Screen.THERAPY_DASHBOARD })
+                        }
+
+                        Screen.EXECUTIVE_FUNCTIONS -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { ExecutiveFunctionsViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame("executive_planning_steps", 3) }
+                            ExecutiveFunctionsGame(viewModel = viewModel, patientId = activeTherapyPatientId, professionalId = currentUserProfile?.id, appointmentId = null, onBack = { currentScreen = Screen.THERAPY_DASHBOARD })
+                        }
+
+                        Screen.LITERACY -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { LiteracyViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(LiteracyVariation.TRACING_BASIC, 3) }
+                            LiteracyGame(
+                                viewModel = viewModel,
+                                patientId = activeTherapyPatientId,
+                                professionalId = currentUserProfile?.id,
+                                appointmentId = null,
+                                onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
+                            )
+                        }
+
                         Screen.AGENDA -> {
                             val agendaRepo = remember { SupabaseAppointmentRepository() }
                             val patientRepo = remember { SupabasePatientRepository() }
@@ -375,11 +444,13 @@ fun App() {
                             val patientId = selectedPatientId ?: ""
                             val repository = remember { SupabasePatientRepository() }
                             val resultsRepository = remember { SupabaseResultsRepository() }
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val viewModel = remember(patientId) { 
                                 PatientDetailViewModel(
                                     patientId = patientId, 
                                     repository = repository,
                                     resultsRepository = resultsRepository,
+                                    therapyRepository = therapyRepo,
                                     updatePatientUseCase = UpdatePatientUseCase(repository),
                                     updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(repository)
                                 ) 

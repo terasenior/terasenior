@@ -1,0 +1,158 @@
+package com.terapia.terasenior.treatment.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.terapia.terasenior.domain.model.results.ActivityResult
+import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.datetime.*
+
+enum class PerceptionType {
+    LATERAL_DOMINANCE, MIRROR, BODY_PARTS
+}
+
+data class PerceptionUiState(
+    val currentType: PerceptionType = PerceptionType.LATERAL_DOMINANCE,
+    val questionText: String = "",
+    val options: List<String> = emptyList(),
+    val correctAnswer: String = "",
+    val isCorrect: Boolean? = null,
+    val isCompleted: Boolean = false,
+    val isSaving: Boolean = false,
+    val currentLevel: Int = 1,
+    val startTimeMs: Long = 0,
+    val errorsCount: Int = 0,
+    val currentStep: Int = 0,
+    val totalSteps: Int = 3
+)
+
+class PerceptionViewModel(
+    private val saveResultUseCase: SaveActivityResultUseCase
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(PerceptionUiState())
+    val uiState: StateFlow<PerceptionUiState> = _uiState.asStateFlow()
+
+    private val lateralQuestions = listOf(
+        Triple("¿De qué lado está el círculo rojo?", listOf("Izquierda", "Derecha"), "Derecha"),
+        Triple("Toca el botón que está a la IZQUIERDA", listOf("Botón A (Izq)", "Botón B (Der)"), "Botón A (Izq)"),
+        Triple("¿Qué mano usas para escribir si eres diestro?", listOf("Derecha", "Izquierda"), "Derecha")
+    )
+
+    private val mirrorQuestions = listOf(
+        Triple("Si ves una 'b' en el espejo, ¿qué letra parece?", listOf("d", "p", "q", "b"), "d"),
+        Triple("Si levantas la mano derecha frente al espejo, ¿qué mano levanta tu reflejo?", listOf("Izquierda", "Derecha"), "Izquierda"),
+        Triple("¿Cuál es el reflejo de la palabra 'AMA'?", listOf("AMA", "OMA", "AMI", "EMA"), "AMA")
+    )
+
+    private val bodyPartsQuestions = listOf(
+        Triple("¿Con qué parte del cuerpo hueles las flores?", listOf("Nariz", "Boca", "Ojos", "Orejas"), "Nariz"),
+        Triple("¿Cómo se llama la parte del brazo que se dobla?", listOf("Codo", "Rodilla", "Muñeca", "Hombro"), "Codo"),
+        Triple("¿Cuántos dedos tenemos en una mano normal?", listOf("5", "4", "6", "10"), "5")
+    )
+
+    fun startNewGame(type: PerceptionType, level: Int = 1) {
+        val now = kotlinx.datetime.Clock.System.now()
+        _uiState.update { it.copy(
+            currentType = type,
+            currentLevel = level,
+            startTimeMs = now.toEpochMilliseconds(),
+            isCompleted = false,
+            errorsCount = 0,
+            currentStep = 0
+        ) }
+        setupQuestion()
+    }
+
+    private fun setupQuestion() {
+        val state = _uiState.value
+        val questions = when(state.currentType) {
+            PerceptionType.LATERAL_DOMINANCE -> lateralQuestions
+            PerceptionType.MIRROR -> mirrorQuestions
+            PerceptionType.BODY_PARTS -> bodyPartsQuestions
+        }
+
+        if (state.currentStep >= questions.size) {
+            _uiState.update { it.copy(isCompleted = true) }
+            return
+        }
+
+        val question = questions[state.currentStep]
+        _uiState.update { it.copy(
+            questionText = question.first,
+            options = question.second.shuffled(),
+            correctAnswer = question.third,
+            isCorrect = null,
+            totalSteps = questions.size
+        ) }
+    }
+
+    fun onOptionSelected(selected: String, patientId: String?, professionalId: String?, appointmentId: String?) {
+        val state = _uiState.value
+        if (state.isCorrect == true || state.isCompleted) return
+
+        if (selected == state.correctAnswer) {
+            _uiState.update { it.copy(isCorrect = true) }
+            viewModelScope.launch {
+                delay(1500)
+                val nextStep = state.currentStep + 1
+                _uiState.update { it.copy(currentStep = nextStep) }
+                if (nextStep >= totalQuestionsForType(state.currentType)) {
+                    _uiState.update { it.copy(isCompleted = true) }
+                    if (patientId != null && professionalId != null) {
+                        saveResult(patientId, professionalId, appointmentId)
+                    }
+                } else {
+                    setupQuestion()
+                }
+            }
+        } else {
+            _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
+            viewModelScope.launch {
+                delay(1000)
+                _uiState.update { it.copy(isCorrect = null) }
+            }
+        }
+    }
+
+    private fun totalQuestionsForType(type: PerceptionType): Int = when(type) {
+        PerceptionType.LATERAL_DOMINANCE -> lateralQuestions.size
+        PerceptionType.MIRROR -> mirrorQuestions.size
+        PerceptionType.BODY_PARTS -> bodyPartsQuestions.size
+    }
+
+    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+        val state = _uiState.value
+        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val diff = endTime - state.startTimeMs
+        val duration = (diff / 1000).toInt()
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+            val activityType = when(state.currentType) {
+                PerceptionType.LATERAL_DOMINANCE -> "perception_lateral_dominance"
+                PerceptionType.MIRROR -> "perception_mirror"
+                PerceptionType.BODY_PARTS -> "perception_body_parts"
+            }
+            val result = ActivityResult(
+                id = "",
+                patientId = patientId,
+                professionalId = professionalId,
+                appointmentId = appointmentId,
+                activityType = activityType,
+                score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
+                durationSeconds = duration,
+                errorsCount = state.errorsCount,
+                difficultyLevel = "NIVEL_${state.currentLevel}",
+                createdAt = ""
+            )
+            saveResultUseCase(result)
+            _uiState.update { it.copy(isSaving = false) }
+        }
+    }
+}

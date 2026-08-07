@@ -110,4 +110,16 @@ class SupabaseTherapySessionRepository : TherapySessionRepository {
                 .map { it.toDomain() }
         })
     }
+
+    override fun getPatientSessions(patientId: String): Flow<Result<List<TherapySession>>> = flow {
+        emit(runCatching {
+            supabase.postgrest["therapy_sessions"]
+                .select {
+                    filter { eq("patient_id", patientId) }
+                    order("created_at", io.github.jan.supabase.postgrest.query.Order.DESCENDING)
+                }
+                .decodeList<TherapySessionDto>()
+                .map { it.toDomain() }
+        })
+    }
 }
