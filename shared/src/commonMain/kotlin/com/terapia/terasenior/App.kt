@@ -201,96 +201,17 @@ fun App() {
                         }
 
                         Screen.SESSION_RUNNER -> {
-                            val resultsRepo = remember { SupabaseResultsRepository() }
                             val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val sessionId = activeSessionId ?: ""
                             
                             val runnerViewModel = remember(sessionId) { 
                                 SessionRunnerViewModel(sessionId, therapyRepo) 
                             }
-                            val runnerState by runnerViewModel.uiState.collectAsState()
                             
-                            val saveUseCase = remember { SaveActivityResultUseCase(resultsRepo) }
-
-                            Box {
-                                // Determinar qué pantalla mostrar basándonos en el tipo de ejercicio
-                                // Esta lógica se moverá al ExerciseRouter en el futuro
-                                val currentExercise = (runnerState as? SessionRunnerUiState.Playing)?.exercises?.getOrNull((runnerState as SessionRunnerUiState.Playing).currentIndex)
-                                
-                                when (currentExercise?.exerciseType) {
-                                    "language_semantic_category" -> {
-                                        val viewModel = remember { SemanticCategoryViewModel(saveUseCase) }
-                                        LaunchedEffect(currentExercise.id) { viewModel.startNewGame(currentExercise.level) }
-                                        SemanticCategoryGame(
-                                            viewModel = viewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id ?: "",
-                                            appointmentId = null,
-                                            onBack = { runnerViewModel.finishSession(); currentScreen = Screen.THERAPY_DASHBOARD }
-                                        )
-                                    }
-                                    "calculation_simple" -> {
-                                        val viewModel = remember { CalculationViewModel(saveUseCase) }
-                                        LaunchedEffect(currentExercise.id) { viewModel.startNewGame(currentExercise.level) }
-                                        CalculationGame(
-                                            viewModel = viewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id ?: "",
-                                            appointmentId = null,
-                                            onBack = { runnerViewModel.finishSession(); currentScreen = Screen.THERAPY_DASHBOARD }
-                                        )
-                                    }
-                                    "language_word_image" -> {
-                                        val viewModel = remember { WordImageViewModel(saveUseCase) }
-                                        LaunchedEffect(currentExercise.id) { viewModel.startNewGame(currentExercise.level) }
-                                        WordImageGame(
-                                            viewModel = viewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id ?: "",
-                                            appointmentId = null,
-                                            onBack = { runnerViewModel.finishSession(); currentScreen = Screen.THERAPY_DASHBOARD }
-                                        )
-                                    }
-                                    "memory_pairs" -> {
-                                        val viewModel = remember { PairsViewModel(saveUseCase) }
-                                        LaunchedEffect(currentExercise.id) { viewModel.startNewGame(currentExercise.level) }
-                                        PairsGame(
-                                            viewModel = viewModel,
-                                            patientId = activeTherapyPatientId,
-                                            professionalId = currentUserProfile?.id ?: "",
-                                            appointmentId = null,
-                                            onBack = { runnerViewModel.finishSession(); currentScreen = Screen.THERAPY_DASHBOARD }
-                                        )
-                                    }
-                                    else -> {
-                                        // Fallback a SessionRunnerScreen que ya tiene el router interno
-                                        SessionRunnerScreen(
-                                            viewModel = runnerViewModel,
-                                            onFinished = { currentScreen = Screen.THERAPY_DASHBOARD }
-                                        )
-                                    }
-                                }
-
-                                // Capa Profesional
-                                if (runnerState is SessionRunnerUiState.Playing) {
-                                    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomStart) {
-                                        SmallFloatingActionButton(
-                                            onClick = { runnerViewModel.toggleProfessionalPanel() },
-                                            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                                        ) {
-                                            Icon(Icons.Default.Settings, contentDescription = "Panel Terapeuta")
-                                        }
-                                    }
-
-                                    if ((runnerState as SessionRunnerUiState.Playing).showProfessionalPanel) {
-                                        ProfessionalControlPanel(
-                                            onLogAssistance = { runnerViewModel.logAssistance(it, null) },
-                                            onLogIncident = { runnerViewModel.logIncident(it, null) },
-                                            onDismiss = { runnerViewModel.toggleProfessionalPanel() }
-                                        )
-                                    }
-                                }
-                            }
+                            SessionRunnerScreen(
+                                viewModel = runnerViewModel,
+                                onFinished = { currentScreen = Screen.THERAPY_DASHBOARD }
+                            )
                         }
                         
                         Screen.NUMBER_SEARCH -> {

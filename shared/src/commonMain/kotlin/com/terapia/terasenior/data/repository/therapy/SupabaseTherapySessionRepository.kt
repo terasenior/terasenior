@@ -33,6 +33,12 @@ class SupabaseTherapySessionRepository : TherapySessionRepository {
         }
     }
 
+    override suspend fun saveSessionClosing(session: TherapySession): Result<Unit> = runCatching {
+        supabase.postgrest["therapy_sessions"].update(session.toData()) {
+            filter { eq("id", session.id) }
+        }
+    }
+
     override fun getSessionsByTherapist(therapistId: String): Flow<Result<List<TherapySession>>> = flow {
         emit(runCatching {
             supabase.postgrest["therapy_sessions"]

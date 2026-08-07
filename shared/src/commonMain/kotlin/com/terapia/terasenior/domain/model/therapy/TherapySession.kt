@@ -19,5 +19,10 @@ data class TherapySession(
     val status: SessionStatus,
     val startedAt: String?,
     val finishedAt: String?,
-    val createdAt: String
+    val createdAt: String,
+    // Valoración Clínica (Fase 4)
+    val participationLevel: String? = null,
+    val fatigueLevel: String? = null,
+    val therapistNotes: String? = null,
+    val valuation: Int = 5
 )

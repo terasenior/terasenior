@@ -94,7 +94,8 @@ class SessionRunnerViewModel(
                 nextIndex = nextIndex
             )
         } else {
-            finishSession()
+            // En lugar de cerrar directo, vamos al Summary
+            _uiState.value = SessionRunnerUiState.Summary(state.session)
         }
     }
 
@@ -143,15 +144,38 @@ class SessionRunnerViewModel(
         }
     }
 
-    fun finishSession() {
+    fun finishSession(
+        participation: String,
+        fatigue: String,
+        notes: String
+    ) {
         viewModelScope.launch {
-            repository.updateSessionStatus(sessionId, SessionStatus.COMPLETED.name)
-            val session = repository.getSessionDetails(sessionId).getOrNull()
-            if (session != null) {
-                _uiState.value = SessionRunnerUiState.Summary(session)
-            } else {
-                _uiState.value = SessionRunnerUiState.Finished
-            }
+            _uiState.value = SessionRunnerUiState.Loading
+            
+            // Recuperamos la sesión actual de la DB para asegurar datos frescos
+            val currentSession = repository.getSessionDetails(sessionId).getOrNull() ?: return@launch
+            
+            val updatedSession = currentSession.copy(
+                status = SessionStatus.COMPLETED,
+                participationLevel = participation,
+                fatigueLevel = fatigue,
+                therapistNotes = notes
+            )
+            
+            repository.saveSessionClosing(updatedSession)
+                .onSuccess { 
+                    _uiState.value = SessionRunnerUiState.Finished 
+                }
+                .onFailure { e ->
+                    _uiState.value = SessionRunnerUiState.Error("Fallo al cerrar sesión: ${e.message}")
+                }
+        }
+    }
+
+    fun abortSession() {
+        viewModelScope.launch {
+            repository.updateSessionStatus(sessionId, SessionStatus.CANCELLED.name)
+            _uiState.value = SessionRunnerUiState.Finished
         }
     }
 

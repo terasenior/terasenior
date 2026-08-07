@@ -2,7 +2,9 @@ package com.terapia.terasenior.ui.therapy
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -47,34 +49,28 @@ fun SessionRunnerScreen(
             is SessionRunnerUiState.Playing -> {
                 val currentExercise = state.exercises[state.currentIndex]
                 
-                // Host del Juego Actual
-                Box(modifier = Modifier.fillMaxSize()) {
-                    ExerciseRouter(
-                        exercise = currentExercise,
-                        patientId = state.session.patientId,
-                        professionalId = state.session.therapistId,
-                        onExerciseCompleted = { viewModel.nextExercise() },
-                        onAbort = { viewModel.finishSession() }
-                    )
+                ExerciseRouter(
+                    exercise = currentExercise,
+                    patientId = state.session.patientId,
+                    professionalId = state.session.therapistId,
+                    onExerciseCompleted = { viewModel.nextExercise() },
+                    onAbort = { viewModel.abortSession() }
+                )
 
-                    // Capa Profesional (Botón de ajustes)
-                    ProfessionalHUD(
-                        onShowPanel = { viewModel.toggleProfessionalPanel() }
-                    )
+                ProfessionalHUD(onShowPanel = { viewModel.toggleProfessionalPanel() })
 
-                    if (state.showProfessionalPanel) {
-                        ProfessionalControlPanel(
-                            onLogAssistance = { viewModel.logAssistance(it, null) },
-                            onLogIncident = { viewModel.logIncident(it, null) },
-                            onDismiss = { viewModel.toggleProfessionalPanel() }
-                        )
-                    }
+                if (state.showProfessionalPanel) {
+                    ProfessionalControlPanel(
+                        onLogAssistance = { viewModel.logAssistance(it, null) },
+                        onLogIncident = { viewModel.logIncident(it, null) },
+                        onDismiss = { viewModel.toggleProfessionalPanel() }
+                    )
                 }
             }
             is SessionRunnerUiState.Summary -> {
-                SessionSummaryView(
+                ClinicalValuationView(
                     session = state.session,
-                    onClose = onFinished
+                    onSave = { p, f, n -> viewModel.finishSession(p, f, n) }
                 )
             }
             is SessionRunnerUiState.Finished -> {
@@ -90,6 +86,71 @@ fun SessionRunnerScreen(
 }
 
 @Composable
+private fun ClinicalValuationView(
+    session: TherapySession,
+    onSave: (participation: String, fatigue: String, notes: String) -> Unit
+) {
+    var participation by remember { mutableStateOf("MEDIUM") }
+    var fatigue by remember { mutableStateOf("NONE") }
+    var notes by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Cierre de Sesión Terapéutica", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Valoración profesional de la intervención.", color = Color.Gray)
+        
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Card(modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp), shape = RoundedCornerShape(24.dp)) {
+            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                
+                Column {
+                    Text("Nivel de Participación", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        FilterChip(selected = participation == "LOW", onClick = { participation = "LOW" }, label = { Text("Baja") })
+                        FilterChip(selected = participation == "MEDIUM", onClick = { participation = "MEDIUM" }, label = { Text("Media") })
+                        FilterChip(selected = participation == "HIGH", onClick = { participation = "HIGH" }, label = { Text("Alta") })
+                    }
+                }
+
+                Column {
+                    Text("Nivel de Fatiga", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        FilterChip(selected = fatigue == "NONE", onClick = { fatigue = "NONE" }, label = { Text("Ninguna") })
+                        FilterChip(selected = fatigue == "MODERATE", onClick = { fatigue = "MODERATE" }, label = { Text("Moderada") })
+                        FilterChip(selected = fatigue == "HIGH", onClick = { fatigue = "HIGH" }, label = { Text("Alta") })
+                    }
+                }
+
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text("Observaciones Clínicas") },
+                    placeholder = { Text("Ej: Ha necesitado apoyo verbal constante en el cálculo...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        Button(
+            onClick = { onSave(participation, fatigue, notes) },
+            modifier = Modifier.height(64.dp).width(280.dp),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Text("Finalizar y Guardar", fontSize = 18.sp)
+        }
+    }
+}
+
+// Reutilizamos el resto de componentes (ExerciseRouter, TransitionView, ProfessionalHUD) de la versión anterior...
+@Composable
 private fun ExerciseRouter(
     exercise: TherapySessionExercise,
     patientId: String?,
@@ -104,53 +165,37 @@ private fun ExerciseRouter(
         "number_search" -> {
             val gameViewModel = remember { NumberSearchViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
-            
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) {
-                if (gameState.isCompleted) onExerciseCompleted()
-            }
-
-            NumberSearchGame(
-                viewModel = gameViewModel,
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = null,
-                onBack = onAbort
-            )
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            NumberSearchGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = null, onBack = onAbort)
         }
         "memory_pairs" -> {
             val gameViewModel = remember { PairsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
-            
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) {
-                if (gameState.isCompleted) onExerciseCompleted()
-            }
-
-            PairsGame(
-                viewModel = gameViewModel,
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = null,
-                onBack = onAbort
-            )
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            PairsGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = null, onBack = onAbort)
         }
         "language_word_image" -> {
             val gameViewModel = remember { WordImageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
-            
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) {
-                if (gameState.isCompleted) onExerciseCompleted()
-            }
-
-            WordImageGame(
-                viewModel = gameViewModel,
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = null,
-                onBack = onAbort
-            )
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            WordImageGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = null, onBack = onAbort)
+        }
+        "language_semantic_category" -> {
+            val gameViewModel = remember { SemanticCategoryViewModel(saveUseCase) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
+            val gameState by gameViewModel.uiState.collectAsState()
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            SemanticCategoryGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = null, onBack = onAbort)
+        }
+        "calculation_simple" -> {
+            val gameViewModel = remember { CalculationViewModel(saveUseCase) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
+            val gameState by gameViewModel.uiState.collectAsState()
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            CalculationGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = null, onBack = onAbort)
         }
     }
 }
@@ -163,27 +208,13 @@ private fun TransitionView(
 ) {
     val message = if (state.isFirst) "¡Hola! Vamos a empezar la sesión." else "¡Muy bien! Vamos al siguiente ejercicio."
     val subMessage = "El siguiente trabajo es: ${state.nextExerciseName}"
-
-    LaunchedEffect(Unit) {
-        speechManager.speak("$message $subMessage")
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+    LaunchedEffect(Unit) { speechManager.speak("$message $subMessage") }
+    Column(modifier = Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Text(message, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(16.dp))
         Text(subMessage, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center)
-        
         Spacer(modifier = Modifier.height(48.dp))
-        
-        Button(
-            onClick = onStart,
-            modifier = Modifier.height(72.dp).width(240.dp),
-            shape = RoundedCornerShape(24.dp)
-        ) {
+        Button(onClick = onStart, modifier = Modifier.height(72.dp).width(240.dp), shape = RoundedCornerShape(24.dp)) {
             Icon(Icons.Default.PlayArrow, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text("Empezar ahora", fontSize = 20.sp)
@@ -192,34 +223,9 @@ private fun TransitionView(
 }
 
 @Composable
-private fun SessionSummaryView(
-    session: TherapySession,
-    onClose: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("🎉 ¡Sesión Finalizada!", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Has completado tu plan de trabajo con éxito.", textAlign = TextAlign.Center)
-        
-        Spacer(modifier = Modifier.height(48.dp))
-        
-        Button(onClick = onClose, shape = RoundedCornerShape(16.dp)) {
-            Text("Volver al Panel de Control")
-        }
-    }
-}
-
-@Composable
 private fun ProfessionalHUD(onShowPanel: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomStart) {
-        SmallFloatingActionButton(
-            onClick = onShowPanel,
-            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-        ) {
+        SmallFloatingActionButton(onClick = onShowPanel, containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)) {
             Icon(Icons.Default.Settings, contentDescription = "Panel Terapeuta")
         }
     }

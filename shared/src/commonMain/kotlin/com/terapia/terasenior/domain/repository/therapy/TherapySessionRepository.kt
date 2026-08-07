@@ -10,6 +10,7 @@ interface TherapySessionRepository {
     suspend fun createSession(session: TherapySession): Result<String>
     suspend fun addExerciseToSession(exercise: TherapySessionExercise): Result<Unit>
     suspend fun updateSessionStatus(sessionId: String, status: String): Result<Unit>
+    suspend fun saveSessionClosing(session: TherapySession): Result<Unit>
     fun getSessionsByTherapist(therapistId: String): Flow<Result<List<TherapySession>>>
     
     // Nuevos métodos Fase 2
