@@ -1,6 +1,9 @@
 package com.terapia.terasenior.ui.patient
 
+import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -221,22 +224,22 @@ fun CategoryResultGroup(category: String, results: List<ActivityResult>) {
 
 @Composable
 fun PatientInfoTab(state: PatientDetailUiState.Success) {
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         // Datos Administrativos
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        CollapsibleCard(
+            title = "Datos Administrativos",
+            icon = Icons.Default.Business,
+            initialExpanded = true
         ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Datos Administrativos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DetailRow(label = "Identificador / NIF", value = state.patient.externalId ?: "No asignado")
                 DetailRow(label = "Fecha de Alta", value = state.patient.admissionDate ?: "No registrada")
                 DetailRow(label = "Fecha de Baja", value = state.patient.dischargeDate ?: "N/A")
-                
                 DetailRow(
-                    label = "Estado Actual", 
+                    label = "Estado Actual",
                     value = when(state.patient.status) {
                         PatientStatus.ACTIVE -> "Activo"
                         PatientStatus.INACTIVE -> "Inactivo"
@@ -248,9 +251,11 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
         }
 
         // Datos Personales
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Información Personal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        CollapsibleCard(
+            title = "Información Personal",
+            icon = Icons.Default.Person
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DetailRow(label = "Apellidos", value = state.patient.lastName)
                 DetailRow(label = "Nombre", value = state.patient.firstName)
                 DetailRow(label = "Nombre Preferido", value = state.patient.preferredName ?: "Igual al nombre")
@@ -259,26 +264,66 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
         }
 
         // Contacto y Emergencia
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+        CollapsibleCard(
+            title = "Contacto y Emergencia",
+            icon = Icons.Default.Phone
         ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Contacto y Emergencia", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-                
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DetailRow(label = "Dirección", value = state.patient.address ?: "No registrada")
                 DetailRow(label = "Teléfono", value = state.patient.phone ?: "No registrado")
-                
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                
                 Text("Persona de Referencia", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 DetailRow(label = "Nombre", value = state.patient.contactName ?: "No asignado")
                 DetailRow(label = "Teléfono de Contacto", value = state.patient.contactPhone ?: "No asignado")
+            }
+        }
+    }
+}
+
+@Composable
+private fun CollapsibleCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    initialExpanded: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    var expanded by remember { mutableStateOf(initialExpanded) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) 
+                             else MaterialTheme.colorScheme.surface
+        ),
+        border = if (!expanded) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Colapsar" else "Expandir",
+                    tint = Color.Gray
+                )
+            }
+            
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp)) {
+                    content()
+                }
             }
         }
     }
