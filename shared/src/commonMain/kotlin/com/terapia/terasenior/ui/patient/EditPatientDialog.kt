@@ -35,6 +35,7 @@ fun EditPatientDialog(
     var phone by remember { mutableStateOf(patient.phone ?: "") }
     var contactName by remember { mutableStateOf(patient.contactName ?: "") }
     var contactPhone by remember { mutableStateOf(patient.contactPhone ?: "") }
+    var notes by remember { mutableStateOf(patient.notes ?: "") }
     var status by remember { mutableStateOf(patient.status) }
 
     var selectedTab by remember { mutableStateOf(0) }
@@ -49,7 +50,7 @@ fun EditPatientDialog(
                     Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Gestión") })
                     Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Ficha") })
                     Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Contacto") })
-                    Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Familiar") })
+                    Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Notas") })
                 }
 
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -92,6 +93,15 @@ fun EditPatientDialog(
                             Text("Referente de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            Text("Observaciones del Terapeuta", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = notes, 
+                                onValueChange = { notes = it }, 
+                                label = { Text("Notas de Seguimiento") }, 
+                                modifier = Modifier.fillMaxWidth().height(150.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            )
                         }
                     }
                 }
@@ -105,7 +115,7 @@ fun EditPatientDialog(
                         preferredName = preferredName, birthDate = birthDate, admissionDate = admissionDate,
                         dischargeDate = dischargeDate, address = address, city = city, postalCode = postalCode,
                         province = province, phone = phone, contactName = contactName, 
-                        contactPhone = contactPhone, status = status
+                        contactPhone = contactPhone, notes = notes, status = status
                     ))
                 },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,

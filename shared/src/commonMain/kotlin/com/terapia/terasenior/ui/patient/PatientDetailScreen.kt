@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -313,6 +314,20 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
                 DetailRow(label = "Teléfono de Contacto", value = state.patient.contactPhone ?: "No asignado")
             }
         }
+
+        // Notas del Terapeuta
+        CollapsibleCard(
+            title = "Observaciones del Terapeuta",
+            icon = Icons.AutoMirrored.Filled.Assignment
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = state.patient.notes?.ifBlank { "Sin observaciones registradas." } ?: "Sin observaciones registradas.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (state.patient.notes.isNullOrBlank()) Color.Gray else MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
     }
 }
 
@@ -376,22 +391,78 @@ private fun DetailRow(label: String, value: String) {
 @Composable
 fun PatientEvolutionTab(state: PatientDetailUiState.Success) {
     val allResults = state.rawResults.sortedByDescending { it.createdAt }
+    
+    // Cálculos de métricas globales
+    val totalExercises = allResults.size
+    val averageScore = if (totalExercises > 0) allResults.map { it.score }.average().toInt() else 0
+    
+    val categoryStats = allResults.groupBy { result ->
+        when {
+            result.activityType.startsWith("orientation") -> "Orientación"
+            result.activityType.startsWith("attention") || result.activityType == "number_search" -> "Atención"
+            result.activityType.startsWith("memory") -> "Memoria"
+            result.activityType.startsWith("language") -> "Lenguaje"
+            result.activityType.startsWith("executive") || result.activityType.startsWith("calculation") -> "Funciones Ejecutivas"
+            result.activityType.startsWith("perception") -> "Percepción"
+            result.activityType.startsWith("literacy") -> "Lectoescritura"
+            else -> "Otros"
+        }
+    }.mapValues { (_, results) -> results.map { it.score }.average().toInt() }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Tendencia de Resultados", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (allResults.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No hay datos suficientes para mostrar la evolución.", color = Color.Gray)
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text("Análisis de Rendimiento", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        
+        // Tarjetas de Métricas Globales
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Actividades", style = MaterialTheme.typography.labelSmall)
+                    Text(totalExercises.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                }
             }
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(allResults.take(20)) { result ->
-                    ResultEvolutionRow(result)
+            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = if(averageScore > 70) Color(0xFFC8E6C9) else Color(0xFFFFEBEE))) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Media de Acierto", style = MaterialTheme.typography.labelSmall)
+                    Text("$averageScore%", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = if(averageScore > 70) Color(0xFF1B5E20) else Color.Red)
                 }
             }
         }
+
+        // Estadísticas por Categoría
+        if (categoryStats.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Rendimiento por Área", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    categoryStats.forEach { (category, score) ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(category, style = MaterialTheme.typography.bodySmall)
+                                Text("$score%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            }
+                            LinearProgressIndicator(
+                                progress = { score / 100f },
+                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                                color = if(score > 70) Color(0xFF4CAF50) else if(score > 40) Color(0xFFFFC107) else Color.Red,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Listado de Tendencia (Historial reciente en esta pestaña también para contexto)
+        Text("Tendencia Reciente", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        
+        if (allResults.isEmpty()) {
+            Text("No hay datos suficientes.", color = Color.Gray, modifier = Modifier.padding(vertical = 8.dp))
+        } else {
+            allResults.take(10).forEach { result ->
+                ResultEvolutionRow(result)
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 

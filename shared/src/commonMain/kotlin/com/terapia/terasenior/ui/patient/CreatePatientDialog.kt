@@ -30,6 +30,7 @@ fun CreatePatientDialog(
         phone: String,
         contactName: String,
         contactPhone: String,
+        notes: String,
         status: PatientStatus
     ) -> Unit,
     isLoading: Boolean,
@@ -49,6 +50,7 @@ fun CreatePatientDialog(
     var phone by remember { mutableStateOf("") }
     var contactName by remember { mutableStateOf("") }
     var contactPhone by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
     var status by remember { mutableStateOf(PatientStatus.ACTIVE) }
 
     var selectedTab by remember { mutableStateOf(0) }
@@ -66,9 +68,9 @@ fun CreatePatientDialog(
 
                 TabRow(selectedTabIndex = selectedTab, modifier = Modifier.padding(bottom = 16.dp)) {
                     Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Admin") })
-                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Personal") })
+                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Ficha") })
                     Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Contacto") })
-                    Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Familiar") })
+                    Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Notas") })
                 }
 
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -107,11 +109,21 @@ fun CreatePatientDialog(
                             }
                             OutlinedTextField(value = province, onValueChange = { province = it }, label = { Text("Provincia") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Paciente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            Text("Persona de Referencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Referente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Referente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                         }
                         3 -> {
-                            Text("Contacto de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                            OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Referente / Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Referente / Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            Text("Información Clínica y Notas", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = notes, 
+                                onValueChange = { notes = it }, 
+                                label = { Text("Observaciones del Terapeuta") }, 
+                                modifier = Modifier.fillMaxWidth().height(200.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            )
                         }
                     }
                 }
@@ -119,7 +131,7 @@ fun CreatePatientDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, status) },
+                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, notes, status) },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {

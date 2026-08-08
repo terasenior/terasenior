@@ -38,13 +38,14 @@ class CreatePatientViewModel(
         phone: String?,
         contactName: String?,
         contactPhone: String?,
+        notes: String?,
         status: com.terapia.terasenior.domain.model.patient.PatientStatus
     ) {
         viewModelScope.launch {
             _uiState.value = CreatePatientUiState.Loading
             createPatientUseCase(
                 entityId, firstName, lastName, preferredName, birthDate, 
-                externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, status
+                externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, notes, status
             )
                 .onSuccess {
                     _uiState.value = CreatePatientUiState.Success

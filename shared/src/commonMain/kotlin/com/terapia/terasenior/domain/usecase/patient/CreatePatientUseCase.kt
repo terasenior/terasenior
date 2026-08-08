@@ -23,6 +23,7 @@ class CreatePatientUseCase(
         phone: String? = null,
         contactName: String? = null,
         contactPhone: String? = null,
+        notes: String? = null,
         status: PatientStatus = PatientStatus.ACTIVE
     ): Result<Unit> {
         if (firstName.isBlank() || lastName.isBlank()) {
@@ -46,6 +47,7 @@ class CreatePatientUseCase(
             phone = phone,
             contactName = contactName,
             contactPhone = contactPhone,
+            notes = notes,
             status = status,
             createdAt = ""
         )
