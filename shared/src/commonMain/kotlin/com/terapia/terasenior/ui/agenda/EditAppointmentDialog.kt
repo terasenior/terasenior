@@ -55,7 +55,7 @@ fun EditAppointmentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar Sesión Programada", style = MaterialTheme.typography.headlineSmall) },
+        title = { Text("Editar Sesión v1.0.5", style = MaterialTheme.typography.headlineSmall) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).verticalScroll(rememberScrollState()),
