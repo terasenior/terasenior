@@ -25,6 +25,7 @@ sealed interface PatientDetailUiState {
         val therapeuticProfile: TherapeuticProfile?,
         val consents: List<Consent> = emptyList(),
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
+        val rawResults: List<ActivityResult> = emptyList(),
         val isUpdating: Boolean = false
     ) : PatientDetailUiState
     data class Error(val message: String) : PatientDetailUiState
@@ -77,7 +78,8 @@ class PatientDetailViewModel(
                         patient = patient,
                         therapeuticProfile = profileResult.getOrNull(),
                         consents = consentsResult.getOrDefault(emptyList()),
-                        sessionsHistory = history
+                        sessionsHistory = history,
+                        rawResults = allResults
                     )
                 } else {
                     _uiState.value = PatientDetailUiState.Error("Paciente no encontrado")

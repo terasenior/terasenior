@@ -37,6 +37,7 @@ fun PatientDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -45,6 +46,13 @@ fun PatientDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    if (uiState is PatientDetailUiState.Success) {
+                        IconButton(onClick = { showEditDialog = true }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar Paciente")
+                        }
                     }
                 }
             )
@@ -63,7 +71,7 @@ fun PatientDetailScreen(
             }
             is PatientDetailUiState.Success -> {
                 Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-                    PatientHeader(state.patient)
+                    PatientHeader(state.patient, onEditClick = { showEditDialog = true })
                     
                     PrimaryTabRow(selectedTabIndex = selectedTab) {
                         Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Perfil") })
@@ -79,13 +87,25 @@ fun PatientDetailScreen(
                         }
                     }
                 }
+
+                if (showEditDialog) {
+                    EditPatientDialog(
+                        patient = state.patient,
+                        onDismiss = { showEditDialog = false },
+                        onConfirm = { updated ->
+                            viewModel.updatePatient(updated)
+                            showEditDialog = false
+                        },
+                        isLoading = state.isUpdating
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun PatientHeader(patient: Patient) {
+fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(24.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -97,9 +117,12 @@ fun PatientHeader(patient: Patient) {
             Text(patient.firstName.take(1), style = MaterialTheme.typography.headlineMedium)
         }
         Spacer(modifier = Modifier.width(20.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text("ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
+        IconButton(onClick = onEditClick) {
+            Icon(Icons.Default.Edit, contentDescription = "Editar Paciente", tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -339,8 +362,64 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 fun PatientEvolutionTab(state: PatientDetailUiState.Success) {
+    val allResults = state.rawResults.sortedByDescending { it.createdAt }
+
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Tendencia de Resultados", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        // ... (gráfica de evolución existente)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (allResults.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No hay datos suficientes para mostrar la evolución.", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(allResults.take(20)) { result ->
+                    ResultEvolutionRow(result)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultEvolutionRow(result: ActivityResult) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = ExerciseTranslationUtils.getDisplayName(result.activityType),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = result.createdAt.take(10),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "${result.score}%",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    color = if(result.score > 70) Color(0xFF2E7D32) else Color.Red
+                )
+                Text(
+                    text = "Nivel ${result.difficultyLevel.takeLast(1)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
+        }
     }
 }
