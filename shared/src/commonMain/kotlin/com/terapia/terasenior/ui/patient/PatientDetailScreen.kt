@@ -120,7 +120,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.0.7 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.0.8 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -289,18 +289,26 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
             }
         }
 
-        // Contacto y Emergencia
+        // Localización y Contacto
         CollapsibleCard(
-            title = "Contacto y Emergencia",
-            icon = Icons.Default.Phone
+            title = "Localización y Contacto",
+            icon = Icons.Default.LocationOn
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DetailRow(label = "Dirección", value = state.patient.address ?: "No registrada")
                 DetailRow(label = "Población", value = "${state.patient.city ?: ""} ${state.patient.postalCode ?: ""}".trim().ifEmpty { "No registrada" })
                 DetailRow(label = "Provincia", value = state.patient.province ?: "No registrada")
                 DetailRow(label = "Teléfono", value = state.patient.phone ?: "No registrado")
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                Text("Persona de Referencia", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Información Familiar
+        CollapsibleCard(
+            title = "Información Familiar",
+            icon = Icons.Default.People
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Referente de Emergencia", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 DetailRow(label = "Nombre", value = state.patient.contactName ?: "No asignado")
                 DetailRow(label = "Teléfono de Contacto", value = state.patient.contactPhone ?: "No asignado")
             }
