@@ -10,9 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.*
@@ -31,7 +31,6 @@ import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.domain.model.patient.SupportLevel
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.results.ActivityResult
-import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,7 +89,7 @@ fun PatientDetailScreen(
                             0 -> PatientInfoTab(state)
                             1 -> PatientEvolutionTab(state)
                             2 -> PatientAssessmentTab(state, viewModel)
-                            3 -> PatientHistoryTab(state)
+                            3 -> PatientHistoryTab(state, viewModel)
                         }
                     }
                 }
@@ -127,129 +126,11 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.0.9 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.1.2 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
             Icon(Icons.Default.Edit, contentDescription = "Editar Paciente", tint = MaterialTheme.colorScheme.primary)
-        }
-    }
-}
-
-@Composable
-fun PatientHistoryTab(state: PatientDetailUiState.Success) {
-    if (state.sessionsHistory.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No hay sesiones registradas todavía.", color = Color.Gray)
-        }
-    } else {
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(state.sessionsHistory) { history ->
-                SessionHistoryCard(history)
-            }
-        }
-    }
-}
-
-@Composable
-fun SessionHistoryCard(history: PatientSessionHistory) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Event, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = history.session.createdAt.take(10), // Fecha YYYY-MM-DD
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        val start = history.session.startedAt?.takeLast(8)?.take(5) ?: "--:--"
-                        val end = history.session.finishedAt?.takeLast(8)?.take(5) ?: "--:--"
-                        Text("$start - $end", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    }
-                }
-                
-                // Badge de Valoración Profesional
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFF57C00))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(history.session.valuation.toString(), style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            // RESULTADOS AGRUPADOS POR CATEGORÍA
-            history.groupedByCategory.forEach { (category, results) ->
-                CategoryResultGroup(category, results)
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            if (history.session.therapistNotes?.isNotBlank() == true) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Observaciones del Terapeuta:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                        Text(history.session.therapistNotes, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CategoryResultGroup(category: String, results: List<ActivityResult>) {
-    Column {
-        Text(
-            text = category,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.primary
-        )
-        results.forEach { result ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = ExerciseTranslationUtils.getDisplayName(result.activityType),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f)
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "${result.score}%",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Black),
-                        color = if(result.score > 70) Color(0xFF2E7D32) else Color.Red
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${result.durationSeconds}s",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
-                }
-            }
         }
     }
 }
@@ -324,6 +205,70 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
 }
 
 @Composable
+fun PatientEvolutionTab(state: PatientDetailUiState.Success) {
+    val allResults = state.rawResults.sortedByDescending { it.createdAt }
+    
+    val totalExercises = allResults.size
+    val averageScore = if (totalExercises > 0) allResults.map { it.score }.average().toInt() else 0
+    
+    val categoryStats = allResults.groupBy { result ->
+        when {
+            result.activityType.startsWith("orientation") -> "Orientación"
+            result.activityType.startsWith("attention") || result.activityType == "number_search" -> "Atención"
+            result.activityType.startsWith("memory") -> "Memoria"
+            result.activityType.startsWith("language") -> "Lenguaje"
+            result.activityType.startsWith("executive") || result.activityType.startsWith("calculation") -> "Funciones Ejecutivas"
+            result.activityType.startsWith("perception") -> "Percepción"
+            result.activityType.startsWith("literacy") -> "Lectoescritura"
+            else -> "Otros"
+        }
+    }.mapValues { (_, results) -> results.map { it.score }.average().toInt() }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text("Análisis de Rendimiento Global", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Total Actividades", style = MaterialTheme.typography.labelSmall)
+                    Text(totalExercises.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                }
+            }
+            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = if(averageScore > 70) Color(0xFFC8E6C9) else Color(0xFFFFEBEE))) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Media de Acierto", style = MaterialTheme.typography.labelSmall)
+                    Text("$averageScore%", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = if(averageScore > 70) Color(0xFF1B5E20) else Color.Red)
+                }
+            }
+        }
+
+        if (categoryStats.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Rendimiento por Área Cognitiva", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    categoryStats.forEach { (category, score) ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(category, style = MaterialTheme.typography.bodySmall)
+                                Text("$score%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            }
+                            LinearProgressIndicator(
+                                progress = { score / 100f },
+                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                                color = if(score > 70) Color(0xFF4CAF50) else if(score > 40) Color(0xFFFFC107) else Color.Red,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
 fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
     val profile = state.therapeuticProfile ?: TherapeuticProfile(state.patient.id, SupportLevel.NONE, null, null, null, null, null)
     
@@ -343,81 +288,174 @@ fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: Patient
     ) {
         Text("Valoración Geriátrica y Funcional", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
-        AssessmentField(
-            label = "Movilidad",
-            placeholder = "Marcha, equilibrio, transferencias y ayudas técnicas...",
-            value = mobility,
-            onValueChange = { mobility = it; hasChanges = true }
-        )
-
-        AssessmentField(
-            label = "Actividades Básicas",
-            placeholder = "Alimentación, vestido, higiene, continencia y uso del baño...",
-            value = basicActivities,
-            onValueChange = { basicActivities = it; hasChanges = true }
-        )
-
-        AssessmentField(
-            label = "Actividades Instrumentales",
-            placeholder = "Cocinar, comprar, gestionar dinero, usar el teléfono y tomar medicación...",
-            value = instrumentalActivities,
-            onValueChange = { instrumentalActivities = it; hasChanges = true }
-        )
-
-        AssessmentField(
-            label = "Estado Cognitivo",
-            placeholder = "Orientación, memoria, atención...",
-            value = cognitiveStatus,
-            onValueChange = { cognitiveStatus = it; hasChanges = true }
-        )
-
-        AssessmentField(
-            label = "Estado Emocional",
-            placeholder = "Aislamiento social, duelo, estado de ánimo...",
-            value = emotionalStatus,
-            onValueChange = { emotionalStatus = it; hasChanges = true }
-        )
-
-        AssessmentField(
-            label = "Riesgos Detectados",
-            placeholder = "Caídas, úlceras, desnutrición o errores de medicación...",
-            value = risks,
-            onValueChange = { risks = it; hasChanges = true }
-        )
-
-        AssessmentField(
-            label = "Capacidad de Decisión",
-            placeholder = "Comprender y decidir sobre el tratamiento...",
-            value = decisionCapacity,
-            onValueChange = { decisionCapacity = it; hasChanges = true }
-        )
+        AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio, transferencias...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
+        AssessmentField(label = "Actividades Básicas", placeholder = "Alimentación, higiene, continencia...", value = basicActivities, onValueChange = { basicActivities = it; hasChanges = true })
+        AssessmentField(label = "Actividades Instrumentales", placeholder = "Medicación, dinero, teléfono...", value = instrumentalActivities, onValueChange = { instrumentalActivities = it; hasChanges = true })
+        AssessmentField(label = "Estado Cognitivo", placeholder = "Orientación, memoria, atención...", value = cognitiveStatus, onValueChange = { cognitiveStatus = it; hasChanges = true })
+        AssessmentField(label = "Estado Emocional", placeholder = "Ánimo, duelo, aislamiento...", value = emotionalStatus, onValueChange = { emotionalStatus = it; hasChanges = true })
+        AssessmentField(label = "Riesgos Detectados", placeholder = "Caídas, úlceras, desnutrición...", value = risks, onValueChange = { risks = it; hasChanges = true })
+        AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión del tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
 
         Button(
             onClick = {
-                val updatedProfile = profile.copy(
-                    mobility = mobility,
-                    basicActivities = basicActivities,
-                    instrumentalActivities = instrumentalActivities,
-                    cognitiveStatus = cognitiveStatus,
-                    emotionalStatus = emotionalStatus,
-                    risks = risks,
-                    decisionCapacity = decisionCapacity
-                )
-                viewModel.updateClinicalProfile(updatedProfile)
+                viewModel.updateClinicalProfile(profile.copy(
+                    mobility = mobility, basicActivities = basicActivities, instrumentalActivities = instrumentalActivities,
+                    cognitiveStatus = cognitiveStatus, emotionalStatus = emotionalStatus, risks = risks, decisionCapacity = decisionCapacity
+                ))
                 hasChanges = false
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             enabled = hasChanges && !state.isUpdating,
             shape = RoundedCornerShape(12.dp)
         ) {
-            if (state.isUpdating) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-            } else {
-                Text("Guardar Valoración")
-            }
+            if (state.isUpdating) CircularProgressIndicator(modifier = Modifier.size(24.dp)) else Text("Guardar Valoración")
         }
         
         Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+@Composable
+fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
+    val allResults = state.rawResults.sortedByDescending { it.createdAt }
+    val totalResults = allResults.size
+    val totalPages = kotlin.math.ceil(totalResults.toDouble() / state.historyPageSize).toInt().coerceAtLeast(1)
+    
+    val startIndex = (state.historyPage - 1) * state.historyPageSize
+    val paginatedResults = allResults.drop(startIndex).take(state.historyPageSize)
+
+    if (allResults.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("No hay actividades registradas todavía.", color = Color.Gray)
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            Text("Historial Completo de Ejercicios", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(paginatedResults) { result ->
+                    ExerciseHistoryRow(result)
+                }
+            }
+            
+            if (totalPages > 1) {
+                PaginationControls(
+                    currentPage = state.historyPage,
+                    totalPages = totalPages,
+                    onPageClick = { viewModel.setHistoryPage(it) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExerciseHistoryRow(result: ActivityResult) {
+    val dateTimeParts = result.createdAt.split("T")
+    val date = dateTimeParts.getOrNull(0) ?: "---"
+    val time = dateTimeParts.getOrNull(1)?.take(5) ?: "--:--"
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            val category = when {
+                result.activityType.startsWith("orientation") -> "Orientación"
+                result.activityType.startsWith("attention") || result.activityType == "number_search" -> "Atención"
+                result.activityType.startsWith("memory") -> "Memoria"
+                result.activityType.startsWith("language") -> "Lenguaje"
+                result.activityType.startsWith("executive") || result.activityType.startsWith("calculation") -> "FF.EE."
+                result.activityType.startsWith("perception") -> "Percepción"
+                result.activityType.startsWith("literacy") -> "Lectoescritura"
+                else -> "Otros"
+            }
+
+            Box(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = when(category) {
+                        "Orientación" -> Icons.Default.Explore
+                        "Atención" -> Icons.Default.Visibility
+                        "Memoria" -> Icons.Default.Psychology
+                        "Lenguaje" -> Icons.Default.Translate
+                        "FF.EE." -> Icons.Default.Calculate
+                        "Percepción" -> Icons.Default.RemoveRedEye
+                        "Lectoescritura" -> Icons.Default.EditNote
+                        else -> Icons.Default.Extension
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = ExerciseTranslationUtils.getDisplayName(result.activityType), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "$date • $time", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f), shape = RoundedCornerShape(4.dp)) {
+                        Text(text = category, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, fontSize = 9.sp)
+                    }
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(text = "${result.score}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = if(result.score > 70) Color(0xFF2E7D32) else if(result.score > 40) Color(0xFFF57C00) else Color.Red)
+                Text(text = "Nivel ${result.difficultyLevel.takeLast(1)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CollapsibleCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    initialExpanded: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    var expanded by remember { mutableStateOf(initialExpanded) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = if (expanded) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface),
+        border = if (!expanded) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Icon(imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null, tint = Color.Gray)
+            }
+            AnimatedVisibility(visible = expanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp)) { content() }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -434,182 +472,5 @@ private fun AssessmentField(label: String, placeholder: String, value: String, o
             minLines = 3,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
-    }
-}
-
-@Composable
-private fun CollapsibleCard(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    initialExpanded: Boolean = false,
-    content: @Composable () -> Unit
-) {
-    var expanded by remember { mutableStateOf(initialExpanded) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (expanded) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) 
-                             else MaterialTheme.colorScheme.surface
-        ),
-        border = if (!expanded) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded }
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded) "Colapsar" else "Expandir",
-                    tint = Color.Gray
-                )
-            }
-            
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp)) {
-                    content()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-fun PatientEvolutionTab(state: PatientDetailUiState.Success) {
-    val allResults = state.rawResults.sortedByDescending { it.createdAt }
-    
-    // Cálculos de métricas globales
-    val totalExercises = allResults.size
-    val averageScore = if (totalExercises > 0) allResults.map { it.score }.average().toInt() else 0
-    
-    val categoryStats = allResults.groupBy { result ->
-        when {
-            result.activityType.startsWith("orientation") -> "Orientación"
-            result.activityType.startsWith("attention") || result.activityType == "number_search" -> "Atención"
-            result.activityType.startsWith("memory") -> "Memoria"
-            result.activityType.startsWith("language") -> "Lenguaje"
-            result.activityType.startsWith("executive") || result.activityType.startsWith("calculation") -> "Funciones Ejecutivas"
-            result.activityType.startsWith("perception") -> "Percepción"
-            result.activityType.startsWith("literacy") -> "Lectoescritura"
-            else -> "Otros"
-        }
-    }.mapValues { (_, results) -> results.map { it.score }.average().toInt() }
-
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Text("Análisis de Rendimiento", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        
-        // Tarjetas de Métricas Globales
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Total Actividades", style = MaterialTheme.typography.labelSmall)
-                    Text(totalExercises.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                }
-            }
-            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = if(averageScore > 70) Color(0xFFC8E6C9) else Color(0xFFFFEBEE))) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Media de Acierto", style = MaterialTheme.typography.labelSmall)
-                    Text("$averageScore%", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = if(averageScore > 70) Color(0xFF1B5E20) else Color.Red)
-                }
-            }
-        }
-
-        // Estadísticas por Categoría
-        if (categoryStats.isNotEmpty()) {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Rendimiento por Área", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    categoryStats.forEach { (category, score) ->
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(category, style = MaterialTheme.typography.bodySmall)
-                                Text("$score%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                            }
-                            LinearProgressIndicator(
-                                progress = { score / 100f },
-                                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                                color = if(score > 70) Color(0xFF4CAF50) else if(score > 40) Color(0xFFFFC107) else Color.Red,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Listado de Tendencia (Historial reciente en esta pestaña también para contexto)
-        Text("Tendencia Reciente", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        
-        if (allResults.isEmpty()) {
-            Text("No hay datos suficientes.", color = Color.Gray, modifier = Modifier.padding(vertical = 8.dp))
-        } else {
-            allResults.take(10).forEach { result ->
-                ResultEvolutionRow(result)
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun ResultEvolutionRow(result: ActivityResult) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = ExerciseTranslationUtils.getDisplayName(result.activityType),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = result.createdAt.take(10),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
-                )
-            }
-            
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "${result.score}%",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
-                    color = if(result.score > 70) Color(0xFF2E7D32) else Color.Red
-                )
-                Text(
-                    text = "Nivel ${result.difficultyLevel.takeLast(1)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
-                )
-            }
-        }
     }
 }

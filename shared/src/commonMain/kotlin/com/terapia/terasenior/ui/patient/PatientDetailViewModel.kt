@@ -26,6 +26,8 @@ sealed interface PatientDetailUiState {
         val consents: List<Consent> = emptyList(),
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
         val rawResults: List<ActivityResult> = emptyList(),
+        val historyPage: Int = 1,
+        val historyPageSize: Int = 10,
         val isUpdating: Boolean = false
     ) : PatientDetailUiState
     data class Error(val message: String) : PatientDetailUiState
@@ -119,6 +121,13 @@ class PatientDetailViewModel(
             updateTherapeuticProfileUseCase(profile)
                 .onSuccess { loadPatientData() }
                 .onFailure { setUpdating(false) }
+        }
+    }
+
+    fun setHistoryPage(page: Int) {
+        val current = _uiState.value
+        if (current is PatientDetailUiState.Success) {
+            _uiState.value = current.copy(historyPage = page)
         }
     }
 
