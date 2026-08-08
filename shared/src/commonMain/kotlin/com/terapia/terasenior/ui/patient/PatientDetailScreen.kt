@@ -33,6 +33,8 @@ import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import com.terapia.terasenior.util.DateUtils
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,17 +119,23 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // NUEVO ICONO DE PERSONA
         Box(
-            modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+            modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(patient.firstName.take(1), style = MaterialTheme.typography.headlineMedium)
+            Icon(
+                Icons.Default.AccountCircle,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
         Spacer(modifier = Modifier.width(20.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.1.4 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.1.5 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -151,8 +159,8 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DetailRow(label = "NIF / DNI", value = state.patient.nif ?: "No registrado")
                 DetailRow(label = "Nº Expediente", value = state.patient.externalId ?: "No asignado")
-                DetailRow(label = "Fecha de Alta", value = DateUtils.toUserFormat(state.patient.admissionDate) ?: "No registrada")
-                DetailRow(label = "Fecha de Baja", value = DateUtils.toUserFormat(state.patient.dischargeDate) ?: "N/A")
+                DetailRow(label = "Fecha de Alta", value = DateUtils.toUserFormat(state.patient.admissionDate))
+                DetailRow(label = "Fecha de Baja", value = DateUtils.toUserFormat(state.patient.dischargeDate))
                 DetailRow(
                     label = "Estado Actual",
                     value = when(state.patient.status) {
@@ -174,7 +182,7 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
                 DetailRow(label = "Apellidos", value = state.patient.lastName)
                 DetailRow(label = "Nombre", value = state.patient.firstName)
                 DetailRow(label = "Nombre Preferido", value = state.patient.preferredName ?: "Igual al nombre")
-                DetailRow(label = "Fecha de Nacimiento", value = DateUtils.toUserFormat(state.patient.birthDate) ?: "Desconocida")
+                DetailRow(label = "Fecha de Nacimiento", value = DateUtils.toUserFormat(state.patient.birthDate))
             }
         }
 
@@ -201,6 +209,17 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
                 DetailRow(label = "Nombre", value = state.patient.contactName ?: "No asignado")
                 DetailRow(label = "Teléfono de Contacto", value = state.patient.contactPhone ?: "No asignado")
             }
+        }
+        
+        // Notas Generales
+        CollapsibleCard(
+            title = "Observaciones Generales",
+            icon = Icons.AutoMirrored.Filled.Assignment
+        ) {
+            Text(
+                text = state.patient.notes?.ifBlank { "Sin observaciones." } ?: "Sin observaciones.",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
@@ -281,38 +300,55 @@ fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: Patient
     var risks by remember { mutableStateOf(profile.risks ?: "") }
     var decisionCapacity by remember { mutableStateOf(profile.decisionCapacity ?: "") }
 
+    var subTab by remember { mutableStateOf(0) }
     var hasChanges by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        Text("Valoración Geriátrica y Funcional", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-
-        AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio, transferencias...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
-        AssessmentField(label = "Actividades Básicas", placeholder = "Alimentación, higiene, continencia...", value = basicActivities, onValueChange = { basicActivities = it; hasChanges = true })
-        AssessmentField(label = "Actividades Instrumentales", placeholder = "Medicación, dinero, teléfono...", value = instrumentalActivities, onValueChange = { instrumentalActivities = it; hasChanges = true })
-        AssessmentField(label = "Estado Cognitivo", placeholder = "Orientación, memoria, atención...", value = cognitiveStatus, onValueChange = { cognitiveStatus = it; hasChanges = true })
-        AssessmentField(label = "Estado Emocional", placeholder = "Ánimo, duelo, aislamiento...", value = emotionalStatus, onValueChange = { emotionalStatus = it; hasChanges = true })
-        AssessmentField(label = "Riesgos Detectados", placeholder = "Caídas, úlceras, desnutrición...", value = risks, onValueChange = { risks = it; hasChanges = true })
-        AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión del tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
-
-        Button(
-            onClick = {
-                viewModel.updateClinicalProfile(profile.copy(
-                    mobility = mobility, basicActivities = basicActivities, instrumentalActivities = instrumentalActivities,
-                    cognitiveStatus = cognitiveStatus, emotionalStatus = emotionalStatus, risks = risks, decisionCapacity = decisionCapacity
-                ))
-                hasChanges = false
-            },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            enabled = hasChanges && !state.isUpdating,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            if (state.isUpdating) CircularProgressIndicator(modifier = Modifier.size(24.dp)) else Text("Guardar Valoración")
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = subTab, modifier = Modifier.fillMaxWidth()) {
+            Tab(selected = subTab == 0, onClick = { subTab = 0 }, text = { Text("Funcional", fontSize = 12.sp) })
+            Tab(selected = subTab == 1, onClick = { subTab = 1 }, text = { Text("Cognitivo", fontSize = 12.sp) })
+            Tab(selected = subTab == 2, onClick = { subTab = 2 }, text = { Text("Riesgos", fontSize = 12.sp) })
         }
-        
-        Spacer(modifier = Modifier.height(40.dp))
+
+        Column(
+            modifier = Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            when (subTab) {
+                0 -> {
+                    AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio, transferencias...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
+                    AssessmentField(label = "Actividades Básicas", placeholder = "Alimentación, higiene, continencia...", value = basicActivities, onValueChange = { basicActivities = it; hasChanges = true })
+                    AssessmentField(label = "Actividades Instrumentales", placeholder = "Medicación, dinero, teléfono...", value = instrumentalActivities, onValueChange = { instrumentalActivities = it; hasChanges = true })
+                }
+                1 -> {
+                    AssessmentField(label = "Estado Cognitivo", placeholder = "Orientación, memoria, atención...", value = cognitiveStatus, onValueChange = { cognitiveStatus = it; hasChanges = true })
+                    AssessmentField(label = "Estado Emocional", placeholder = "Ánimo, duelo, aislamiento...", value = emotionalStatus, onValueChange = { emotionalStatus = it; hasChanges = true })
+                }
+                2 -> {
+                    AssessmentField(label = "Riesgos Detectados", placeholder = "Caídas, úlceras, desnutrición...", value = risks, onValueChange = { risks = it; hasChanges = true })
+                    AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión del tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = {
+                    viewModel.updateClinicalProfile(profile.copy(
+                        mobility = mobility, basicActivities = basicActivities, instrumentalActivities = instrumentalActivities,
+                        cognitiveStatus = cognitiveStatus, emotionalStatus = emotionalStatus, risks = risks, decisionCapacity = decisionCapacity
+                    ))
+                    hasChanges = false
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                enabled = hasChanges && !state.isUpdating,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (state.isUpdating) CircularProgressIndicator(modifier = Modifier.size(24.dp)) else Text("Guardar Cambios de Valoración")
+            }
+            
+            Spacer(modifier = Modifier.height(40.dp))
+        }
     }
 }
 

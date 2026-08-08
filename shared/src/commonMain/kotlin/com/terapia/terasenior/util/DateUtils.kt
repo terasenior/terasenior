@@ -13,14 +13,18 @@ object DateUtils {
         if (dbDate.isNullOrBlank()) return ""
         val parts = dbDate.split("-")
         if (parts.size != 3) return dbDate
-        return "${parts[2]}-${parts[1]}-${parts[0]}"
+        // Si el formato es YYYY-MM-DD
+        if (parts[0].length == 4) {
+            return "${parts[2]}-${parts[1]}-${parts[0]}"
+        }
+        return dbDate
     }
 
     /**
      * Convierte una fecha de formato DD-MM-AAAA (Usuario) a YYYY-MM-DD (DB).
      */
-    fun toDbFormat(userDate: String?): String {
-        if (userDate.isNullOrBlank()) return ""
+    fun toDbFormat(userDate: String?): String? {
+        if (userDate.isNullOrBlank()) return null
         val parts = userDate.split("-")
         if (parts.size != 3) return userDate
         // Si el primer segmento tiene 4 dígitos, ya está en formato DB
