@@ -24,6 +24,9 @@ fun CreatePatientDialog(
         nif: String,
         admissionDate: String,
         address: String,
+        city: String,
+        postalCode: String,
+        province: String,
         phone: String,
         contactName: String,
         contactPhone: String,
@@ -40,6 +43,9 @@ fun CreatePatientDialog(
     var nif by remember { mutableStateOf("") }
     var admissionDate by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
+    var postalCode by remember { mutableStateOf("") }
+    var province by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var contactName by remember { mutableStateOf("") }
     var contactPhone by remember { mutableStateOf("") }
@@ -93,8 +99,14 @@ fun CreatePatientDialog(
                             OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                         }
                         2 -> {
-                            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección Completa") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("Población") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp))
+                                OutlinedTextField(value = postalCode, onValueChange = { postalCode = it }, label = { Text("CP") }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(12.dp))
+                            }
+                            OutlinedTextField(value = province, onValueChange = { province = it }, label = { Text("Provincia") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Paciente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             Text("Contacto de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Referente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
@@ -106,7 +118,7 @@ fun CreatePatientDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, phone, contactName, contactPhone, status) },
+                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, status) },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {

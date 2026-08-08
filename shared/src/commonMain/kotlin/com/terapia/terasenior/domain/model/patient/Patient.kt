@@ -16,6 +16,9 @@ data class Patient(
     val admissionDate: String? = null, // Fecha de Alta
     val dischargeDate: String? = null, // Fecha de Baja
     val address: String? = null,
+    val city: String? = null,          // Población
+    val postalCode: String? = null,    // Código Postal
+    val province: String? = null,      // Provincia
     val phone: String? = null,
     val contactName: String? = null,
     val contactPhone: String? = null,

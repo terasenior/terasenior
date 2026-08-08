@@ -29,6 +29,9 @@ fun EditPatientDialog(
     var admissionDate by remember { mutableStateOf(patient.admissionDate ?: "") }
     var dischargeDate by remember { mutableStateOf(patient.dischargeDate ?: "") }
     var address by remember { mutableStateOf(patient.address ?: "") }
+    var city by remember { mutableStateOf(patient.city ?: "") }
+    var postalCode by remember { mutableStateOf(patient.postalCode ?: "") }
+    var province by remember { mutableStateOf(patient.province ?: "") }
     var phone by remember { mutableStateOf(patient.phone ?: "") }
     var contactName by remember { mutableStateOf(patient.contactName ?: "") }
     var contactPhone by remember { mutableStateOf(patient.contactPhone ?: "") }
@@ -77,6 +80,11 @@ fun EditPatientDialog(
                         }
                         2 -> {
                             OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("Población") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp))
+                                OutlinedTextField(value = postalCode, onValueChange = { postalCode = it }, label = { Text("CP") }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(12.dp))
+                            }
+                            OutlinedTextField(value = province, onValueChange = { province = it }, label = { Text("Provincia") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Principal") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             Text("Referente de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
@@ -93,8 +101,9 @@ fun EditPatientDialog(
                     onConfirm(patient.copy(
                         externalId = externalId, nif = nif, firstName = firstName, lastName = lastName, 
                         preferredName = preferredName, birthDate = birthDate, admissionDate = admissionDate,
-                        dischargeDate = dischargeDate, address = address, phone = phone,
-                        contactName = contactName, contactPhone = contactPhone, status = status
+                        dischargeDate = dischargeDate, address = address, city = city, postalCode = postalCode,
+                        province = province, phone = phone, contactName = contactName, 
+                        contactPhone = contactPhone, status = status
                     ))
                 },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,

@@ -32,6 +32,9 @@ class CreatePatientViewModel(
         nif: String?,
         admissionDate: String?,
         address: String?,
+        city: String?,
+        postalCode: String?,
+        province: String?,
         phone: String?,
         contactName: String?,
         contactPhone: String?,
@@ -41,7 +44,7 @@ class CreatePatientViewModel(
             _uiState.value = CreatePatientUiState.Loading
             createPatientUseCase(
                 entityId, firstName, lastName, preferredName, birthDate, 
-                externalId, nif, admissionDate, address, phone, contactName, contactPhone, status
+                externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, status
             )
                 .onSuccess {
                     _uiState.value = CreatePatientUiState.Success
