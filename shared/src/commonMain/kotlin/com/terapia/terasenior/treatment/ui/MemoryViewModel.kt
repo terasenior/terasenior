@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.*
 
 enum class MemoryType {
     CULTURAL, UTILITY, NEEDS, RECENT
@@ -31,6 +30,7 @@ data class MemoryUiState(
     val totalSteps: Int = 4
 )
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 class MemoryViewModel(
     private val saveResultUseCase: SaveActivityResultUseCase
 ) : ViewModel() {
@@ -67,7 +67,7 @@ class MemoryViewModel(
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
-            startTimeMs = kotlinx.datetime.Clock.System.now().toEpochMilliseconds(),
+            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
             currentStep = 0
@@ -136,9 +136,8 @@ class MemoryViewModel(
 
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
-        val diff = endTime - state.startTimeMs
-        val duration = (diff / 1000).toInt()
+        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }

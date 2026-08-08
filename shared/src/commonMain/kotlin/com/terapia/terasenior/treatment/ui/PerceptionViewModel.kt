@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.*
 
 enum class PerceptionType {
     LATERAL_DOMINANCE, MIRROR, BODY_PARTS
@@ -31,6 +30,7 @@ data class PerceptionUiState(
     val totalSteps: Int = 3
 )
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 class PerceptionViewModel(
     private val saveResultUseCase: SaveActivityResultUseCase
 ) : ViewModel() {
@@ -57,11 +57,10 @@ class PerceptionViewModel(
     )
 
     fun startNewGame(type: PerceptionType, level: Int = 1) {
-        val now = kotlinx.datetime.Clock.System.now()
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
-            startTimeMs = now.toEpochMilliseconds(),
+            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
             currentStep = 0
@@ -128,9 +127,8 @@ class PerceptionViewModel(
 
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
-        val diff = endTime - state.startTimeMs
-        val duration = (diff / 1000).toInt()
+        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }

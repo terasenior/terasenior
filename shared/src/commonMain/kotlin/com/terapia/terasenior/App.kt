@@ -332,7 +332,7 @@ fun App() {
                             if (showCreateDialog) {
                                 val state = createUiState
                                 if (state is CreateAppointmentUiState.Success || state is CreateAppointmentUiState.Loading) {
-                                    val currentDay = (agendaState as? AgendaUiState.Success)?.selectedDate ?: kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                    val currentDay = (agendaState as? AgendaUiState.Success)?.selectedDate ?: (kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
                                     CreateAppointmentDialog(
                                         selectedDate = currentDay,
                                         patients = if (state is CreateAppointmentUiState.Success) state.patients else emptyList(),
@@ -447,12 +447,12 @@ fun App() {
                             val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val viewModel = remember(patientId) { 
                                 PatientDetailViewModel(
-                                    patientId = patientId, 
-                                    repository = repository,
-                                    resultsRepository = resultsRepository,
-                                    therapyRepository = therapyRepo,
-                                    updatePatientUseCase = UpdatePatientUseCase(repository),
-                                    updateTherapeuticProfileUseCase = UpdateTherapeuticProfileUseCase(repository)
+                                    patientId, 
+                                    repository,
+                                    resultsRepository,
+                                    therapyRepo,
+                                    UpdatePatientUseCase(repository),
+                                    UpdateTherapeuticProfileUseCase(repository)
                                 ) 
                             }
                             PatientDetailScreen(

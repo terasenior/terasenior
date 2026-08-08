@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.*
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.DayOfWeek
 
 enum class OrientationType {
     WEEKDAY, MONTH, YEAR, SEASON, WEATHER
@@ -41,9 +44,10 @@ class OrientationViewModel(
     private val seasons = listOf("Primavera", "Verano", "Otoño", "Invierno")
     private val weatherOptions = listOf("Frío", "Calor", "Templado", "Mucho Calor")
 
+    @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(level: Int = 1) {
-        val nowInstant = kotlinx.datetime.Clock.System.now()
-        val now = nowInstant.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+        val nowInstant = kotlin.time.Clock.System.now()
+        val now = nowInstant.toLocalDateTime(TimeZone.currentSystemDefault())
         setupQuestion(OrientationType.WEEKDAY, now)
         _uiState.update { it.copy(
             currentLevel = level,
@@ -64,7 +68,6 @@ class OrientationViewModel(
                     DayOfWeek.FRIDAY -> "Viernes"
                     DayOfWeek.SATURDAY -> "Sábado"
                     DayOfWeek.SUNDAY -> "Domingo"
-                    else -> ""
                 }
                 Triple("¿Qué día de la semana es hoy?", days.shuffled(), correctDay)
             }
@@ -77,8 +80,8 @@ class OrientationViewModel(
                 Triple("¿En qué año estamos?", listOf(year, (now.year-1).toString(), (now.year+1).toString(), "2020").shuffled(), year)
             }
             OrientationType.SEASON -> {
-                val mOrdinal = now.month.ordinal + 1
-                val correctSeason = when(mOrdinal) {
+                val mNum = now.month.ordinal + 1
+                val correctSeason = when(mNum) {
                     in 3..5 -> "Primavera"
                     in 6..8 -> "Verano"
                     in 9..11 -> "Otoño"
@@ -117,8 +120,9 @@ class OrientationViewModel(
         }
     }
 
+    @OptIn(kotlin.time.ExperimentalTime::class)
     private fun nextQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+        val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         when(_uiState.value.currentQuestionType) {
             OrientationType.WEEKDAY -> setupQuestion(OrientationType.MONTH, now)
             OrientationType.MONTH -> setupQuestion(OrientationType.YEAR, now)
@@ -133,11 +137,11 @@ class OrientationViewModel(
         }
     }
 
+    @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
-        val diff = endTime - state.startTimeMs
-        val duration = (diff / 1000).toInt()
+        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }

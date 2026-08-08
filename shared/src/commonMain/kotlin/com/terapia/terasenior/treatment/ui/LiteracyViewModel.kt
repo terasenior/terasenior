@@ -37,6 +37,7 @@ data class LiteracyUiState(
     val tracingAccuracy: Float = 0f
 )
 
+@OptIn(kotlin.time.ExperimentalTime::class)
 class LiteracyViewModel(
     private val saveResultUseCase: SaveActivityResultUseCase
 ) : ViewModel() {
@@ -75,7 +76,7 @@ class LiteracyViewModel(
             targetValue = target,
             options = options,
             currentLevel = level,
-            startTimeMs = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -175,9 +176,8 @@ class LiteracyViewModel(
 
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
-        val diff = endTime - state.startTimeMs
-        val duration = (diff / 1000).toInt()
+        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
