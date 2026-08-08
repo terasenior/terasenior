@@ -1,12 +1,15 @@
 package com.terapia.terasenior.ui.patient
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 
@@ -97,7 +101,7 @@ fun PatientListScreen(
                     }
 
                     if (state.patients.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Default.SearchOff, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -108,15 +112,77 @@ fun PatientListScreen(
                         LazyColumn(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.weight(1f).fillMaxWidth()
                         ) {
                             items(state.patients) { patient ->
                                 PatientCard(patient = patient, onClick = { onPatientClick(patient.id) })
                             }
                         }
+                        
+                        // CONTROLES DE PAGINACIÓN
+                        if (state.totalPages > 1) {
+                            PaginationControls(
+                                currentPage = state.currentPage,
+                                totalPages = state.totalPages,
+                                onPageClick = { viewModel.onPageChanged(it) }
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun PaginationControls(
+    currentPage: Int,
+    totalPages: Int,
+    onPageClick: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = { onPageClick(currentPage - 1) },
+            enabled = currentPage > 1
+        ) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Anterior")
+        }
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        repeat(totalPages) { index ->
+            val page = index + 1
+            val isSelected = page == currentPage
+            
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onPageClick(page) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = page.toString(),
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    fontSize = 14.sp
+                )
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        IconButton(
+            onClick = { onPageClick(currentPage + 1) },
+            enabled = currentPage < totalPages
+        ) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Siguiente")
         }
     }
 }
@@ -134,17 +200,19 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // NUEVO ICONO PROFESIONAL
             Box(
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = patient.firstName.take(1).uppercase(),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                Icon(
+                    Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -156,7 +224,7 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
                         text = patient.fullName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
-                    if (patient.externalId != null || patient.nif != null) {
+                    if (patient.nif != null || patient.externalId != null) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "(${listOfNotNull(patient.nif, patient.externalId).joinToString(" / ")})",
