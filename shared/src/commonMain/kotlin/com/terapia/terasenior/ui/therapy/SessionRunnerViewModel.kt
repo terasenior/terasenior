@@ -179,10 +179,5 @@ class SessionRunnerViewModel(
         }
     }
 
-    private fun getExerciseDisplayName(type: String): String = when(type) {
-        "number_search" -> "Busca el Número"
-        "memory_pairs" -> "Parejas de Figuras"
-        "language_word_image" -> "Vocabulario"
-        else -> type
-    }
+    private fun getExerciseDisplayName(type: String): String = ExerciseTranslationUtils.getDisplayName(type)
 }

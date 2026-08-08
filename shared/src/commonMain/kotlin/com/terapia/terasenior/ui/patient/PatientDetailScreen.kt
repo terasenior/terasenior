@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
+import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -195,7 +196,7 @@ fun CategoryResultGroup(category: String, results: List<ActivityResult>) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = result.activityType.replace("_", " ").replaceFirstChar { it.uppercase() },
+                    text = ExerciseTranslationUtils.getDisplayName(result.activityType),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f)
                 )
