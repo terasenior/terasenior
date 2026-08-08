@@ -12,7 +12,13 @@ class CreatePatientUseCase(
         firstName: String,
         lastName: String,
         preferredName: String? = null,
-        birthDate: String? = null
+        birthDate: String? = null,
+        externalId: String? = null,
+        admissionDate: String? = null,
+        address: String? = null,
+        phone: String? = null,
+        contactName: String? = null,
+        contactPhone: String? = null
     ): Result<Unit> {
         if (firstName.isBlank() || lastName.isBlank()) {
             return Result.failure(Exception("Nombre y apellidos son obligatorios"))
@@ -21,10 +27,16 @@ class CreatePatientUseCase(
         val patient = Patient(
             id = "", 
             entityId = entityId,
+            externalId = externalId,
             firstName = firstName,
             lastName = lastName,
             preferredName = preferredName,
             birthDate = birthDate,
+            admissionDate = admissionDate,
+            address = address,
+            phone = phone,
+            contactName = contactName,
+            contactPhone = contactPhone,
             status = PatientStatus.ACTIVE,
             createdAt = ""
         )

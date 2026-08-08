@@ -27,11 +27,17 @@ class CreatePatientViewModel(
         firstName: String,
         lastName: String,
         preferredName: String?,
-        birthDate: String?
+        birthDate: String?,
+        externalId: String?,
+        admissionDate: String?,
+        address: String?,
+        phone: String?,
+        contactName: String?,
+        contactPhone: String?
     ) {
         viewModelScope.launch {
             _uiState.value = CreatePatientUiState.Loading
-            createPatientUseCase(entityId, firstName, lastName, preferredName, birthDate)
+            createPatientUseCase(entityId, firstName, lastName, preferredName, birthDate, externalId, admissionDate, address, phone, contactName, contactPhone)
                 .onSuccess {
                     _uiState.value = CreatePatientUiState.Success
                 }

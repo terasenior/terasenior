@@ -84,7 +84,7 @@ fun PatientListScreen(
                                 val label = when(s) {
                                     PatientStatus.ACTIVE -> "Activo"
                                     PatientStatus.INACTIVE -> "Inactivo"
-                                    PatientStatus.DECEASED -> "Fallecido"
+                                    PatientStatus.BAJA -> "Baja"
                                     PatientStatus.DISCHARGED -> "Alta"
                                 }
                                 FilterChip(
@@ -151,16 +151,26 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = patient.fullName,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = patient.fullName,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    if (patient.externalId != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "(${patient.externalId})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
+                }
                 
                 Surface(
                     color = when(patient.status) {
                         PatientStatus.ACTIVE -> Color(0xFFC8E6C9)
                         PatientStatus.INACTIVE -> Color(0xFFFFF9C4)
-                        PatientStatus.DECEASED -> Color(0xFFBDBDBD)
+                        PatientStatus.BAJA -> Color(0xFFBDBDBD)
                         PatientStatus.DISCHARGED -> Color(0xFFB2EBF2)
                     },
                     shape = RoundedCornerShape(8.dp),
@@ -169,7 +179,7 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
                     val label = when(patient.status) {
                         PatientStatus.ACTIVE -> "Activo"
                         PatientStatus.INACTIVE -> "Inactivo"
-                        PatientStatus.DECEASED -> "Fallecido"
+                        PatientStatus.BAJA -> "Baja"
                         PatientStatus.DISCHARGED -> "Alta Terapéutica"
                     }
                     Text(

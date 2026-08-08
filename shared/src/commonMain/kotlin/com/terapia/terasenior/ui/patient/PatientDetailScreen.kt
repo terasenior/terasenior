@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
+import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
@@ -220,9 +221,74 @@ fun CategoryResultGroup(category: String, results: List<ActivityResult>) {
 
 @Composable
 fun PatientInfoTab(state: PatientDetailUiState.Success) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())) {
-        Text("Perfil Clínico", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        // ... (resto del perfil clínico existente)
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        // Datos Administrativos
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        ) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Datos Administrativos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                
+                DetailRow(label = "Identificador / NIF", value = state.patient.externalId ?: "No asignado")
+                DetailRow(label = "Fecha de Alta", value = state.patient.admissionDate ?: "No registrada")
+                DetailRow(label = "Fecha de Baja", value = state.patient.dischargeDate ?: "N/A")
+                
+                DetailRow(
+                    label = "Estado Actual", 
+                    value = when(state.patient.status) {
+                        PatientStatus.ACTIVE -> "Activo"
+                        PatientStatus.INACTIVE -> "Inactivo"
+                        PatientStatus.BAJA -> "Baja"
+                        PatientStatus.DISCHARGED -> "Alta Terapéutica"
+                    }
+                )
+            }
+        }
+
+        // Datos Personales
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Información Personal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                DetailRow(label = "Apellidos", value = state.patient.lastName)
+                DetailRow(label = "Nombre", value = state.patient.firstName)
+                DetailRow(label = "Nombre Preferido", value = state.patient.preferredName ?: "Igual al nombre")
+                DetailRow(label = "Fecha de Nacimiento", value = state.patient.birthDate ?: "Desconocida")
+            }
+        }
+
+        // Contacto y Emergencia
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+        ) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Contacto y Emergencia", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                
+                DetailRow(label = "Dirección", value = state.patient.address ?: "No registrada")
+                DetailRow(label = "Teléfono", value = state.patient.phone ?: "No registrado")
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                
+                Text("Persona de Referencia", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                DetailRow(label = "Nombre", value = state.patient.contactName ?: "No asignado")
+                DetailRow(label = "Teléfono de Contacto", value = state.patient.contactPhone ?: "No asignado")
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 

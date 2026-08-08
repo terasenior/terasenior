@@ -1,16 +1,23 @@
 package com.terapia.terasenior.domain.model.patient
 
 enum class PatientStatus {
-    ACTIVE, INACTIVE, DECEASED, DISCHARGED
+    ACTIVE, INACTIVE, BAJA, DISCHARGED
 }
 
 data class Patient(
     val id: String,
     val entityId: String,
+    val externalId: String? = null, // DNI, NIF, Num Expediente (Fase 5)
     val firstName: String,
     val lastName: String,
     val preferredName: String?,
     val birthDate: String?,
+    val admissionDate: String? = null, // Fecha de Alta
+    val dischargeDate: String? = null, // Fecha de Baja
+    val address: String? = null,
+    val phone: String? = null,
+    val contactName: String? = null,
+    val contactPhone: String? = null,
     val status: PatientStatus,
     val createdAt: String
 ) {
