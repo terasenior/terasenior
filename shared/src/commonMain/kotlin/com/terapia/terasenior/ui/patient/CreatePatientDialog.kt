@@ -21,6 +21,7 @@ fun CreatePatientDialog(
         preferredName: String, 
         birthDate: String, 
         externalId: String, 
+        nif: String,
         admissionDate: String,
         address: String,
         phone: String,
@@ -36,6 +37,7 @@ fun CreatePatientDialog(
     var preferredName by remember { mutableStateOf("") }
     var birthDate by remember { mutableStateOf("") }
     var externalId by remember { mutableStateOf("") }
+    var nif by remember { mutableStateOf("") }
     var admissionDate by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -65,7 +67,8 @@ fun CreatePatientDialog(
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     when (selectedTab) {
                         0 -> {
-                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("ID Externo / DNI / NIF") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("Nº Expediente / ID Interno") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = nif, onValueChange = { nif = it }, label = { Text("DNI / NIF") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             
                             Text("Estado Inicial", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
@@ -77,7 +80,9 @@ fun CreatePatientDialog(
                                         PatientStatus.DISCHARGED -> "Alta"
                                         else -> ""
                                     }
-                                    FilterChip(selected = status == s, onClick = { status = s }, label = { Text(label) })
+                                    if (label.isNotEmpty()) {
+                                        FilterChip(selected = status == s, onClick = { status = s }, label = { Text(label) })
+                                    }
                                 }
                             }
                         }
@@ -90,7 +95,7 @@ fun CreatePatientDialog(
                         2 -> {
                             OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección Completa") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Paciente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             Text("Contacto de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Referente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Referente") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
@@ -101,7 +106,7 @@ fun CreatePatientDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, admissionDate, address, phone, contactName, contactPhone, status) },
+                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, phone, contactName, contactPhone, status) },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {

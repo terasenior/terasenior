@@ -257,10 +257,11 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
         CollapsibleCard(
             title = "Datos Administrativos",
             icon = Icons.Default.Business,
-            initialExpanded = true
+            initialExpanded = false
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                DetailRow(label = "Identificador / NIF", value = state.patient.externalId ?: "No asignado")
+                DetailRow(label = "NIF / DNI", value = state.patient.nif ?: "No registrado")
+                DetailRow(label = "Nº Expediente", value = state.patient.externalId ?: "No asignado")
                 DetailRow(label = "Fecha de Alta", value = state.patient.admissionDate ?: "No registrada")
                 DetailRow(label = "Fecha de Baja", value = state.patient.dischargeDate ?: "N/A")
                 DetailRow(

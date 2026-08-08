@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditPatientDialog(
     patient: Patient,
@@ -21,6 +21,7 @@ fun EditPatientDialog(
     isLoading: Boolean
 ) {
     var externalId by remember { mutableStateOf(patient.externalId ?: "") }
+    var nif by remember { mutableStateOf(patient.nif ?: "") }
     var firstName by remember { mutableStateOf(patient.firstName) }
     var lastName by remember { mutableStateOf(patient.lastName) }
     var preferredName by remember { mutableStateOf(patient.preferredName ?: "") }
@@ -50,7 +51,8 @@ fun EditPatientDialog(
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     when (selectedTab) {
                         0 -> {
-                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("ID Externo / NIF") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("Nº Expediente / ID Interno") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = nif, onValueChange = { nif = it }, label = { Text("DNI / NIF Oficial") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja (Si aplica)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                             
@@ -89,7 +91,7 @@ fun EditPatientDialog(
             Button(
                 onClick = { 
                     onConfirm(patient.copy(
-                        externalId = externalId, firstName = firstName, lastName = lastName, 
+                        externalId = externalId, nif = nif, firstName = firstName, lastName = lastName, 
                         preferredName = preferredName, birthDate = birthDate, admissionDate = admissionDate,
                         dischargeDate = dischargeDate, address = address, phone = phone,
                         contactName = contactName, contactPhone = contactPhone, status = status

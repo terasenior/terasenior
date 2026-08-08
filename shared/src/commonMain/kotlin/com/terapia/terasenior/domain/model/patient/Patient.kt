@@ -7,7 +7,8 @@ enum class PatientStatus {
 data class Patient(
     val id: String,
     val entityId: String,
-    val externalId: String? = null, // DNI, NIF, Num Expediente (Fase 5)
+    val externalId: String? = null, // Número de Expediente / ID Interno
+    val nif: String? = null,        // DNI / NIF oficial
     val firstName: String,
     val lastName: String,
     val preferredName: String?,

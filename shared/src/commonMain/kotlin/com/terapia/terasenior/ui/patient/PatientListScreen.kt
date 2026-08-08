@@ -156,10 +156,10 @@ private fun PatientCard(patient: Patient, onClick: () -> Unit) {
                         text = patient.fullName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
-                    if (patient.externalId != null) {
+                    if (patient.externalId != null || patient.nif != null) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "(${patient.externalId})",
+                            text = "(${listOfNotNull(patient.nif, patient.externalId).joinToString(" / ")})",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
