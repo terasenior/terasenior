@@ -18,7 +18,8 @@ data class AppointmentDto(
     @SerialName("status") val status: String = "SCHEDULED",
     @SerialName("session_id") val sessionId: String? = null,
     @SerialName("intervention_type") val interventionType: String? = null,
-    @SerialName("notes") val notes: String? = null
+    @SerialName("notes") val notes: String? = null,
+    @SerialName("planned_exercises") val plannedExercises: List<String> = emptyList()
 )
 
 fun AppointmentDto.toDomain() = Appointment(
@@ -32,7 +33,8 @@ fun AppointmentDto.toDomain() = Appointment(
     status = try { AppointmentStatus.valueOf(status) } catch (e: Exception) { AppointmentStatus.SCHEDULED },
     sessionId = sessionId,
     interventionType = interventionType,
-    notes = notes
+    notes = notes,
+    plannedExercises = plannedExercises
 )
 
 fun Appointment.toData() = AppointmentDto(
@@ -46,5 +48,6 @@ fun Appointment.toData() = AppointmentDto(
     status = status.name,
     sessionId = sessionId,
     interventionType = interventionType,
-    notes = notes
+    notes = notes,
+    plannedExercises = plannedExercises
 )

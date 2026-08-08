@@ -23,5 +23,6 @@ data class Appointment(
     val status: AppointmentStatus,
     val sessionId: String? = null,
     val interventionType: String? = "ESTIMULACION",
-    val notes: String? = null
+    val notes: String? = null,
+    val plannedExercises: List<String> = emptyList() // Lista de tipos de ejercicios (Fase 5)
 )

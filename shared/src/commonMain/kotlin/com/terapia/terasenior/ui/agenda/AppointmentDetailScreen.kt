@@ -15,15 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentAttendee
 import com.terapia.terasenior.domain.model.agenda.AttendanceStatus
+import com.terapia.terasenior.domain.model.agenda.Appointment
+import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppointmentDetailScreen(
     viewModel: AppointmentDetailViewModel,
-    onStartSession: (String) -> Unit,
+    onStartSession: (Appointment) -> Unit,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -73,6 +76,22 @@ fun AppointmentDetailScreen(
                                     }
                                     Text("Estado: $statusLabel", style = MaterialTheme.typography.labelMedium)
                                 }
+
+                                if (state.appointment.plannedExercises.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text("Actividades Planificadas:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        state.appointment.plannedExercises.forEach { type ->
+                                            SuggestionChip(
+                                                onClick = {},
+                                                label = { Text(ExerciseTranslationUtils.getDisplayName(type), fontSize = 11.sp) }
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -82,7 +101,7 @@ fun AppointmentDetailScreen(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (state.appointment.status == AppointmentStatus.SCHEDULED || state.appointment.status == AppointmentStatus.CONFIRMED) {
                                 Button(
-                                    onClick = { onStartSession(state.appointment.id) },
+                                    onClick = { onStartSession(state.appointment) },
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {

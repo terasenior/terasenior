@@ -67,7 +67,8 @@ class CreateAppointmentViewModel(
         endTime: LocalTime,
         type: AppointmentType,
         selectedStaffIds: List<String>,
-        selectedPatientIds: List<String>
+        selectedPatientIds: List<String>,
+        plannedExercises: List<String> = emptyList()
     ) {
         if (entityId.isBlank()) {
             _uiState.value = CreateAppointmentUiState.Error("Error: El ID del centro no puede estar vacío.")
@@ -99,7 +100,8 @@ class CreateAppointmentViewModel(
                 startAt = startInstant.toString(),
                 endAt = endInstant.toString(),
                 type = type,
-                status = AppointmentStatus.SCHEDULED
+                status = AppointmentStatus.SCHEDULED,
+                plannedExercises = plannedExercises
             )
 
             agendaRepository.createFullAppointment(appointment, selectedStaffIds, selectedPatientIds)

@@ -2,6 +2,7 @@ package com.terapia.terasenior.ui.therapy
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
@@ -10,6 +11,7 @@ import com.terapia.terasenior.domain.model.therapy.TherapySession
 import com.terapia.terasenior.domain.model.therapy.TherapySessionExercise
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
+import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,12 +71,26 @@ class CreateSessionViewModel(
         _uiState.update { it.copy(selectedPatient = patient, currentStep = WizardStep.CATEGORY_SELECTION) }
     }
 
-    fun startFromAppointment(appointmentId: String, patient: Patient?) {
+    fun startFromAppointment(appointment: Appointment, patient: Patient?) {
+        val plannedExercises = appointment.plannedExercises.map { type ->
+            ExerciseConfig(
+                type = type,
+                name = ExerciseTranslationUtils.getDisplayName(type),
+                category = "Atención", // Default, could be improved
+                level = 1
+            )
+        }
+        
         _uiState.update { it.copy(
             mode = SessionMode.FROM_APPOINTMENT,
-            selectedAppointmentId = appointmentId,
+            selectedAppointmentId = appointment.id,
             selectedPatient = patient,
-            currentStep = if (patient != null) WizardStep.CATEGORY_SELECTION else WizardStep.PATIENT_SELECTION
+            selectedExercises = plannedExercises,
+            currentStep = if (patient != null) {
+                if (plannedExercises.isNotEmpty()) WizardStep.SUMMARY else WizardStep.CATEGORY_SELECTION
+            } else {
+                WizardStep.PATIENT_SELECTION
+            }
         ) }
         if (patient == null) loadPatients()
     }

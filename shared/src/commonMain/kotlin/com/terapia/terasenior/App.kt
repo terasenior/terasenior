@@ -338,7 +338,7 @@ fun App() {
                                         patients = if (state is CreateAppointmentUiState.Success) state.patients else emptyList(),
                                         professionals = if (state is CreateAppointmentUiState.Success) state.professionals else emptyList(),
                                         onDismiss = { showCreateDialog = false },
-                                        onConfirm = { t, d, s, e, type, staff, attendees ->
+                                        onConfirm = { t, d, s, e, type, staff, attendees, exercises ->
                                             scope.launch {
                                                 val entityId = currentUserProfile?.entityId 
                                                     ?: (state as? CreateAppointmentUiState.Success)?.entities?.firstOrNull()?.id
@@ -354,7 +354,8 @@ fun App() {
                                                     endTime = e,
                                                     type = type,
                                                     selectedStaffIds = staff,
-                                                    selectedPatientIds = attendees
+                                                    selectedPatientIds = attendees,
+                                                    plannedExercises = exercises
                                                 )
                                             }
                                         },
@@ -384,8 +385,8 @@ fun App() {
                             }
                             AppointmentDetailScreen(
                                 viewModel = viewModel,
-                                onStartSession = { id ->
-                                    createViewModel.startFromAppointment(id, null)
+                                onStartSession = { appt ->
+                                    createViewModel.startFromAppointment(appt, null)
                                     currentScreen = Screen.CREATE_SESSION
                                 },
                                 onBack = { currentScreen = Screen.AGENDA }
