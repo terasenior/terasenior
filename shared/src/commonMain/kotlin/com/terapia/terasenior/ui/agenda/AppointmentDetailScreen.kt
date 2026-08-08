@@ -21,6 +21,9 @@ import com.terapia.terasenior.domain.model.agenda.AppointmentAttendee
 import com.terapia.terasenior.domain.model.agenda.AttendanceStatus
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
+import com.terapia.terasenior.util.DateUtils
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -80,6 +83,9 @@ fun AppointmentDetailScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
+                                    val startDateTime = kotlinx.datetime.Instant.parse(state.appointment.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
+                                    val dateStr = DateUtils.toUserFormat(startDateTime.date.toString())
+                                    Text("Fecha: $dateStr • Estado: ", style = MaterialTheme.typography.labelMedium)
                                     val statusLabel = when(state.appointment.status) {
                                         AppointmentStatus.SCHEDULED -> "Programada"
                                         AppointmentStatus.CONFIRMED -> "Confirmada"

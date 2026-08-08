@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.patient.PatientStatus
+import com.terapia.terasenior.util.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -80,7 +81,7 @@ fun CreatePatientDialog(
                         0 -> {
                             OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("Nº Expediente / ID Interno") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             OutlinedTextField(value = nif, onValueChange = { nif = it }, label = { Text("DNI / NIF") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
-                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (DD-MM-AAAA)") }, placeholder = { Text("Ej: 08-08-2026") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             
                             Text("Estado Inicial", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -101,7 +102,7 @@ fun CreatePatientDialog(
                             OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Nombre *") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), isError = firstName.isBlank())
                             OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text("Apellidos *") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), isError = lastName.isBlank())
                             OutlinedTextField(value = preferredName, onValueChange = { preferredName = it }, label = { Text("Nombre Preferido") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
-                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (DD-MM-AAAA)") }, placeholder = { Text("Ej: 20-05-1945") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                         }
                         2 -> {
                             OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
@@ -133,7 +134,15 @@ fun CreatePatientDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, notes, status) },
+                onClick = { 
+                    onConfirm(
+                        firstName, lastName, preferredName, 
+                        DateUtils.toDbFormat(birthDate), 
+                        externalId, nif, 
+                        DateUtils.toDbFormat(admissionDate), 
+                        address, city, postalCode, province, phone, contactName, contactPhone, notes, status
+                    ) 
+                },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {

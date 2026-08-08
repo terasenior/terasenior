@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
+import com.terapia.terasenior.util.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -27,9 +28,9 @@ fun EditPatientDialog(
     var firstName by remember { mutableStateOf(patient.firstName) }
     var lastName by remember { mutableStateOf(patient.lastName) }
     var preferredName by remember { mutableStateOf(patient.preferredName ?: "") }
-    var birthDate by remember { mutableStateOf(patient.birthDate ?: "") }
-    var admissionDate by remember { mutableStateOf(patient.admissionDate ?: "") }
-    var dischargeDate by remember { mutableStateOf(patient.dischargeDate ?: "") }
+    var birthDate by remember { mutableStateOf(DateUtils.toUserFormat(patient.birthDate)) }
+    var admissionDate by remember { mutableStateOf(DateUtils.toUserFormat(patient.admissionDate)) }
+    var dischargeDate by remember { mutableStateOf(DateUtils.toUserFormat(patient.dischargeDate)) }
     var address by remember { mutableStateOf(patient.address ?: "") }
     var city by remember { mutableStateOf(patient.city ?: "") }
     var postalCode by remember { mutableStateOf(patient.postalCode ?: "") }
@@ -60,8 +61,8 @@ fun EditPatientDialog(
                         0 -> {
                             OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("Nº Expediente / ID Interno") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             OutlinedTextField(value = nif, onValueChange = { nif = it }, label = { Text("DNI / NIF Oficial") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
-                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
-                            OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja (Si aplica)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (DD-MM-AAAA)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja (DD-MM-AAAA)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             
                             Text("Estado Actual", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -80,7 +81,7 @@ fun EditPatientDialog(
                             OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Nombre *") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), isError = firstName.isBlank())
                             OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text("Apellidos *") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), isError = lastName.isBlank())
                             OutlinedTextField(value = preferredName, onValueChange = { preferredName = it }, label = { Text("Nombre Preferido") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
-                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (DD-MM-AAAA)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                         }
                         2 -> {
                             OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
@@ -114,8 +115,11 @@ fun EditPatientDialog(
                 onClick = { 
                     onConfirm(patient.copy(
                         externalId = externalId, nif = nif, firstName = firstName, lastName = lastName, 
-                        preferredName = preferredName, birthDate = birthDate, admissionDate = admissionDate,
-                        dischargeDate = dischargeDate, address = address, city = city, postalCode = postalCode,
+                        preferredName = preferredName, 
+                        birthDate = DateUtils.toDbFormat(birthDate), 
+                        admissionDate = DateUtils.toDbFormat(admissionDate),
+                        dischargeDate = DateUtils.toDbFormat(dischargeDate), 
+                        address = address, city = city, postalCode = postalCode,
                         province = province, phone = phone, contactName = contactName, 
                         contactPhone = contactPhone, notes = notes, status = status
                     ))

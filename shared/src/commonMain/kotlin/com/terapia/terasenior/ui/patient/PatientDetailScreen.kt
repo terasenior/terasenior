@@ -32,6 +32,7 @@ import com.terapia.terasenior.domain.model.patient.SupportLevel
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
+import com.terapia.terasenior.util.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,7 +127,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.1.2 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.1.3 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -150,8 +151,8 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DetailRow(label = "NIF / DNI", value = state.patient.nif ?: "No registrado")
                 DetailRow(label = "Nº Expediente", value = state.patient.externalId ?: "No asignado")
-                DetailRow(label = "Fecha de Alta", value = state.patient.admissionDate ?: "No registrada")
-                DetailRow(label = "Fecha de Baja", value = state.patient.dischargeDate ?: "N/A")
+                DetailRow(label = "Fecha de Alta", value = DateUtils.toUserFormat(state.patient.admissionDate) ?: "No registrada")
+                DetailRow(label = "Fecha de Baja", value = DateUtils.toUserFormat(state.patient.dischargeDate) ?: "N/A")
                 DetailRow(
                     label = "Estado Actual",
                     value = when(state.patient.status) {
@@ -173,7 +174,7 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
                 DetailRow(label = "Apellidos", value = state.patient.lastName)
                 DetailRow(label = "Nombre", value = state.patient.firstName)
                 DetailRow(label = "Nombre Preferido", value = state.patient.preferredName ?: "Igual al nombre")
-                DetailRow(label = "Fecha de Nacimiento", value = state.patient.birthDate ?: "Desconocida")
+                DetailRow(label = "Fecha de Nacimiento", value = DateUtils.toUserFormat(state.patient.birthDate) ?: "Desconocida")
             }
         }
 
@@ -403,7 +404,7 @@ private fun ExerciseHistoryRow(result: ActivityResult) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = ExerciseTranslationUtils.getDisplayName(result.activityType), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "$date • $time", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(text = "${DateUtils.toUserFormat(date)} • $time", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f), shape = RoundedCornerShape(4.dp)) {
                         Text(text = category, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, fontSize = 9.sp)
