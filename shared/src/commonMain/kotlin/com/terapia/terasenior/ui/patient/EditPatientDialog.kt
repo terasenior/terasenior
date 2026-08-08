@@ -3,11 +3,13 @@ package com.terapia.terasenior.ui.patient
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
@@ -56,10 +58,10 @@ fun EditPatientDialog(
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     when (selectedTab) {
                         0 -> {
-                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("Nº Expediente / ID Interno") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = nif, onValueChange = { nif = it }, label = { Text("DNI / NIF Oficial") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja (Si aplica)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("Nº Expediente / ID Interno") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = nif, onValueChange = { nif = it }, label = { Text("DNI / NIF Oficial") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja (Si aplica)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             
                             Text("Estado Actual", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -75,24 +77,24 @@ fun EditPatientDialog(
                             }
                         }
                         1 -> {
-                            OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text("Apellidos") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = preferredName, onValueChange = { preferredName = it }, label = { Text("Nombre Preferido") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Nombre *") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), isError = firstName.isBlank())
+                            OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text("Apellidos *") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next), isError = lastName.isBlank())
+                            OutlinedTextField(value = preferredName, onValueChange = { preferredName = it }, label = { Text("Nombre Preferido") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                         }
                         2 -> {
-                            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("Población") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp))
-                                OutlinedTextField(value = postalCode, onValueChange = { postalCode = it }, label = { Text("CP") }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(12.dp))
+                                OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("Población") }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                                OutlinedTextField(value = postalCode, onValueChange = { postalCode = it }, label = { Text("CP") }, modifier = Modifier.width(100.dp), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             }
-                            OutlinedTextField(value = province, onValueChange = { province = it }, label = { Text("Provincia") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Principal") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = province, onValueChange = { province = it }, label = { Text("Provincia") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Principal") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                         }
                         3 -> {
                             Text("Referente de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                            OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                            OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+                            OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             Text("Observaciones del Terapeuta", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                             OutlinedTextField(

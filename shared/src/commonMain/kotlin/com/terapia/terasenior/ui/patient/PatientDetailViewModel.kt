@@ -107,14 +107,18 @@ class PatientDetailViewModel(
     fun updatePatient(patient: Patient) {
         viewModelScope.launch {
             setUpdating(true)
-            updatePatientUseCase(patient).onSuccess { loadPatientData() }
+            updatePatientUseCase(patient)
+                .onSuccess { loadPatientData() }
+                .onFailure { setUpdating(false) }
         }
     }
 
     fun updateClinicalProfile(profile: TherapeuticProfile) {
         viewModelScope.launch {
             setUpdating(true)
-            updateTherapeuticProfileUseCase(profile).onSuccess { loadPatientData() }
+            updateTherapeuticProfileUseCase(profile)
+                .onSuccess { loadPatientData() }
+                .onFailure { setUpdating(false) }
         }
     }
 
