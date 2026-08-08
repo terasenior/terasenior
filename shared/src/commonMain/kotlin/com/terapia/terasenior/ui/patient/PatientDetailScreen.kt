@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.*
@@ -22,10 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
+import com.terapia.terasenior.domain.model.patient.SupportLevel
+import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
@@ -77,14 +81,16 @@ fun PatientDetailScreen(
                     PrimaryTabRow(selectedTabIndex = selectedTab) {
                         Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Perfil") })
                         Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Evolución") })
-                        Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Historial") })
+                        Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Valoración") })
+                        Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Historial") })
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
                         when (selectedTab) {
                             0 -> PatientInfoTab(state)
                             1 -> PatientEvolutionTab(state)
-                            2 -> PatientHistoryTab(state)
+                            2 -> PatientAssessmentTab(state, viewModel)
+                            3 -> PatientHistoryTab(state)
                         }
                     }
                 }
@@ -314,20 +320,120 @@ fun PatientInfoTab(state: PatientDetailUiState.Success) {
                 DetailRow(label = "Teléfono de Contacto", value = state.patient.contactPhone ?: "No asignado")
             }
         }
+    }
+}
 
-        // Notas del Terapeuta
-        CollapsibleCard(
-            title = "Observaciones del Terapeuta",
-            icon = Icons.AutoMirrored.Filled.Assignment
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = state.patient.notes?.ifBlank { "Sin observaciones registradas." } ?: "Sin observaciones registradas.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (state.patient.notes.isNullOrBlank()) Color.Gray else MaterialTheme.colorScheme.onSurface
+@Composable
+fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
+    val profile = state.therapeuticProfile ?: TherapeuticProfile(state.patient.id, SupportLevel.NONE, null, null, null, null, null)
+    
+    var mobility by remember { mutableStateOf(profile.mobility ?: "") }
+    var basicActivities by remember { mutableStateOf(profile.basicActivities ?: "") }
+    var instrumentalActivities by remember { mutableStateOf(profile.instrumentalActivities ?: "") }
+    var cognitiveStatus by remember { mutableStateOf(profile.cognitiveStatus ?: "") }
+    var emotionalStatus by remember { mutableStateOf(profile.emotionalStatus ?: "") }
+    var risks by remember { mutableStateOf(profile.risks ?: "") }
+    var decisionCapacity by remember { mutableStateOf(profile.decisionCapacity ?: "") }
+
+    var hasChanges by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Text("Valoración Geriátrica y Funcional", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+
+        AssessmentField(
+            label = "Movilidad",
+            placeholder = "Marcha, equilibrio, transferencias y ayudas técnicas...",
+            value = mobility,
+            onValueChange = { mobility = it; hasChanges = true }
+        )
+
+        AssessmentField(
+            label = "Actividades Básicas",
+            placeholder = "Alimentación, vestido, higiene, continencia y uso del baño...",
+            value = basicActivities,
+            onValueChange = { basicActivities = it; hasChanges = true }
+        )
+
+        AssessmentField(
+            label = "Actividades Instrumentales",
+            placeholder = "Cocinar, comprar, gestionar dinero, usar el teléfono y tomar medicación...",
+            value = instrumentalActivities,
+            onValueChange = { instrumentalActivities = it; hasChanges = true }
+        )
+
+        AssessmentField(
+            label = "Estado Cognitivo",
+            placeholder = "Orientación, memoria, atención...",
+            value = cognitiveStatus,
+            onValueChange = { cognitiveStatus = it; hasChanges = true }
+        )
+
+        AssessmentField(
+            label = "Estado Emocional",
+            placeholder = "Aislamiento social, duelo, estado de ánimo...",
+            value = emotionalStatus,
+            onValueChange = { emotionalStatus = it; hasChanges = true }
+        )
+
+        AssessmentField(
+            label = "Riesgos Detectados",
+            placeholder = "Caídas, úlceras, desnutrición o errores de medicación...",
+            value = risks,
+            onValueChange = { risks = it; hasChanges = true }
+        )
+
+        AssessmentField(
+            label = "Capacidad de Decisión",
+            placeholder = "Comprender y decidir sobre el tratamiento...",
+            value = decisionCapacity,
+            onValueChange = { decisionCapacity = it; hasChanges = true }
+        )
+
+        Button(
+            onClick = {
+                val updatedProfile = profile.copy(
+                    mobility = mobility,
+                    basicActivities = basicActivities,
+                    instrumentalActivities = instrumentalActivities,
+                    cognitiveStatus = cognitiveStatus,
+                    emotionalStatus = emotionalStatus,
+                    risks = risks,
+                    decisionCapacity = decisionCapacity
                 )
+                viewModel.updateClinicalProfile(updatedProfile)
+                hasChanges = false
+            },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            enabled = hasChanges && !state.isUpdating,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            if (state.isUpdating) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            } else {
+                Text("Guardar Valoración")
             }
         }
+        
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+}
+
+@Composable
+private fun AssessmentField(label: String, placeholder: String, value: String, onValueChange: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, fontSize = 14.sp) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            minLines = 3,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+        )
     }
 }
 

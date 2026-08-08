@@ -13,7 +13,14 @@ data class TherapeuticProfileDto(
     @SerialName("preserved_capacities") val preservedCapacities: String? = null,
     @SerialName("observed_difficulties") val observedDifficulties: String? = null,
     @SerialName("interests_preferences") val interests: String? = null,
-    @SerialName("therapeutic_goals") val goals: String? = null
+    @SerialName("therapeutic_goals") val goals: String? = null,
+    @SerialName("mobility") val mobility: String? = null,
+    @SerialName("basic_activities") val basicActivities: String? = null,
+    @SerialName("instrumental_activities") val instrumentalActivities: String? = null,
+    @SerialName("cognitive_status") val cognitiveStatus: String? = null,
+    @SerialName("emotional_status") val emotionalStatus: String? = null,
+    @SerialName("risks") val risks: String? = null,
+    @SerialName("decision_capacity") val decisionCapacity: String? = null
 )
 
 fun TherapeuticProfileDto.toDomain() = TherapeuticProfile(
@@ -23,7 +30,14 @@ fun TherapeuticProfileDto.toDomain() = TherapeuticProfile(
     preservedCapacities = preservedCapacities,
     observedDifficulties = observedDifficulties,
     interests = interests,
-    goals = goals
+    goals = goals,
+    mobility = mobility,
+    basicActivities = basicActivities,
+    instrumentalActivities = instrumentalActivities,
+    cognitiveStatus = cognitiveStatus,
+    emotionalStatus = emotionalStatus,
+    risks = risks,
+    decisionCapacity = decisionCapacity
 )
 
 fun TherapeuticProfile.toData() = TherapeuticProfileDto(
@@ -33,5 +47,12 @@ fun TherapeuticProfile.toData() = TherapeuticProfileDto(
     preservedCapacities = preservedCapacities,
     observedDifficulties = observedDifficulties,
     interests = interests,
-    goals = goals
+    goals = goals,
+    mobility = mobility,
+    basicActivities = basicActivities,
+    instrumentalActivities = instrumentalActivities,
+    cognitiveStatus = cognitiveStatus,
+    emotionalStatus = emotionalStatus,
+    risks = risks,
+    decisionCapacity = decisionCapacity
 )
