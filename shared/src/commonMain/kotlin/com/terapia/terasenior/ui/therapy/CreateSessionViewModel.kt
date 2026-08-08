@@ -129,12 +129,16 @@ class CreateSessionViewModel(
         val previousStep = when (currentState.currentStep) {
             WizardStep.MODE_SELECTION -> WizardStep.MODE_SELECTION
             WizardStep.PATIENT_SELECTION -> WizardStep.MODE_SELECTION
-            WizardStep.CATEGORY_SELECTION -> if (currentState.mode == SessionMode.WITHOUT_PATIENT) WizardStep.MODE_SELECTION else WizardStep.PATIENT_SELECTION
+            WizardStep.CATEGORY_SELECTION -> if (currentState.mode == SessionMode.WITHOUT_PATIENT || currentState.mode == SessionMode.FROM_APPOINTMENT) WizardStep.MODE_SELECTION else WizardStep.PATIENT_SELECTION
             WizardStep.EXERCISE_SELECTION -> WizardStep.CATEGORY_SELECTION
             WizardStep.LEVEL_SELECTION -> WizardStep.EXERCISE_SELECTION
             WizardStep.SUMMARY -> WizardStep.LEVEL_SELECTION
         }
         _uiState.update { it.copy(currentStep = previousStep) }
+    }
+
+    fun resetWizard() {
+        _uiState.value = CreateSessionUiState()
     }
 
     fun createSession(therapistId: String) {

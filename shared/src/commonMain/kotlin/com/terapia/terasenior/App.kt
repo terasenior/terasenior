@@ -57,6 +57,11 @@ fun App() {
         val scope = rememberCoroutineScope()
         val authRepository = remember { AuthRepository() }
         val entityRepository = remember { SupabaseEntityRepository() }
+        
+        // Repositorios y ViewModels compartidos para navegación fluida
+        val therapyRepo = remember { SupabaseTherapySessionRepository() }
+        val patientRepo = remember { SupabasePatientRepository() }
+        val createSessionViewModel = remember { CreateSessionViewModel(therapyRepo, patientRepo) }
 
         // Cargar nombre de la entidad
         LaunchedEffect(currentUserProfile) {
@@ -176,22 +181,20 @@ fun App() {
                         Screen.LOGIN -> { /* No accesible */ }
                         
                         Screen.THERAPY_DASHBOARD -> {
-                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val dashboardViewModel = remember { TherapyDashboardViewModel(therapyRepo) }
                             TherapyDashboardScreen(
                                 viewModel = dashboardViewModel,
                                 therapistId = currentUserProfile?.id ?: "",
-                                onNewSessionClick = { currentScreen = Screen.CREATE_SESSION }
+                                onNewSessionClick = { 
+                                    createSessionViewModel.resetWizard()
+                                    currentScreen = Screen.CREATE_SESSION 
+                                }
                             )
                         }
 
                         Screen.CREATE_SESSION -> {
-                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
-                            val patientRepo = remember { SupabasePatientRepository() }
-                            val viewModel = remember { CreateSessionViewModel(therapyRepo, patientRepo) }
-                            
                             CreateSessionWizard(
-                                viewModel = viewModel,
+                                viewModel = createSessionViewModel,
                                 therapistId = currentUserProfile?.id ?: "",
                                 onSessionCreated = { sessionId ->
                                     activeSessionId = sessionId
@@ -375,18 +378,14 @@ fun App() {
                         Screen.APPOINTMENT_DETAIL -> {
                             val appointmentId = selectedAppointmentId ?: ""
                             val agendaRepository = remember { SupabaseAppointmentRepository() }
-                            val patientRepo = remember { SupabasePatientRepository() }
-                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             
-                            val createViewModel = remember { CreateSessionViewModel(therapyRepo, patientRepo) }
-
                             val viewModel = remember(appointmentId) { 
                                 AppointmentDetailViewModel(appointmentId, agendaRepository, patientRepo) 
                             }
                             AppointmentDetailScreen(
                                 viewModel = viewModel,
-                                onStartSession = { appt ->
-                                    createViewModel.startFromAppointment(appt, null)
+                                onStartSession = { appt, patient ->
+                                    createSessionViewModel.startFromAppointment(appt, patient)
                                     currentScreen = Screen.CREATE_SESSION
                                 },
                                 onBack = { currentScreen = Screen.AGENDA }

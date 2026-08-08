@@ -26,7 +26,7 @@ import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 @Composable
 fun AppointmentDetailScreen(
     viewModel: AppointmentDetailViewModel,
-    onStartSession: (Appointment) -> Unit,
+    onStartSession: (Appointment, com.terapia.terasenior.domain.model.patient.Patient?) -> Unit,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -115,7 +115,12 @@ fun AppointmentDetailScreen(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (state.appointment.status == AppointmentStatus.SCHEDULED || state.appointment.status == AppointmentStatus.CONFIRMED) {
                                 Button(
-                                    onClick = { onStartSession(state.appointment) },
+                                    onClick = { 
+                                        // Intentar encontrar el primer paciente de la lista de asistentes
+                                        val firstPatientId = state.attendees.firstOrNull()?.patientId
+                                        val patient = state.allPatients.find { it.id == firstPatientId }
+                                        onStartSession(state.appointment, patient) 
+                                    },
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
