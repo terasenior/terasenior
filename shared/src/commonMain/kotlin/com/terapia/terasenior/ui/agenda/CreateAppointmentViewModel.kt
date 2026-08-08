@@ -8,6 +8,7 @@ import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.domain.model.admin.UserProfile
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.admin.EntityRepository
 import com.terapia.terasenior.domain.repository.admin.UserProfileRepository
@@ -68,7 +69,7 @@ class CreateAppointmentViewModel(
         type: AppointmentType,
         selectedStaffIds: List<String>,
         selectedPatientIds: List<String>,
-        plannedExercises: List<String> = emptyList()
+        plannedExercises: List<ExerciseConfig> = emptyList()
     ) {
         if (entityId.isBlank()) {
             _uiState.value = CreateAppointmentUiState.Error("Error: El ID del centro no puede estar vacío.")

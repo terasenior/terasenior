@@ -72,22 +72,15 @@ class CreateSessionViewModel(
     }
 
     fun startFromAppointment(appointment: Appointment, patient: Patient?) {
-        val plannedExercises = appointment.plannedExercises.map { type ->
-            ExerciseConfig(
-                type = type,
-                name = ExerciseTranslationUtils.getDisplayName(type),
-                category = "Atención", // Default, could be improved
-                level = 1
-            )
-        }
+        val planned = appointment.plannedExercises
         
         _uiState.update { it.copy(
             mode = SessionMode.FROM_APPOINTMENT,
             selectedAppointmentId = appointment.id,
             selectedPatient = patient,
-            selectedExercises = plannedExercises,
+            selectedExercises = planned,
             currentStep = if (patient != null) {
-                if (plannedExercises.isNotEmpty()) WizardStep.SUMMARY else WizardStep.CATEGORY_SELECTION
+                if (planned.isNotEmpty()) WizardStep.SUMMARY else WizardStep.CATEGORY_SELECTION
             } else {
                 WizardStep.PATIENT_SELECTION
             }

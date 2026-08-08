@@ -3,8 +3,17 @@ package com.terapia.terasenior.data.model.agenda
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+
+@Serializable
+data class PlannedExerciseDto(
+    @SerialName("type") val type: String,
+    @SerialName("level") val level: Int,
+    @SerialName("name") val name: String = "",
+    @SerialName("category") val category: String = ""
+)
 
 @Serializable
 data class AppointmentDto(
@@ -19,7 +28,7 @@ data class AppointmentDto(
     @SerialName("session_id") val sessionId: String? = null,
     @SerialName("intervention_type") val interventionType: String? = null,
     @SerialName("notes") val notes: String? = null,
-    @SerialName("planned_exercises") val plannedExercises: List<String> = emptyList()
+    @SerialName("planned_exercises") val plannedExercises: List<PlannedExerciseDto> = emptyList()
 )
 
 fun AppointmentDto.toDomain() = Appointment(
@@ -34,7 +43,7 @@ fun AppointmentDto.toDomain() = Appointment(
     sessionId = sessionId,
     interventionType = interventionType,
     notes = notes,
-    plannedExercises = plannedExercises
+    plannedExercises = plannedExercises.map { it.toDomain() }
 )
 
 fun Appointment.toData() = AppointmentDto(
@@ -49,5 +58,19 @@ fun Appointment.toData() = AppointmentDto(
     sessionId = sessionId,
     interventionType = interventionType,
     notes = notes,
-    plannedExercises = plannedExercises
+    plannedExercises = plannedExercises.map { it.toData() }
+)
+
+fun PlannedExerciseDto.toDomain() = ExerciseConfig(
+    type = type,
+    level = level,
+    name = name,
+    category = category
+)
+
+fun ExerciseConfig.toData() = PlannedExerciseDto(
+    type = type,
+    level = level,
+    name = name,
+    category = category
 )

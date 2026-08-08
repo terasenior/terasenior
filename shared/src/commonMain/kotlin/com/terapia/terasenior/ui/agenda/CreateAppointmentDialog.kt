@@ -8,8 +8,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,22 +16,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.admin.UserProfile
-import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
+import com.terapia.terasenior.ui.therapy.SessionPlannerComponent
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAppointmentDialog(
     selectedDate: LocalDate,
     patients: List<Patient>,
     professionals: List<UserProfile>,
     onDismiss: () -> Unit,
-    onConfirm: (title: String, desc: String?, start: LocalTime, end: LocalTime, type: AppointmentType, staff: List<String>, attendees: List<String>, exercises: List<String>) -> Unit,
+    onConfirm: (title: String, desc: String?, start: LocalTime, end: LocalTime, type: AppointmentType, staff: List<String>, attendees: List<String>, exercises: List<ExerciseConfig>) -> Unit,
     isLoading: Boolean
 ) {
     var title by remember { mutableStateOf("") }
@@ -46,7 +44,7 @@ fun CreateAppointmentDialog(
     
     var appointmentType by remember { mutableStateOf(AppointmentType.INDIVIDUAL) }
     val selectedPatients = remember { mutableStateListOf<String>() }
-    val selectedExercises = remember { mutableStateListOf<String>() }
+    val plannedExercises = remember { mutableStateListOf<ExerciseConfig>() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -81,7 +79,7 @@ fun CreateAppointmentDialog(
                 Text("Asistentes", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        patients.take(5).forEach { patient ->
+                        patients.forEach { patient ->
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { if (selectedPatients.contains(patient.id)) selectedPatients.remove(patient.id) else selectedPatients.add(patient.id) }) {
                                 Checkbox(checked = selectedPatients.contains(patient.id), onCheckedChange = { if (it) selectedPatients.add(patient.id) else selectedPatients.remove(patient.id) })
                                 Text(patient.fullName, style = MaterialTheme.typography.bodySmall)
@@ -90,34 +88,12 @@ fun CreateAppointmentDialog(
                     }
                 }
 
-                // NUEVA SECCIÓN: PLANIFICACIÓN DE TAREAS
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Psychology, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Actividades Planificadas", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                }
-                
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf(
-                        "orientation_temporal", "number_search", "attention_different", 
-                        "memory_cultural", "language_denomination", "executive_planning_steps",
-                        "literacy_tracing_basic"
-                    ).forEach { type ->
-                        val name = ExerciseTranslationUtils.getDisplayName(type)
-                        FilterChip(
-                            selected = selectedExercises.contains(type),
-                            onClick = { 
-                                if (selectedExercises.contains(type)) selectedExercises.remove(type)
-                                else selectedExercises.add(type)
-                            },
-                            label = { Text(name, fontSize = 12.sp) }
-                        )
-                    }
-                }
+                // COMPONENTE DE PLANIFICACIÓN
+                SessionPlannerComponent(
+                    plannedExercises = plannedExercises,
+                    onAddExercise = { plannedExercises.add(it) },
+                    onRemoveExercise = { plannedExercises.removeAt(it) }
+                )
             }
         },
         confirmButton = {
@@ -125,7 +101,7 @@ fun CreateAppointmentDialog(
                 onClick = { 
                     val start = LocalTime(startHour.toIntOrNull() ?: 10, startMin.toIntOrNull() ?: 0)
                     val end = LocalTime(endHour.toIntOrNull() ?: 11, endMin.toIntOrNull() ?: 0)
-                    onConfirm(title, description, start, end, appointmentType, emptyList(), selectedPatients, selectedExercises.toList()) 
+                    onConfirm(title, description, start, end, appointmentType, emptyList(), selectedPatients.toList(), plannedExercises.toList()) 
                 },
                 enabled = title.isNotBlank() && selectedPatients.isNotEmpty() && !isLoading,
                 shape = RoundedCornerShape(12.dp)

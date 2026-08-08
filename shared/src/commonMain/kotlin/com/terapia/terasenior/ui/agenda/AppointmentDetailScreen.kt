@@ -98,10 +98,10 @@ fun AppointmentDetailScreen(
                                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        state.appointment.plannedExercises.forEach { type ->
+                                        state.appointment.plannedExercises.forEach { config ->
                                             SuggestionChip(
                                                 onClick = {},
-                                                label = { Text(ExerciseTranslationUtils.getDisplayName(type), fontSize = 11.sp) }
+                                                label = { Text("${ExerciseTranslationUtils.getDisplayName(config.type)} (N${config.level})", fontSize = 11.sp) }
                                             )
                                         }
                                     }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,15 +16,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.agenda.AppointmentAttendee
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
-import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
+import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
+import com.terapia.terasenior.ui.therapy.SessionPlannerComponent
 import kotlinx.datetime.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditAppointmentDialog(
     appointment: Appointment,
@@ -39,9 +38,9 @@ fun EditAppointmentDialog(
     var description by remember { mutableStateOf(appointment.description ?: "") }
     
     // Parse times
+    val tz = TimeZone.currentSystemDefault()
     val startInstant = Instant.parse(appointment.startAt)
     val endInstant = Instant.parse(appointment.endAt)
-    val tz = TimeZone.currentSystemDefault()
     val startTime = startInstant.toLocalDateTime(tz).time
     val endTime = endInstant.toLocalDateTime(tz).time
     val date = startInstant.toLocalDateTime(tz).date
@@ -52,7 +51,7 @@ fun EditAppointmentDialog(
     var endMin by remember { mutableStateOf(endTime.minute.toString().padStart(2, '0')) }
     
     val selectedPatients = remember { mutableStateListOf<String>().apply { addAll(attendees.map { it.patientId }) } }
-    val selectedExercises = remember { mutableStateListOf<String>().apply { addAll(appointment.plannedExercises) } }
+    val plannedExercises = remember { mutableStateListOf<ExerciseConfig>().apply { addAll(appointment.plannedExercises) } }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -93,21 +92,12 @@ fun EditAppointmentDialog(
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Psychology, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Planificación", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                }
-                
-                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("orientation_temporal", "number_search", "attention_different", "memory_cultural", "language_denomination", "executive_planning_steps", "literacy_tracing_basic").forEach { type ->
-                        FilterChip(
-                            selected = selectedExercises.contains(type),
-                            onClick = { if (selectedExercises.contains(type)) selectedExercises.remove(type) else selectedExercises.add(type) },
-                            label = { Text(ExerciseTranslationUtils.getDisplayName(type), fontSize = 11.sp) }
-                        )
-                    }
-                }
+                // COMPONENTE DE PLANIFICACIÓN
+                SessionPlannerComponent(
+                    plannedExercises = plannedExercises,
+                    onAddExercise = { plannedExercises.add(it) },
+                    onRemoveExercise = { plannedExercises.removeAt(it) }
+                )
             }
         },
         confirmButton = {
@@ -120,7 +110,7 @@ fun EditAppointmentDialog(
                         description = description,
                         startAt = date.atTime(sTime).toInstant(tz).toString(),
                         endAt = date.atTime(eTime).toInstant(tz).toString(),
-                        plannedExercises = selectedExercises.toList()
+                        plannedExercises = plannedExercises.toList()
                     )
                     onConfirm(updated, selectedPatients.toList()) 
                 },
@@ -133,9 +123,4 @@ fun EditAppointmentDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
         shape = RoundedCornerShape(24.dp)
     )
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(text = title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
 }

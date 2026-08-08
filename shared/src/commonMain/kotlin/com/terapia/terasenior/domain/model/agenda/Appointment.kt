@@ -24,5 +24,5 @@ data class Appointment(
     val sessionId: String? = null,
     val interventionType: String? = "ESTIMULACION",
     val notes: String? = null,
-    val plannedExercises: List<String> = emptyList() // Lista de tipos de ejercicios (Fase 5)
+    val plannedExercises: List<com.terapia.terasenior.domain.model.therapy.ExerciseConfig> = emptyList() 
 )
