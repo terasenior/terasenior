@@ -59,7 +59,39 @@ class SupabaseAppointmentRepository : AppointmentRepository {
         }
     }
 
+    override suspend fun updateFullAppointment(
+        appointment: Appointment,
+        staffIds: List<String>,
+        patientIds: List<String>
+    ): Result<Unit> = runCatching {
+        // 1. Actualizar datos básicos de la cita
+        supabase.postgrest["appointments"].update(appointment.toData()) {
+            filter { eq("id", appointment.id) }
+        }
+
+        // 2. Sincronizar asistentes (Borrar y volver a insertar para simplicidad en esta fase)
+        supabase.postgrest["appointment_attendees"].delete {
+            filter { eq("appointment_id", appointment.id) }
+        }
+        if (patientIds.isNotEmpty()) {
+            val attendeesData = patientIds.map { mapOf("appointment_id" to appointment.id, "patient_id" to it) }
+            supabase.postgrest["appointment_attendees"].insert(attendeesData)
+        }
+
+        // 3. Sincronizar personal
+        supabase.postgrest["appointment_staff"].delete {
+            filter { eq("appointment_id", appointment.id) }
+        }
+        if (staffIds.isNotEmpty()) {
+            val staffData = staffIds.map { mapOf("appointment_id" to appointment.id, "professional_id" to it) }
+            supabase.postgrest["appointment_staff"].insert(staffData)
+        }
+    }
+
     override suspend fun deleteAppointment(id: String): Result<Unit> = runCatching {
+        // Al borrar la cita, las cascadas o RLS deberían manejar los hijos, pero borramos explícitamente para seguridad
+        supabase.postgrest["appointment_attendees"].delete { filter { eq("appointment_id", id) } }
+        supabase.postgrest["appointment_staff"].delete { filter { eq("appointment_id", id) } }
         supabase.postgrest["appointments"].delete {
             filter { eq("id", id) }
         }

@@ -375,13 +375,13 @@ fun App() {
                         Screen.APPOINTMENT_DETAIL -> {
                             val appointmentId = selectedAppointmentId ?: ""
                             val agendaRepository = remember { SupabaseAppointmentRepository() }
-                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val patientRepo = remember { SupabasePatientRepository() }
+                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             
                             val createViewModel = remember { CreateSessionViewModel(therapyRepo, patientRepo) }
 
                             val viewModel = remember(appointmentId) { 
-                                AppointmentDetailViewModel(appointmentId, agendaRepository) 
+                                AppointmentDetailViewModel(appointmentId, agendaRepository, patientRepo) 
                             }
                             AppointmentDetailScreen(
                                 viewModel = viewModel,

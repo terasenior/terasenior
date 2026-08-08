@@ -16,6 +16,11 @@ interface AppointmentRepository {
     ): Result<Unit>
     
     suspend fun updateAppointment(appointment: Appointment): Result<Unit>
+    suspend fun updateFullAppointment(
+        appointment: Appointment,
+        staffIds: List<String>,
+        patientIds: List<String>
+    ): Result<Unit>
     suspend fun deleteAppointment(id: String): Result<Unit>
 
     // Gestión de asistentes

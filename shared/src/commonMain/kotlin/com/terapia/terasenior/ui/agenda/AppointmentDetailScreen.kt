@@ -30,6 +30,14 @@ fun AppointmentDetailScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState) {
+        if (uiState is AppointmentDetailUiState.Success && (uiState as AppointmentDetailUiState.Success).isDeleted) {
+            onBack()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -60,7 +68,13 @@ fun AppointmentDetailScreen(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(state.appointment.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(state.appointment.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                    if (state.appointment.status != AppointmentStatus.COMPLETED) {
+                                        IconButton(onClick = { showEditDialog = true }) { Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary) }
+                                        IconButton(onClick = { showDeleteConfirm = true }) { Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error) }
+                                    }
+                                }
                                 Text(state.appointment.description ?: "Sin descripción", style = MaterialTheme.typography.bodyMedium)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -150,6 +164,36 @@ fun AppointmentDetailScreen(
                                 )
                             }
                         }
+                    }
+
+                    if (showEditDialog) {
+                        EditAppointmentDialog(
+                            appointment = state.appointment,
+                            attendees = state.attendees,
+                            allPatients = state.allPatients,
+                            onDismiss = { showEditDialog = false },
+                            onConfirm = { updated, pIds -> 
+                                viewModel.updateFullSession(updated, pIds)
+                                showEditDialog = false
+                            },
+                            isLoading = state.isSaving
+                        )
+                    }
+
+                    if (showDeleteConfirm) {
+                        AlertDialog(
+                            onDismissRequest = { showDeleteConfirm = false },
+                            title = { Text("Eliminar Sesión") },
+                            text = { Text("¿Estás seguro de que deseas eliminar esta sesión programada? Esta acción no se puede deshacer.") },
+                            confirmButton = {
+                                Button(onClick = { viewModel.deleteSession(); showDeleteConfirm = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                                    Text("Eliminar")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancelar") }
+                            }
+                        )
                     }
                 }
             }
