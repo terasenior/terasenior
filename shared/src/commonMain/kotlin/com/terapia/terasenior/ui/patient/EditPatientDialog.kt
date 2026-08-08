@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditPatientDialog(
     patient: Patient,
@@ -33,41 +33,54 @@ fun EditPatientDialog(
     var contactPhone by remember { mutableStateOf(patient.contactPhone ?: "") }
     var status by remember { mutableStateOf(patient.status) }
 
+    var selectedTab by remember { mutableStateOf(0) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar Ficha Paciente", style = MaterialTheme.typography.headlineSmall) },
+        title = { Text("Edición de Ficha Clínica", style = MaterialTheme.typography.headlineSmall) },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                SectionTitle("Identificación")
-                OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("ID Externo / NIF") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text("Apellidos") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-
-                SectionTitle("Contacto y Localización")
-                OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Principal") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+            Column(modifier = Modifier.fillMaxWidth().heightIn(min = 450.dp)) {
                 
-                SectionTitle("Persona de Referencia")
-                OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Familiar/Contacto") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Familiar/Contacto") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                TabRow(selectedTabIndex = selectedTab, modifier = Modifier.padding(bottom = 16.dp)) {
+                    Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Gestión") })
+                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Ficha") })
+                    Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Contacto") })
+                }
 
-                SectionTitle("Fechas Administrativas")
-                OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-
-                SectionTitle("Estado")
-                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PatientStatus.entries.forEach { s ->
-                        val label = when(s) {
-                            PatientStatus.ACTIVE -> "Activo"
-                            PatientStatus.INACTIVE -> "Inactivo"
-                            PatientStatus.BAJA -> "Baja"
-                            PatientStatus.DISCHARGED -> "Alta"
+                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    when (selectedTab) {
+                        0 -> {
+                            OutlinedTextField(value = externalId, onValueChange = { externalId = it }, label = { Text("ID Externo / NIF") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = admissionDate, onValueChange = { admissionDate = it }, label = { Text("Fecha Alta (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = dischargeDate, onValueChange = { dischargeDate = it }, label = { Text("Fecha Baja (Si aplica)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            
+                            Text("Estado Actual", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                PatientStatus.entries.forEach { s ->
+                                    val label = when(s) {
+                                        PatientStatus.ACTIVE -> "Activo"
+                                        PatientStatus.INACTIVE -> "Inactivo"
+                                        PatientStatus.BAJA -> "Baja"
+                                        PatientStatus.DISCHARGED -> "Alta"
+                                    }
+                                    FilterChip(selected = status == s, onClick = { status = s }, label = { Text(label) })
+                                }
+                            }
                         }
-                        FilterChip(selected = status == s, onClick = { status = s }, label = { Text(label) })
+                        1 -> {
+                            OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = lastName, onValueChange = { lastName = it }, label = { Text("Apellidos") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = preferredName, onValueChange = { preferredName = it }, label = { Text("Nombre Preferido") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = birthDate, onValueChange = { birthDate = it }, label = { Text("Fecha Nacimiento (AAAA-MM-DD)") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                        }
+                        2 -> {
+                            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Teléfono Principal") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            Text("Referente de Emergencia", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            OutlinedTextField(value = contactName, onValueChange = { contactName = it }, label = { Text("Nombre Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                            OutlinedTextField(value = contactPhone, onValueChange = { contactPhone = it }, label = { Text("Teléfono Familiar") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                        }
                     }
                 }
             }
@@ -76,30 +89,19 @@ fun EditPatientDialog(
             Button(
                 onClick = { 
                     onConfirm(patient.copy(
-                        externalId = externalId,
-                        firstName = firstName, 
-                        lastName = lastName, 
-                        preferredName = preferredName, 
-                        birthDate = birthDate,
-                        admissionDate = admissionDate,
-                        dischargeDate = dischargeDate,
-                        address = address,
-                        phone = phone,
-                        contactName = contactName,
-                        contactPhone = contactPhone,
-                        status = status
+                        externalId = externalId, firstName = firstName, lastName = lastName, 
+                        preferredName = preferredName, birthDate = birthDate, admissionDate = admissionDate,
+                        dischargeDate = dischargeDate, address = address, phone = phone,
+                        contactName = contactName, contactPhone = contactPhone, status = status
                     ))
                 },
-                enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading
+                enabled = firstName.isNotBlank() && lastName.isNotBlank() && !isLoading,
+                shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp)) else Text("Guardar Cambios")
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        shape = RoundedCornerShape(24.dp)
     )
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(text = title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
 }

@@ -18,7 +18,8 @@ class CreatePatientUseCase(
         address: String? = null,
         phone: String? = null,
         contactName: String? = null,
-        contactPhone: String? = null
+        contactPhone: String? = null,
+        status: PatientStatus = PatientStatus.ACTIVE
     ): Result<Unit> {
         if (firstName.isBlank() || lastName.isBlank()) {
             return Result.failure(Exception("Nombre y apellidos son obligatorios"))
@@ -37,7 +38,7 @@ class CreatePatientUseCase(
             phone = phone,
             contactName = contactName,
             contactPhone = contactPhone,
-            status = PatientStatus.ACTIVE,
+            status = status,
             createdAt = ""
         )
 

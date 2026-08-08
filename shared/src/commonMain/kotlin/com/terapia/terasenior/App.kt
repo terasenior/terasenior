@@ -425,13 +425,13 @@ fun App() {
                                         showCreateDialog = false
                                         createViewModel.resetState()
                                     },
-                                    onConfirm = { f, l, p, b, ext, adm, addr, ph, cName, cPh -> 
+                                    onConfirm = { f, l, p, b, ext, adm, addr, ph, cName, cPh, st -> 
                                         scope.launch {
                                             val entityId = currentUserProfile?.entityId 
                                                 ?: entityRepository.getEntities().getOrNull()?.firstOrNull()?.id
                                                 ?: ""
                                             
-                                            createViewModel.createPatient(entityId, f, l, p, b, ext, adm, addr, ph, cName, cPh)
+                                            createViewModel.createPatient(entityId, f, l, p, b, ext, adm, addr, ph, cName, cPh, st)
                                         }
                                     },
                                     isLoading = createUiState is CreatePatientUiState.Loading,
