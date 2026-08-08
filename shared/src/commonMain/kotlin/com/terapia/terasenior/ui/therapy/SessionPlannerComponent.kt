@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 
+// SessionPlannerComponent v1.0.4 - Planificador Clínico Avanzado
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionPlannerComponent(
