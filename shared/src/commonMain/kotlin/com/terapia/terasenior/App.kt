@@ -30,6 +30,7 @@ import com.terapia.terasenior.ui.admin.users.AdminUsersScreen
 import com.terapia.terasenior.ui.agenda.*
 import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.patient.*
+import com.terapia.terasenior.ui.reports.ReportsScreen
 import com.terapia.terasenior.ui.therapy.*
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import kotlinx.coroutines.launch
@@ -37,7 +38,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
-    LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, ADMIN_ENTITIES, ADMIN_USERS,
+    LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, REPORTS, ADMIN_ENTITIES, ADMIN_USERS,
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
@@ -157,6 +158,13 @@ fun App() {
                                 icon = { Icon(Icons.Default.People, contentDescription = null) },
                                 label = { Text("Pacientes") }
                             )
+
+                            NavigationBarItem(
+                                selected = currentScreen == Screen.REPORTS,
+                                onClick = { currentScreen = Screen.REPORTS },
+                                icon = { Icon(Icons.Default.Description, contentDescription = null) },
+                                label = { Text("Informes") }
+                            )
                             
                             if (canAdmin) {
                                 NavigationBarItem(
@@ -204,6 +212,10 @@ fun App() {
                                     currentScreen = Screen.PATIENT_DETAIL
                                 }
                             )
+                        }
+
+                        Screen.REPORTS -> {
+                            ReportsScreen()
                         }
 
                         Screen.CREATE_SESSION -> {

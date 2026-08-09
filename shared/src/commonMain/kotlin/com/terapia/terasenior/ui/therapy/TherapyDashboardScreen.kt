@@ -58,7 +58,7 @@ fun TherapyDashboardScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "v1.2.3 • Gestión clínica diaria.",
+                            text = "v1.2.5 • Gestión clínica diaria.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -74,26 +74,6 @@ fun TherapyDashboardScreen(
                             Text("Online", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32))
                         }
                     }
-                }
-            }
-
-            // SECCIÓN INFORMES (NUEVO)
-            item {
-                Text("Informes del terapeuta", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ReportActionCard(
-                        title = "Informes de Sesión",
-                        icon = Icons.Default.Description,
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Navegar a informes */ }
-                    )
-                    ReportActionCard(
-                        title = "Evolución Grupal",
-                        icon = Icons.Default.Insights,
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Navegar a evolución grupal */ }
-                    )
                 }
             }
 
@@ -190,22 +170,6 @@ private fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.ve
             Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.height(8.dp))
             Text(title, color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        }
-    }
-}
-
-@Composable
-private fun ReportActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    ) {
-        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(title, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
     }
 }
