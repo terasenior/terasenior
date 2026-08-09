@@ -305,12 +305,12 @@ private fun AppointmentCard(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 val label = when(appointment.status) {
-                    AppointmentStatus.SCHEDULED -> "Pte"
-                    AppointmentStatus.CONFIRMED -> "Ok"
-                    AppointmentStatus.IN_PROGRESS -> ">>"
-                    AppointmentStatus.COMPLETED -> "Ok"
-                    AppointmentStatus.CANCELLED -> "X"
-                    AppointmentStatus.MISSED -> "No"
+                    AppointmentStatus.SCHEDULED -> "Pendiente"
+                    AppointmentStatus.CONFIRMED -> "Confirmada"
+                    AppointmentStatus.IN_PROGRESS -> "En curso"
+                    AppointmentStatus.COMPLETED -> "Finalizada"
+                    AppointmentStatus.CANCELLED -> "Cancelada"
+                    AppointmentStatus.MISSED -> "No presentado"
                 }
                 Text(
                     text = label,

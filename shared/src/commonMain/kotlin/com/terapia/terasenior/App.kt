@@ -181,14 +181,16 @@ fun App() {
                         Screen.LOGIN -> { /* No accesible */ }
                         
                         Screen.THERAPY_DASHBOARD -> {
-                            val dashboardViewModel = remember { TherapyDashboardViewModel(therapyRepo) }
+                            val agendaRepo = remember { SupabaseAppointmentRepository() }
+                            val dashboardViewModel = remember { TherapyDashboardViewModel(therapyRepo, agendaRepo) }
                             TherapyDashboardScreen(
                                 viewModel = dashboardViewModel,
                                 therapistId = currentUserProfile?.id ?: "",
                                 onNewSessionClick = { 
                                     createSessionViewModel.resetWizard()
                                     currentScreen = Screen.CREATE_SESSION 
-                                }
+                                },
+                                onGoToAgenda = { currentScreen = Screen.AGENDA }
                             )
                         }
 
