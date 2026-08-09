@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.agenda.Appointment
@@ -56,7 +57,7 @@ fun TherapyDashboardScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Resumen de actividad clínica.",
+                            text = "v1.2.3 • Gestión clínica diaria.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -75,14 +76,23 @@ fun TherapyDashboardScreen(
                 }
             }
 
-            // ESTADÍSTICAS DE INTERVENCIÓN (NUEVO)
+            // SECCIÓN INFORMES (NUEVO)
             item {
-                Text("Pacientes Atendidos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Informes del terapeuta", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatsMiniCard(title = "Esta Semana", value = uiState.stats["week"]?.toString() ?: "0", modifier = Modifier.weight(1f))
-                    StatsMiniCard(title = "Este Mes", value = uiState.stats["month"]?.toString() ?: "0", modifier = Modifier.weight(1f))
-                    StatsMiniCard(title = "Último Año", value = uiState.stats["year"]?.toString() ?: "0", modifier = Modifier.weight(1f))
+                    ReportActionCard(
+                        title = "Informes de Sesión",
+                        icon = Icons.Default.Description,
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Navegar a informes */ }
+                    )
+                    ReportActionCard(
+                        title = "Evolución Grupal",
+                        icon = Icons.Default.Insights,
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Navegar a evolución grupal */ }
+                    )
                 }
             }
 
@@ -117,7 +127,7 @@ fun TherapyDashboardScreen(
                 }
             }
 
-            // SESIONES DE HOY (Accesibles)
+            // SESIONES DE HOY
             item {
                 Text("Sesiones para Hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
@@ -134,7 +144,7 @@ fun TherapyDashboardScreen(
                 }
             }
 
-            // PACIENTES DE HOY (Accesibles y Numerados)
+            // PACIENTES DE HOY (Numerados y Accesibles)
             if (uiState.todayPatients.isNotEmpty()) {
                 item {
                     Text("Pacientes del Día", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -162,22 +172,22 @@ fun TherapyDashboardScreen(
                     }
                 }
             }
-            
-            // Hemos quitado Actividad Reciente por petición del usuario
         }
     }
 }
 
 @Composable
-private fun StatsMiniCard(title: String, value: String, modifier: Modifier) {
+private fun ReportActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
     ) {
         Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontSize = 9.sp)
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(title, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
     }
 }

@@ -3,7 +3,6 @@ package com.terapia.terasenior.ui.therapy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.agenda.Appointment
-import com.terapia.terasenior.domain.model.therapy.SessionStatus
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import kotlinx.coroutines.flow.*
@@ -14,7 +13,6 @@ data class DashboardUiState(
     val summary: Map<String, Int> = emptyMap(),
     val todayAppointments: List<Appointment> = emptyList(),
     val todayPatients: List<Pair<String, String>> = emptyList(), // ID y Nombre
-    val stats: Map<String, Int> = emptyMap(), // "week", "month", "year"
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -27,6 +25,7 @@ class TherapyDashboardViewModel(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    @OptIn(kotlin.time.ExperimentalTime::class)
     fun loadDashboard(therapistId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -53,37 +52,14 @@ class TherapyDashboardViewModel(
                 }
             }
 
-            // 3. Calcular Estadísticas (Semana, Mes, Año)
-            repository.getRecentSessions(therapistId, 1000).collect { result ->
-                val allSessions = result.getOrDefault(emptyList()).filter { it.status == SessionStatus.COMPLETED }
-                
-                val weekAgo = now.minus(7, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
-                val monthAgo = now.minus(30, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
-                val yearAgo = now.minus(365, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
-
-                val weekCount = allSessions.count { 
-                    try { Instant.parse(it.createdAt) > weekAgo } catch(e: Exception) { false } 
-                }
-                val monthCount = allSessions.count { 
-                    try { Instant.parse(it.createdAt) > monthAgo } catch(e: Exception) { false } 
-                }
-                val yearCount = allSessions.count { 
-                    try { Instant.parse(it.createdAt) > yearAgo } catch(e: Exception) { false } 
-                }
-
-                _uiState.update { state ->
-                    state.copy(
-                        summary = summaryResult.getOrDefault(emptyMap()),
-                        todayAppointments = todayAppts,
-                        todayPatients = patientsInfo.distinctBy { it.first },
-                        stats = mapOf(
-                            "week" to weekCount,
-                            "month" to monthCount,
-                            "year" to yearCount
-                        ),
-                        isLoading = false
-                    )
-                }
+            // Actualizamos el estado con los datos de hoy
+            _uiState.update { state ->
+                state.copy(
+                    summary = summaryResult.getOrDefault(emptyMap()),
+                    todayAppointments = todayAppts,
+                    todayPatients = patientsInfo.distinctBy { it.first },
+                    isLoading = false
+                )
             }
         }
     }
