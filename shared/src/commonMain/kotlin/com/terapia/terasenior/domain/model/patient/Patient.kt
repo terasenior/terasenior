@@ -23,6 +23,7 @@ data class Patient(
     val contactName: String? = null,
     val contactPhone: String? = null,
     val notes: String? = null,        // Notas generales del terapeuta
+    val assignedTherapistId: String? = null, // Terapeuta responsable (Fase 5)
     val status: PatientStatus,
     val createdAt: String
 ) {

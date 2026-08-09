@@ -29,6 +29,7 @@ fun TherapyDashboardScreen(
     viewModel: TherapyDashboardViewModel,
     therapistId: String,
     onNewSessionClick: () -> Unit,
+    onNewPatientClick: () -> Unit,
     onGoToAgenda: () -> Unit,
     onAppointmentClick: (String) -> Unit,
     onPatientClick: (String) -> Unit
@@ -99,31 +100,32 @@ fun TherapyDashboardScreen(
             // ACCIONES RÁPIDAS
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Card(
-                        onClick = onNewSessionClick,
-                        modifier = Modifier.weight(1f).height(100.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Nueva Sesión", color = Color.White, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                    // NUEVA SESIÓN
+                    QuickActionCard(
+                        title = "Nueva Sesión",
+                        icon = Icons.Default.PlayArrow,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNewSessionClick
+                    )
 
-                    Card(
-                        onClick = onGoToAgenda,
-                        modifier = Modifier.weight(1f).height(100.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary)
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
-                            Icon(Icons.Default.Event, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Agenda", color = Color.White, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                    // NUEVO PACIENTE
+                    QuickActionCard(
+                        title = "Nuevo Paciente",
+                        icon = Icons.Default.PersonAdd,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNewPatientClick
+                    )
+
+                    // AGENDA
+                    QuickActionCard(
+                        title = "Agenda",
+                        icon = Icons.Default.Event,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onGoToAgenda
+                    )
                 }
             }
 
@@ -172,6 +174,22 @@ fun TherapyDashboardScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(90.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = color)
+    ) {
+        Column(modifier = Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(title, color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
     }
 }

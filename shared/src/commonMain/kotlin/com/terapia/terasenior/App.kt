@@ -190,6 +190,10 @@ fun App() {
                                     createSessionViewModel.resetWizard()
                                     currentScreen = Screen.CREATE_SESSION 
                                 },
+                                onNewPatientClick = {
+                                    currentScreen = Screen.PATIENTS
+                                    // Podemos añadir un flag para abrir el dialogo directamente si fuera necesario
+                                },
                                 onGoToAgenda = { currentScreen = Screen.AGENDA },
                                 onAppointmentClick = { id ->
                                     selectedAppointmentId = id
@@ -455,12 +459,14 @@ fun App() {
                             val repository = remember { SupabasePatientRepository() }
                             val resultsRepository = remember { SupabaseResultsRepository() }
                             val therapyRepo = remember { SupabaseTherapySessionRepository() }
+                            val userRepo = remember { SupabaseUserProfileRepository() }
                             val viewModel = remember(patientId) { 
                                 PatientDetailViewModel(
                                     patientId, 
                                     repository,
                                     resultsRepository,
                                     therapyRepo,
+                                    userRepo,
                                     UpdatePatientUseCase(repository),
                                     UpdateTherapeuticProfileUseCase(repository)
                                 ) 

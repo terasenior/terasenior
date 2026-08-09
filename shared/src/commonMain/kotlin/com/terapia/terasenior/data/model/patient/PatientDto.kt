@@ -25,6 +25,7 @@ data class PatientDto(
     @SerialName("contact_name") val contactName: String? = null,
     @SerialName("contact_phone") val contactPhone: String? = null,
     @SerialName("notes") val notes: String? = null,
+    @SerialName("assigned_therapist_id") val assignedTherapistId: String? = null,
     @SerialName("status") val status: String = "ACTIVE",
     @SerialName("created_at") val createdAt: String? = null
 )
@@ -48,6 +49,7 @@ fun PatientDto.toDomain() = Patient(
     contactName = contactName,
     contactPhone = contactPhone,
     notes = notes,
+    assignedTherapistId = assignedTherapistId,
     status = try { 
         if (status == "DECEASED") PatientStatus.BAJA else PatientStatus.valueOf(status) 
     } catch (e: Exception) { PatientStatus.ACTIVE },
@@ -73,5 +75,6 @@ fun Patient.toData() = PatientDto(
     contactName = contactName,
     contactPhone = contactPhone,
     notes = notes,
+    assignedTherapistId = assignedTherapistId,
     status = status.name
 )

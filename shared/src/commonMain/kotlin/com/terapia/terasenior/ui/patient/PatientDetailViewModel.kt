@@ -7,6 +7,8 @@ import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
+import com.terapia.terasenior.domain.model.admin.UserProfile
+import com.terapia.terasenior.domain.repository.admin.UserProfileRepository
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
@@ -25,6 +27,8 @@ sealed interface PatientDetailUiState {
         val therapeuticProfile: TherapeuticProfile?,
         val consents: List<Consent> = emptyList(),
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
+        val treatedBy: List<UserProfile> = emptyList(), // Terapeutas que lo han atendido
+        val entityProfessionals: List<UserProfile> = emptyList(), // Para el traspaso
         val rawResults: List<ActivityResult> = emptyList(),
         val historyPage: Int = 1,
         val historyPageSize: Int = 10,
@@ -38,6 +42,7 @@ class PatientDetailViewModel(
     private val repository: PatientRepository,
     private val resultsRepository: ResultsRepository,
     private val therapyRepository: TherapySessionRepository,
+    private val userRepository: UserProfileRepository,
     private val updatePatientUseCase: UpdatePatientUseCase,
     private val updateTherapeuticProfileUseCase: UpdateTherapeuticProfileUseCase
 ) : ViewModel() {
@@ -66,6 +71,18 @@ class PatientDetailViewModel(
                     val allResults = resultsResult.getOrDefault(emptyList())
                     val allSessions = sessionsResult.getOrDefault(emptyList())
                     
+                    // Obtener lista única de terapeutas de las sesiones
+                    val treatedByIds = allSessions.map { it.therapistId }.distinct()
+                    val treatedBy = mutableListOf<UserProfile>()
+                    treatedByIds.forEach { tid ->
+                        userRepository.getUserProfileById(tid).onSuccess { prof -> 
+                            if (prof != null) treatedBy.add(prof)
+                        }
+                    }
+
+                    // Cargar profesionales de la misma entidad para traspaso
+                    val entityProfs = userRepository.getUserProfiles(patient.entityId).getOrDefault(emptyList())
+
                     // Mapear resultados a sus sesiones
                     val history = allSessions.map { session ->
                         val sessionResults = allResults.filter { it.sessionId == session.id }
@@ -81,6 +98,8 @@ class PatientDetailViewModel(
                         therapeuticProfile = profileResult.getOrNull(),
                         consents = consentsResult.getOrDefault(emptyList()),
                         sessionsHistory = history,
+                        treatedBy = treatedBy,
+                        entityProfessionals = entityProfs,
                         rawResults = allResults
                     )
                 } else {
@@ -128,6 +147,19 @@ class PatientDetailViewModel(
         val current = _uiState.value
         if (current is PatientDetailUiState.Success) {
             _uiState.value = current.copy(historyPage = page)
+        }
+    }
+
+    fun transferPatient(newTherapistId: String) {
+        val state = _uiState.value
+        if (state is PatientDetailUiState.Success) {
+            viewModelScope.launch {
+                setUpdating(true)
+                val updatedPatient = state.patient.copy(assignedTherapistId = newTherapistId)
+                updatePatientUseCase(updatedPatient).onSuccess {
+                    loadPatientData()
+                }.onFailure { setUpdating(false) }
+            }
         }
     }
 
