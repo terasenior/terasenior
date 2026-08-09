@@ -135,7 +135,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.1.7 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.1.9 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -292,62 +292,90 @@ fun PatientEvolutionTab(state: PatientDetailUiState.Success) {
 fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
     val profile = state.therapeuticProfile ?: TherapeuticProfile(state.patient.id, SupportLevel.NONE, null, null, null, null, null)
     
-    var mobility by remember { mutableStateOf(profile.mobility ?: "") }
-    var basicActivities by remember { mutableStateOf(profile.basicActivities ?: "") }
-    var instrumentalActivities by remember { mutableStateOf(profile.instrumentalActivities ?: "") }
-    var cognitiveStatus by remember { mutableStateOf(profile.cognitiveStatus ?: "") }
-    var emotionalStatus by remember { mutableStateOf(profile.emotionalStatus ?: "") }
-    var risks by remember { mutableStateOf(profile.risks ?: "") }
-    var decisionCapacity by remember { mutableStateOf(profile.decisionCapacity ?: "") }
+    // Estados locales del formulario
+    var mobility by remember(profile) { mutableStateOf(profile.mobility ?: "") }
+    var basicActivities by remember(profile) { mutableStateOf(profile.basicActivities ?: "") }
+    var instrumentalActivities by remember(profile) { mutableStateOf(profile.instrumentalActivities ?: "") }
+    var cognitiveStatus by remember(profile) { mutableStateOf(profile.cognitiveStatus ?: "") }
+    var emotionalStatus by remember(profile) { mutableStateOf(profile.emotionalStatus ?: "") }
+    var risks by remember(profile) { mutableStateOf(profile.risks ?: "") }
+    var decisionCapacity by remember(profile) { mutableStateOf(profile.decisionCapacity ?: "") }
 
     var subTab by remember { mutableStateOf(0) }
     var hasChanges by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = subTab, modifier = Modifier.fillMaxWidth()) {
-            Tab(selected = subTab == 0, onClick = { subTab = 0 }, text = { Text("Funcional", fontSize = 12.sp) })
-            Tab(selected = subTab == 1, onClick = { subTab = 1 }, text = { Text("Cognitivo", fontSize = 12.sp) })
-            Tab(selected = subTab == 2, onClick = { subTab = 2 }, text = { Text("Riesgos", fontSize = 12.sp) })
+        // Sub-pestañas más diferenciadas
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("FUNCIONAL", "COGNITIVO", "RIESGOS").forEachIndexed { index, title ->
+                    FilterChip(
+                        selected = subTab == index,
+                        onClick = { subTab = index },
+                        label = { Text(title, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            }
         }
 
-        Column(
-            modifier = Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            when (subTab) {
-                0 -> {
-                    AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio, transferencias...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
-                    AssessmentField(label = "Actividades Básicas", placeholder = "Alimentación, higiene, continencia...", value = basicActivities, onValueChange = { basicActivities = it; hasChanges = true })
-                    AssessmentField(label = "Actividades Instrumentales", placeholder = "Medicación, dinero, teléfono...", value = instrumentalActivities, onValueChange = { instrumentalActivities = it; hasChanges = true })
-                }
-                1 -> {
-                    AssessmentField(label = "Estado Cognitivo", placeholder = "Orientación, memoria, atención...", value = cognitiveStatus, onValueChange = { cognitiveStatus = it; hasChanges = true })
-                    AssessmentField(label = "Estado Emocional", placeholder = "Ánimo, duelo, aislamiento...", value = emotionalStatus, onValueChange = { emotionalStatus = it; hasChanges = true })
-                }
-                2 -> {
-                    AssessmentField(label = "Riesgos Detectados", placeholder = "Caídas, úlceras, desnutrición...", value = risks, onValueChange = { risks = it; hasChanges = true })
-                    AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión del tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    viewModel.updateClinicalProfile(profile.copy(
-                        mobility = mobility, basicActivities = basicActivities, instrumentalActivities = instrumentalActivities,
-                        cognitiveStatus = cognitiveStatus, emotionalStatus = emotionalStatus, risks = risks, decisionCapacity = decisionCapacity
-                    ))
-                    hasChanges = false
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                enabled = hasChanges && !state.isUpdating,
-                shape = RoundedCornerShape(12.dp)
+        Box(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                if (state.isUpdating) CircularProgressIndicator(modifier = Modifier.size(24.dp)) else Text("Guardar Cambios de Valoración")
+                when (subTab) {
+                    0 -> {
+                        AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio, transferencias...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
+                        AssessmentField(label = "Actividades Básicas", placeholder = "Alimentación, higiene, continencia...", value = basicActivities, onValueChange = { basicActivities = it; hasChanges = true })
+                        AssessmentField(label = "Actividades Instrumentales", placeholder = "Medicación, dinero, teléfono...", value = instrumentalActivities, onValueChange = { instrumentalActivities = it; hasChanges = true })
+                    }
+                    1 -> {
+                        AssessmentField(label = "Estado Cognitivo", placeholder = "Orientación, memoria, atención...", value = cognitiveStatus, onValueChange = { cognitiveStatus = it; hasChanges = true })
+                        AssessmentField(label = "Estado Emocional", placeholder = "Ánimo, duelo, aislamiento...", value = emotionalStatus, onValueChange = { emotionalStatus = it; hasChanges = true })
+                    }
+                    2 -> {
+                        AssessmentField(label = "Riesgos Detectados", placeholder = "Caídas, úlceras, desnutrición...", value = risks, onValueChange = { risks = it; hasChanges = true })
+                        AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión del tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
+                    }
+                }
+                Spacer(modifier = Modifier.height(80.dp)) // Espacio para el botón fijo
             }
-            
-            Spacer(modifier = Modifier.height(40.dp))
+
+            // BOTÓN DE GUARDADO FIJO AL FINAL DE LA PESTAÑA
+            Surface(
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Button(
+                    onClick = {
+                        viewModel.updateClinicalProfile(profile.copy(
+                            mobility = mobility, basicActivities = basicActivities, instrumentalActivities = instrumentalActivities,
+                            cognitiveStatus = cognitiveStatus, emotionalStatus = emotionalStatus, risks = risks, decisionCapacity = decisionCapacity
+                        ))
+                        hasChanges = false
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(16.dp).height(50.dp),
+                    enabled = hasChanges && !state.isUpdating,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (state.isUpdating) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                    } else {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Guardar Cambios de Valoración")
+                    }
+                }
+            }
         }
     }
 }
