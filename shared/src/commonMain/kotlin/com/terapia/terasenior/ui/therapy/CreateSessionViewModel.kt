@@ -145,7 +145,7 @@ class CreateSessionViewModel(
                 description = "Intervención de estimulación cognitiva",
                 therapistId = therapistId,
                 patientId = state.selectedPatient?.id,
-                appointmentId = null,
+                appointmentId = state.selectedAppointmentId,
                 mode = state.mode ?: SessionMode.WITHOUT_PATIENT,
                 status = SessionStatus.READY,
                 startedAt = null,
