@@ -182,6 +182,7 @@ fun AppointmentDetailScreen(
                             appointment = state.appointment,
                             attendees = state.attendees,
                             allPatients = state.allPatients,
+                            existingAppointments = state.allAppointments,
                             onDismiss = { showEditDialog = false },
                             onConfirm = { updated, pIds -> 
                                 viewModel.updateFullSession(updated, pIds)

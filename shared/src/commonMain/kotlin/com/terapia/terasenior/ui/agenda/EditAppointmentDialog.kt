@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ fun EditAppointmentDialog(
     appointment: Appointment,
     attendees: List<AppointmentAttendee>,
     allPatients: List<Patient>,
+    existingAppointments: List<Appointment>, // Para detectar conflictos
     onDismiss: () -> Unit,
     onConfirm: (updatedAppt: Appointment, selectedPatientIds: List<String>) -> Unit,
     isLoading: Boolean
@@ -56,92 +58,53 @@ fun EditAppointmentDialog(
 
     var showPatientPicker by remember { mutableStateOf(false) }
     var showExercisePicker by remember { mutableStateOf(false) }
+    
+    var conflictAppt by remember { mutableStateOf<Appointment?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar Sesión Programada", style = MaterialTheme.typography.headlineSmall) },
+        title = { Text(if (conflictAppt != null) "¡Conflicto de Horario!" else "Editar Sesión Programada", style = MaterialTheme.typography.headlineSmall) },
         text = {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Título") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Text("Horario", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(value = startHour, onValueChange = { if(it.length <= 2) startHour = it }, modifier = Modifier.weight(1f), label = { Text("Hora") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
-                    Text(":")
-                    OutlinedTextField(value = startMin, onValueChange = { if(it.length <= 2) startMin = it }, modifier = Modifier.weight(1f), label = { Text("Min") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
-                    Icon(Icons.Default.AccessTime, contentDescription = null)
-                    OutlinedTextField(value = endHour, onValueChange = { if(it.length <= 2) endHour = it }, modifier = Modifier.weight(1f), label = { Text("Hora") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
-                    Text(":")
-                    OutlinedTextField(value = endMin, onValueChange = { if(it.length <= 2) endMin = it }, modifier = Modifier.weight(1f), label = { Text("Min") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
-                }
-
-                // SECCIÓN DE ASISTENTES
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Asistentes (${selectedPatientIds.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        Button(
-                            onClick = { showPatientPicker = true },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Cambiar", fontSize = 12.sp)
-                        }
-                    }
-                    
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            selectedPatientIds.forEach { id ->
-                                val name = allPatients.find { it.id == id }?.fullName ?: "Desconocido"
-                                Text("• $name", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
-                            }
+            if (conflictAppt != null) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp).align(Alignment.CenterHorizontally))
+                    Text(text = "El nuevo horario coincide con otra sesión:", style = MaterialTheme.typography.bodyMedium)
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f))) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(conflictAppt!!.title, fontWeight = FontWeight.Bold)
+                            val s = Instant.parse(conflictAppt!!.startAt).toLocalDateTime(tz)
+                            val e = Instant.parse(conflictAppt!!.endAt).toLocalDateTime(tz)
+                            Text("Horario: ${s.hour}:${s.minute.toString().padStart(2,'0')} - ${e.hour}:${e.minute.toString().padStart(2,'0')}", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
 
-                // SECCIÓN DE PLANIFICACIÓN
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Plan de Ejercicios (${plannedExercises.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                        Button(
-                            onClick = { showExercisePicker = true },
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Ajustar", fontSize = 12.sp)
-                        }
+                    Text("Horario", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(value = startHour, onValueChange = { if(it.length <= 2) startHour = it }, modifier = Modifier.weight(1f), label = { Text("Hora") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
+                        Text(":")
+                        OutlinedTextField(value = startMin, onValueChange = { if(it.length <= 2) startMin = it }, modifier = Modifier.weight(1f), label = { Text("Min") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
+                        Icon(Icons.Default.AccessTime, contentDescription = null)
+                        OutlinedTextField(value = endHour, onValueChange = { if(it.length <= 2) endHour = it }, modifier = Modifier.weight(1f), label = { Text("Hora") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
+                        Text(":")
+                        OutlinedTextField(value = endMin, onValueChange = { if(it.length <= 2) endMin = it }, modifier = Modifier.weight(1f), label = { Text("Min") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
                     }
 
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            plannedExercises.forEach { config ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(config.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                                    Text("Nivel ${config.level}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                                }
+                    // Secciones resumidas de Asistentes y Ejercicios
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("Asistentes (${selectedPatientIds.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Button(onClick = { showPatientPicker = true }, shape = RoundedCornerShape(8.dp)) { Text("Cambiar", fontSize = 12.sp) }
+                        }
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                selectedPatientIds.forEach { id -> Text("• ${allPatients.find { it.id == id }?.fullName ?: "Desconocido"}", style = MaterialTheme.typography.bodySmall) }
                             }
                         }
                     }
@@ -149,51 +112,69 @@ fun EditAppointmentDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = { 
+            if (conflictAppt != null) {
+                Button(onClick = { 
                     val sTime = LocalTime(startHour.toIntOrNull() ?: 10, startMin.toIntOrNull() ?: 0)
                     val eTime = LocalTime(endHour.toIntOrNull() ?: 11, endMin.toIntOrNull() ?: 0)
                     val updated = appointment.copy(
                         title = title,
-                        description = description,
                         startAt = date.atTime(sTime).toInstant(tz).toString(),
                         endAt = date.atTime(eTime).toInstant(tz).toString(),
                         plannedExercises = plannedExercises.toList()
                     )
                     onConfirm(updated, selectedPatientIds.toList()) 
-                },
-                enabled = title.isNotBlank() && selectedPatientIds.isNotEmpty() && !isLoading,
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp)) else Text("Guardar Cambios")
+                }) {
+                    Text("Permitir Solape")
+                }
+            } else {
+                Button(
+                    onClick = { 
+                        val sTime = LocalTime(startHour.toIntOrNull() ?: 10, startMin.toIntOrNull() ?: 0)
+                        val eTime = LocalTime(endHour.toIntOrNull() ?: 11, endMin.toIntOrNull() ?: 0)
+                        
+                        val newStart = date.atTime(sTime).toInstant(tz)
+                        val newEnd = date.atTime(eTime).toInstant(tz)
+                        
+                        val conflict = existingAppointments.find { appt ->
+                            if (appt.id == appointment.id) return@find false // No chocar con sí misma
+                            val exStart = Instant.parse(appt.startAt)
+                            val exEnd = Instant.parse(appt.endAt)
+                            newStart < exEnd && exStart < newEnd
+                        }
+                        
+                        if (conflict != null) {
+                            conflictAppt = conflict
+                        } else {
+                            val updated = appointment.copy(
+                                title = title,
+                                description = description,
+                                startAt = newStart.toString(),
+                                endAt = newEnd.toString(),
+                                plannedExercises = plannedExercises.toList()
+                            )
+                            onConfirm(updated, selectedPatientIds.toList()) 
+                        }
+                    },
+                    enabled = title.isNotBlank() && selectedPatientIds.isNotEmpty() && !isLoading,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp)) else Text("Guardar Cambios")
+                }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { 
+            TextButton(onClick = { if (conflictAppt != null) conflictAppt = null else onDismiss() }) { 
+                Text(if (conflictAppt != null) "Corregir Horario" else "Cancelar") 
+            } 
+        },
         shape = RoundedCornerShape(24.dp)
     )
 
     if (showPatientPicker) {
-        PatientPickerDialog(
-            patients = allPatients,
-            initiallySelectedIds = selectedPatientIds.toList(),
-            onDismiss = { showPatientPicker = false },
-            onConfirm = { ids ->
-                selectedPatientIds.clear()
-                selectedPatientIds.addAll(ids)
-                showPatientPicker = false
-            }
-        )
+        PatientPickerDialog(patients = allPatients, initiallySelectedIds = selectedPatientIds.toList(), onDismiss = { showPatientPicker = false }, onConfirm = { ids -> selectedPatientIds.clear(); selectedPatientIds.addAll(ids); showPatientPicker = false })
     }
 
     if (showExercisePicker) {
-        ExercisePickerDialog(
-            initiallySelected = plannedExercises.toList(),
-            onDismiss = { showExercisePicker = false },
-            onConfirm = { list ->
-                plannedExercises.clear()
-                plannedExercises.addAll(list)
-                showExercisePicker = false
-            }
-        )
+        ExercisePickerDialog(initiallySelected = plannedExercises.toList(), onDismiss = { showExercisePicker = false }, onConfirm = { list -> plannedExercises.clear(); plannedExercises.addAll(list); showExercisePicker = false })
     }
 }

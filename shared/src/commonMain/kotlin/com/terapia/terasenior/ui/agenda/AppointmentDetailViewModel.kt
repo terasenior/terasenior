@@ -22,6 +22,7 @@ sealed interface AppointmentDetailUiState {
         val appointment: Appointment,
         val attendees: List<AppointmentAttendee>,
         val allPatients: List<Patient> = emptyList(),
+        val allAppointments: List<Appointment> = emptyList(), // Para conflictos
         val isSaving: Boolean = false,
         val isDeleted: Boolean = false
     ) : AppointmentDetailUiState
@@ -48,6 +49,7 @@ class AppointmentDetailViewModel(
             val appointmentResult = repository.getAppointmentById(appointmentId)
             val attendeesResult = repository.getAttendees(appointmentId)
             val patientsResult = patientRepository.getPatients().first()
+            val allApptsResult = repository.getAppointments().first()
 
             if (appointmentResult.isSuccess && attendeesResult.isSuccess) {
                 val appt = appointmentResult.getOrThrow()
@@ -55,7 +57,8 @@ class AppointmentDetailViewModel(
                     _uiState.value = AppointmentDetailUiState.Success(
                         appointment = appt,
                         attendees = attendeesResult.getOrThrow(),
-                        allPatients = patientsResult.getOrDefault(emptyList())
+                        allPatients = patientsResult.getOrDefault(emptyList()),
+                        allAppointments = allApptsResult.getOrDefault(emptyList())
                     )
                 } else {
                     _uiState.value = AppointmentDetailUiState.Error("La sesión ya no existe.")

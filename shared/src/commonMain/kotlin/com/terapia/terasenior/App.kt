@@ -354,6 +354,7 @@ fun App() {
                                         selectedDate = currentDay,
                                         patients = if (state is CreateAppointmentUiState.Success) state.patients else emptyList(),
                                         professionals = if (state is CreateAppointmentUiState.Success) state.professionals else emptyList(),
+                                        existingAppointments = (agendaState as? AgendaUiState.Success)?.filteredAppointments ?: emptyList(),
                                         onDismiss = { showCreateDialog = false },
                                     onConfirm = { t, d, s, e, type, staff, attendees, exercises ->
                                             scope.launch {
