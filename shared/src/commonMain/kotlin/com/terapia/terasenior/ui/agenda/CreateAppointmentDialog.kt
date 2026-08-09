@@ -1,6 +1,6 @@
 package com.terapia.terasenior.ui.agenda
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +8,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,11 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.admin.UserProfile
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
-import com.terapia.terasenior.ui.therapy.SessionPlannerComponent
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
@@ -43,8 +46,11 @@ fun CreateAppointmentDialog(
     var endMin by remember { mutableStateOf("00") }
     
     var appointmentType by remember { mutableStateOf(AppointmentType.INDIVIDUAL) }
-    val selectedPatients = remember { mutableStateListOf<String>() }
+    val selectedPatientIds = remember { mutableStateListOf<String>() }
     val plannedExercises = remember { mutableStateListOf<ExerciseConfig>() }
+
+    var showPatientPicker by remember { mutableStateOf(false) }
+    var showExercisePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -55,7 +61,7 @@ fun CreateAppointmentDialog(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 OutlinedTextField(
                     value = title,
@@ -76,24 +82,76 @@ fun CreateAppointmentDialog(
                     OutlinedTextField(value = endMin, onValueChange = { if(it.length <= 2) endMin = it }, modifier = Modifier.weight(1f), label = { Text("Min") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), shape = RoundedCornerShape(12.dp))
                 }
 
-                Text("Asistentes", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        patients.forEach { patient ->
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { if (selectedPatients.contains(patient.id)) selectedPatients.remove(patient.id) else selectedPatients.add(patient.id) }) {
-                                Checkbox(checked = selectedPatients.contains(patient.id), onCheckedChange = { if (it) selectedPatients.add(patient.id) else selectedPatients.remove(patient.id) })
-                                Text(patient.fullName, style = MaterialTheme.typography.bodySmall)
+                // SECCIÓN DE ASISTENTES
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Asistentes (${selectedPatientIds.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = { showPatientPicker = true },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Agregar", fontSize = 12.sp)
+                        }
+                    }
+                    
+                    if (selectedPatientIds.isEmpty()) {
+                        Text("Ningún paciente seleccionado.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    } else {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                selectedPatientIds.forEach { id ->
+                                    val name = patients.find { it.id == id }?.fullName ?: "Desconocido"
+                                    Text("• $name", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
+                                }
                             }
                         }
                     }
                 }
 
-                // COMPONENTE DE PLANIFICACIÓN
-                SessionPlannerComponent(
-                    plannedExercises = plannedExercises,
-                    onAddExercise = { plannedExercises.add(it) },
-                    onRemoveExercise = { plannedExercises.removeAt(it) }
-                )
+                // SECCIÓN DE PLANIFICACIÓN
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Plan de Ejercicios (${plannedExercises.size})", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = { showExercisePicker = true },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Agregar", fontSize = 12.sp)
+                        }
+                    }
+
+                    if (plannedExercises.isEmpty()) {
+                        Text("Sin actividades programadas.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    } else {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                plannedExercises.forEach { config ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(config.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                        Text("Nivel ${config.level}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -101,9 +159,9 @@ fun CreateAppointmentDialog(
                 onClick = { 
                     val start = LocalTime(startHour.toIntOrNull() ?: 10, startMin.toIntOrNull() ?: 0)
                     val end = LocalTime(endHour.toIntOrNull() ?: 11, endMin.toIntOrNull() ?: 0)
-                    onConfirm(title, description, start, end, appointmentType, emptyList(), selectedPatients.toList(), plannedExercises.toList()) 
+                    onConfirm(title, description, start, end, appointmentType, emptyList(), selectedPatientIds.toList(), plannedExercises.toList()) 
                 },
-                enabled = title.isNotBlank() && selectedPatients.isNotEmpty() && !isLoading,
+                enabled = title.isNotBlank() && selectedPatientIds.isNotEmpty() && !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp)) else Text("Programar")
@@ -112,4 +170,29 @@ fun CreateAppointmentDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
         shape = RoundedCornerShape(24.dp)
     )
+
+    if (showPatientPicker) {
+        PatientPickerDialog(
+            patients = patients,
+            initiallySelectedIds = selectedPatientIds.toList(),
+            onDismiss = { showPatientPicker = false },
+            onConfirm = { ids ->
+                selectedPatientIds.clear()
+                selectedPatientIds.addAll(ids)
+                showPatientPicker = false
+            }
+        )
+    }
+
+    if (showExercisePicker) {
+        ExercisePickerDialog(
+            initiallySelected = plannedExercises.toList(),
+            onDismiss = { showExercisePicker = false },
+            onConfirm = { list ->
+                plannedExercises.clear()
+                plannedExercises.addAll(list)
+                showExercisePicker = false
+            }
+        )
+    }
 }
