@@ -3,7 +3,7 @@ package com.terapia.terasenior.ui.therapy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.agenda.Appointment
-import com.terapia.terasenior.domain.model.therapy.TherapySession
+import com.terapia.terasenior.domain.model.therapy.SessionStatus
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import kotlinx.coroutines.flow.*
@@ -12,9 +12,9 @@ import kotlinx.datetime.*
 
 data class DashboardUiState(
     val summary: Map<String, Int> = emptyMap(),
-    val recentSessions: List<TherapySession> = emptyList(),
     val todayAppointments: List<Appointment> = emptyList(),
-    val todayPatients: List<String> = emptyList(), // Nombres de pacientes programados hoy
+    val todayPatients: List<Pair<String, String>> = emptyList(), // ID y Nombre
+    val stats: Map<String, Int> = emptyMap(), // "week", "month", "year"
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -27,14 +27,13 @@ class TherapyDashboardViewModel(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
     fun loadDashboard(therapistId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             
             val summaryResult = repository.getTherapistSummary(therapistId)
             
-            // Cargar Citas de Hoy
+            // 1. Cargar Citas de Hoy
             val now = kotlin.time.Clock.System.now()
             val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
             val appointmentsResult = agendaRepository.getAppointments().first()
@@ -46,21 +45,42 @@ class TherapyDashboardViewModel(
                 } catch(e: Exception) { false }
             }
 
-            // Cargar pacientes de esas citas (simplificado para el dashboard)
-            val patientNames = mutableListOf<String>()
+            // 2. Cargar pacientes de hoy con sus IDs para navegación
+            val patientsInfo = mutableListOf<Pair<String, String>>()
             todayAppts.forEach { appt ->
                 agendaRepository.getAttendees(appt.id).onSuccess { attendees ->
-                    patientNames.addAll(attendees.map { it.patientName })
+                    attendees.forEach { patientsInfo.add(it.patientId to it.patientName) }
                 }
             }
 
-            repository.getRecentSessions(therapistId).collect { recentResult ->
+            // 3. Calcular Estadísticas (Semana, Mes, Año)
+            repository.getRecentSessions(therapistId, 1000).collect { result ->
+                val allSessions = result.getOrDefault(emptyList()).filter { it.status == SessionStatus.COMPLETED }
+                
+                val weekAgo = now.minus(7, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
+                val monthAgo = now.minus(30, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
+                val yearAgo = now.minus(365, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
+
+                val weekCount = allSessions.count { 
+                    try { Instant.parse(it.createdAt) > weekAgo } catch(e: Exception) { false } 
+                }
+                val monthCount = allSessions.count { 
+                    try { Instant.parse(it.createdAt) > monthAgo } catch(e: Exception) { false } 
+                }
+                val yearCount = allSessions.count { 
+                    try { Instant.parse(it.createdAt) > yearAgo } catch(e: Exception) { false } 
+                }
+
                 _uiState.update { state ->
                     state.copy(
                         summary = summaryResult.getOrDefault(emptyMap()),
-                        recentSessions = recentResult.getOrDefault(emptyList()),
                         todayAppointments = todayAppts,
-                        todayPatients = patientNames.distinct(),
+                        todayPatients = patientsInfo.distinctBy { it.first },
+                        stats = mapOf(
+                            "week" to weekCount,
+                            "month" to monthCount,
+                            "year" to yearCount
+                        ),
                         isLoading = false
                     )
                 }

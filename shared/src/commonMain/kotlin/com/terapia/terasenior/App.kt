@@ -190,7 +190,15 @@ fun App() {
                                     createSessionViewModel.resetWizard()
                                     currentScreen = Screen.CREATE_SESSION 
                                 },
-                                onGoToAgenda = { currentScreen = Screen.AGENDA }
+                                onGoToAgenda = { currentScreen = Screen.AGENDA },
+                                onAppointmentClick = { id ->
+                                    selectedAppointmentId = id
+                                    currentScreen = Screen.APPOINTMENT_DETAIL
+                                },
+                                onPatientClick = { id ->
+                                    selectedPatientId = id
+                                    currentScreen = Screen.PATIENT_DETAIL
+                                }
                             )
                         }
 
@@ -207,11 +215,11 @@ fun App() {
                         }
 
                         Screen.SESSION_RUNNER -> {
-                            val therapyRepo = remember { SupabaseTherapySessionRepository() }
                             val sessionId = activeSessionId ?: ""
+                            val agendaRepo = remember { SupabaseAppointmentRepository() }
                             
                             val runnerViewModel = remember(sessionId) { 
-                                SessionRunnerViewModel(sessionId, therapyRepo) 
+                                SessionRunnerViewModel(sessionId, therapyRepo, agendaRepo) 
                             }
                             
                             SessionRunnerScreen(

@@ -2,11 +2,14 @@ package com.terapia.terasenior.ui.therapy
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.therapy.*
+import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -34,7 +37,8 @@ sealed interface SessionRunnerUiState {
  */
 class SessionRunnerViewModel(
     private val sessionId: String,
-    private val repository: TherapySessionRepository
+    private val repository: TherapySessionRepository,
+    private val agendaRepository: AppointmentRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SessionRunnerUiState>(SessionRunnerUiState.Loading)
@@ -164,6 +168,14 @@ class SessionRunnerViewModel(
             
             repository.saveSessionClosing(updatedSession)
                 .onSuccess { 
+                    // ACTUALIZAR CITA SI EXISTE
+                    currentSession.appointmentId?.let { apptId ->
+                        agendaRepository.getAppointmentById(apptId).onSuccess { appt ->
+                            appt?.let {
+                                agendaRepository.updateAppointment(it.copy(status = AppointmentStatus.COMPLETED))
+                            }
+                        }
+                    }
                     _uiState.value = SessionRunnerUiState.Finished 
                 }
                 .onFailure { e ->

@@ -314,7 +314,7 @@ private fun AppointmentCard(
                 }
                 Text(
                     text = label,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = statusColor
                 )
