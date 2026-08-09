@@ -135,7 +135,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.1.6 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.1.7 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
