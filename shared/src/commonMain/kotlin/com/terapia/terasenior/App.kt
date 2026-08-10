@@ -46,10 +46,10 @@ import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
     LOGIN, THERAPY_DASHBOARD, CREATE_SESSION, SESSION_RUNNER, PATIENTS, PATIENT_DETAIL, AGENDA, APPOINTMENT_DETAIL, REPORTS, ADMIN_ENTITIES, ADMIN_USERS,
-    NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
+    NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.10 - Perception Fixes)
+// Terasenior App Entry Point (v1.3.11 - Constructional Praxis)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -363,6 +363,19 @@ fun App() {
                             val viewModel = remember { LiteracyViewModel(SaveActivityResultUseCase(resultsRepo)) }
                             LaunchedEffect(Unit) { viewModel.startNewGame(LiteracyVariation.TRACING_BASIC, 3) }
                             LiteracyGame(
+                                viewModel = viewModel,
+                                patientId = activeTherapyPatientId,
+                                professionalId = currentUserProfile?.id,
+                                appointmentId = null,
+                                onBack = { currentScreen = Screen.THERAPY_DASHBOARD }
+                            )
+                        }
+
+                        Screen.SHAPE_FITTING -> {
+                            val resultsRepo = remember { SupabaseResultsRepository() }
+                            val viewModel = remember { ShapeFittingViewModel(SaveActivityResultUseCase(resultsRepo)) }
+                            LaunchedEffect(Unit) { viewModel.startNewGame(3) }
+                            ShapeFittingGame(
                                 viewModel = viewModel,
                                 patientId = activeTherapyPatientId,
                                 professionalId = currentUserProfile?.id,

@@ -301,6 +301,13 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             PerceptionGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
+        "perception_shape_fitting" -> {
+            val gameViewModel = remember { ShapeFittingViewModel(saveUseCase) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
+            val gameState by gameViewModel.uiState.collectAsState()
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            ShapeFittingGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
+        }
         "literacy_tracing" -> {
             val gameViewModel = remember { TracingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }

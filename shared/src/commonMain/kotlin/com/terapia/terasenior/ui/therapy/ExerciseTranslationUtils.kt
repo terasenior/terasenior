@@ -67,9 +67,10 @@ object ExerciseTranslationUtils {
             "perception_size_ordering" -> "Orden de Tamaños"
             "perception_lateral_dominance" -> "Derecha e Izquierda"
             "perception_mirror" -> "Imágenes en Espejo"
-            "perception_body_parts" -> "Esquema Corporal"
-            
-            // Lectoescritura
+        "perception_body_parts" -> "Esquema Corporal"
+        "perception_shape_fitting" -> "Encaje de Formas"
+        
+        // Lectoescritura
             "literacy_tracing", "literacy_tracing_basic" -> "Trazos y Caligrafía"
             "literacy_complete_letters" -> "Completar Palabras"
             "literacy_copy_words" -> "Copia de Palabras"
