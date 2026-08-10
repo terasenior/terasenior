@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.admin.Entity
 
 @Composable
@@ -54,8 +55,12 @@ fun EditEntityDialog(
                     value = logoUrl,
                     onValueChange = { logoUrl = it },
                     label = { Text("URL del Logo") },
+                    placeholder = { Text("https://...") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    supportingText = {
+                        Text("Nota: Si el logo no aparece, puede ser por bloqueo de seguridad del servidor externo. Se recomienda subirlo a un servidor compatible (CORS).", fontSize = 10.sp)
+                    }
                 )
 
                 OutlinedTextField(

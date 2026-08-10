@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.11 - Constructional Praxis)
+// Terasenior App Entry Point (v1.3.12 - Logo Logic Fix & Session Times)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -104,36 +104,38 @@ fun App() {
                         TopAppBar(
                             title = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // LOGO DE LA ENTIDAD O ICONO DE USUARIO (v1.3.8)
-                                    Surface(
-                                        modifier = Modifier.size(48.dp),
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            if (!currentEntityLogoUrl.isNullOrBlank()) {
-                                                KamelImage(
-                                                    resource = { asyncPainterResource(currentEntityLogoUrl!!.trim()) },
-                                                    contentDescription = "Logo Centro",
-                                                    modifier = Modifier.fillMaxSize().padding(3.dp).clip(RoundedCornerShape(10.dp)),
-                                                    onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
-                                                    onFailure = {
-                                                        Icon(
-                                                            Icons.Default.Business,
-                                                            contentDescription = "Error carga",
-                                                            modifier = Modifier.size(28.dp),
-                                                            tint = MaterialTheme.colorScheme.primary
-                                                        )
-                                                    }
-                                                )
-                                            } else {
-                                                Icon(
-                                                    Icons.Default.AccountCircle,
-                                                    contentDescription = "Perfil",
-                                                    modifier = Modifier.size(36.dp),
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
+                                    // LOGO DE LA ENTIDAD O ICONO DE USUARIO (v1.3.12)
+                                    key(currentEntityLogoUrl) {
+                                        Surface(
+                                            modifier = Modifier.size(48.dp),
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                if (!currentEntityLogoUrl.isNullOrBlank()) {
+                                                    KamelImage(
+                                                        resource = { asyncPainterResource(currentEntityLogoUrl!!.trim()) },
+                                                        contentDescription = "Logo Centro",
+                                                        modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(8.dp)),
+                                                        onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
+                                                        onFailure = {
+                                                            Icon(
+                                                                Icons.Default.Business,
+                                                                contentDescription = "Error carga",
+                                                                modifier = Modifier.size(28.dp),
+                                                                tint = MaterialTheme.colorScheme.primary
+                                                            )
+                                                        }
+                                                    )
+                                                } else {
+                                                    Icon(
+                                                        Icons.Default.AccountCircle,
+                                                        contentDescription = "Perfil",
+                                                        modifier = Modifier.size(34.dp),
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
                                             }
                                         }
                                     }
