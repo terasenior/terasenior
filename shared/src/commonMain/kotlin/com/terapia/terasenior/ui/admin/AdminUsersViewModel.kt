@@ -138,6 +138,8 @@ class AdminUsersViewModel(
     ) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
+            
             authRepository.adminCreateUser(
                 email = email,
                 password = password,
@@ -147,9 +149,10 @@ class AdminUsersViewModel(
                 phone = phone,
                 isActive = isActive
             ).onSuccess {
+                _errorMessage.value = null
                 loadUsers(currentEntityId)
             }.onFailure { error ->
-                _errorMessage.value = error.message
+                _errorMessage.value = "Error al crear usuario: ${error.message}"
                 _isLoading.value = false
             }
         }

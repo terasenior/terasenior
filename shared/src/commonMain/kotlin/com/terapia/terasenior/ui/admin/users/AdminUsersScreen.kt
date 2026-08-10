@@ -93,6 +93,23 @@ fun AdminUsersScreen(
                         onEntityFilterChange = viewModel::onEntityFilterChanged
                     )
 
+                    state.errorMessage?.let { error ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = error, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodySmall)
+                                IconButton(onClick = { viewModel.clearError() }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Cerrar", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
+
                     if (state.users.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text("No se encontraron usuarios.")

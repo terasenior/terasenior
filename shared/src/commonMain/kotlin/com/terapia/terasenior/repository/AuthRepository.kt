@@ -32,14 +32,15 @@ class AuthRepository {
     ): Result<Unit> {
         return runCatching {
             // 1. Crear el usuario en Supabase Auth
+            // Usamos signUpWith. Nota: Si la confirmación de email está activa, el usuario no aparecerá como "Confirmado"
             val authResponse = supabase.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
 
-            val newUserId = authResponse?.id ?: throw Exception("No se pudo generar el ID de autenticación")
+            val newUserId = authResponse?.id ?: throw Exception("Supabase Auth no devolvió un ID de usuario. Verifica si el email ya existe o si el registro está deshabilitado.")
 
-            // 2. Crear el objeto Profile (que ya es @Serializable)
+            // 2. Crear el objeto Profile
             val newProfile = Profile(
                 id = newUserId,
                 email = email,
@@ -50,8 +51,12 @@ class AuthRepository {
                 phone = phone
             )
 
-            // 3. Insertar el objeto directamente
-            supabase.postgrest["user_profiles"].insert(newProfile)
+            // 3. Insertar el objeto Profile en la tabla pública
+            try {
+                supabase.postgrest["user_profiles"].insert(newProfile)
+            } catch (e: Exception) {
+                throw Exception("Usuario autenticado correctamente (ID: $newUserId) pero falló la creación de su perfil clínico: ${e.message}")
+            }
         }
     }
 

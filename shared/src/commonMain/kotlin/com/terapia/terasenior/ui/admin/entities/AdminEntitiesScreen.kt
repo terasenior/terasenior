@@ -49,7 +49,7 @@ fun AdminEntitiesScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.2.8",
+                                text = "v1.2.9",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -290,117 +290,71 @@ private fun EntityCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            // LOGO DEL CENTRO (Imagen o Icono)
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
             ) {
-                // LOGO DEL CENTRO / PLACEHOLDER
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Business,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                if (!entity.logoUrl.isNullOrBlank()) {
+                    // Aquí iría el cargador de imágenes Async (ej: Coil/Kamel)
+                    // Por ahora usamos el icono si falla o placeholder
+                    Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                } else {
+                    Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                 }
+            }
 
-                Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = entity.name,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1
                     )
-                    
+                    Spacer(modifier = Modifier.width(8.dp))
                     val isActive = entity.status == "ACTIVE"
                     Surface(
                         color = if (isActive) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.padding(top = 4.dp)
+                        shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
                             text = if (isActive) "ACTIVO" else "INACTIVO",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (isActive) Color(0xFF2E7D32) else Color(0xFFC62828)
-                            )
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold, color = if (isActive) Color(0xFF2E7D32) else Color(0xFFC62828))
                         )
                     }
                 }
-
+                
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                    Text("CIF: ${entity.cif}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    if (!entity.address.isNullOrBlank()) {
+                        Text(" • ", color = Color.Gray)
+                        Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(10.dp), tint = Color.Gray)
+                        Text(entity.address.take(20) + (if(entity.address.length > 20) "..." else ""), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column(modifier = Modifier.weight(1f)) {
-                    entity.licenseExpiresAt?.let { expiresAt ->
-                        val isExpired = try {
-                            kotlin.time.Instant.parse(expiresAt) < kotlin.time.Clock.System.now()
-                        } catch (e: Exception) {
-                            false
-                        }
-                        
-                        Text(
-                            text = if (isExpired) "❌ Licencia Expirada" else "🛡️ Licencia: ${DateUtils.toUserFormat(expiresAt.take(10))}",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isExpired) Color(0xFFC62828) else Color(0xFF2E7D32)
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "CIF: ${entity.cif}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Edit, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
                 }
-
-                if (!entity.address.isNullOrBlank()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = entity.address,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                    }
+                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                 }
             }
         }
