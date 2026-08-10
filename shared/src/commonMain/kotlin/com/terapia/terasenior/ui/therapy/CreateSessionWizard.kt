@@ -150,156 +150,89 @@ private fun ExerciseSelectionStep(
     onToggle: (type: String, name: String, category: String, desc: String) -> Unit,
     onNext: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
         Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
-        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            when(category) {
-                "Orientación" -> {
-                    ExerciseItem(
-                        title = "Orientación Temporal",
-                        isSelected = selectedExercises.any { config -> config.type == "orientation_temporal" },
-                        onToggle = { onToggle("orientation_temporal", "Orientación", "Orientación", "Preguntas sobre el día, mes, año y estación.") }
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(end = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val exercises = when (category) {
+                    "Orientación" -> listOf(
+                        Triple("orientation_temporal", "Orientación Temporal", "Preguntas sobre el día, mes, año y estación.")
                     )
+                    "Atención" -> listOf(
+                        Triple("number_search", "Busca el Número", "Entrenamiento de atención focalizada."),
+                        Triple("attention_different", "Rodear el diferente", "Buscar el elemento intruso."),
+                        Triple("attention_equals_model", "Rodear los iguales al modelo", "Búsqueda visual selectiva."),
+                        Triple("attention_positions", "Rodear posiciones iguales", "Orientación espacial."),
+                        Triple("attention_differences", "Buscar diferencias", "Atención al detalle."),
+                        Triple("attention_letters", "Rodear las letras iguales", "Búsqueda de grafemas."),
+                        Triple("attention_symbols", "Rodear símbolos iguales", "Atención visual simbólica."),
+                        Triple("attention_matrices", "Matrices (Animales/Símbolos)", "Atención en cuadrícula."),
+                        Triple("attention_row_cancel", "Tachado por filas con recuento", "Cancelación y conteo."),
+                        Triple("attention_consecutive", "Rodear números consecutivos", "Atención sostenida."),
+                        Triple("attention_yes_no", "Tachar una sí y otra no", "Alternancia atencional."),
+                        Triple("attention_dual_task", "Tarea Dual (Doble instrucción)", "Atención dividida."),
+                        Triple("attention_count", "Contar dibujos", "Conteo visual."),
+                        Triple("attention_longest", "Palabra/Cifra más larga", "Discriminación visual."),
+                        Triple("attention_missing_part", "Parte del dibujo que falta", "Integración visual."),
+                        Triple("attention_word_search", "Sopa de letras/números", "Búsqueda sistemática.")
+                    ).sortedBy { it.second }
+                    "Memoria" -> listOf(
+                        Triple("memory_pairs", "Parejas de Memoria", "Encuentra las parejas de cartas iguales."),
+                        Triple("memory_cultural", "Cultura General", "Preguntas sobre geografía e historia."),
+                        Triple("memory_utility", "Utilidad de Objetos", "Relacionar objetos con su función."),
+                        Triple("memory_needs", "Necesidades para Tareas", "Identificar qué se necesita para una tarea."),
+                        Triple("memory_recent", "Memoria Reciente", "Preguntas sobre eventos cercanos.")
+                    ).sortedBy { it.second }
+                    "Lenguaje" -> listOf(
+                        Triple("language_word_image", "Vocabulario: Palabra-Imagen", "Identifica la imagen que corresponde a la palabra."),
+                        Triple("language_naming_objects", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
+                        Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
+                    ).sortedBy { it.second }
+                    "Cálculo" -> listOf(
+                        Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
+                    )
+                    "Funciones Ejecutivas" -> listOf(
+                        Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas.")
+                    )
+                    "Percepción" -> listOf(
+                        Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
+                        Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
+                        Triple("perception_lateral_dominance", "Dominancia Lateral (Izq/Der)", "Identificar izquierda y derecha."),
+                        Triple("perception_mirror", "Imagen en Espejo", "Reconocer formas y letras reflejadas."),
+                        Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo.")
+                    ).sortedBy { it.second }
+                    "Lectoescritura" -> listOf(
+                        Triple("literacy_tracing", "Trazos Básicos", "Sigue las líneas punteadas con precisión.")
+                    )
+                    else -> emptyList()
                 }
-                "Atención" -> {
-                    val attentionGames = listOf(
-                        "number_search" to "Busca el Número",
-                        "attention_different" to "Rodear el diferente",
-                        "attention_equals_model" to "Rodear los iguales al modelo",
-                        "attention_positions" to "Rodear posiciones iguales",
-                        "attention_differences" to "Buscar diferencias",
-                        "attention_letters" to "Rodear las letras iguales",
-                        "attention_symbols" to "Rodear símbolos iguales",
-                        "attention_matrices" to "Matrices (Animales/Símbolos)",
-                        "attention_row_cancel" to "Tachado por filas con recuento",
-                        "attention_consecutive" to "Rodear números consecutivos",
-                        "attention_yes_no" to "Tachar una sí y otra no",
-                        "attention_dual_task" to "Tarea Dual (Doble instrucción)",
-                        "attention_count" to "Contar dibujos",
-                        "attention_longest" to "Palabra/Cifra más larga",
-                        "attention_missing_part" to "Parte del dibujo que falta",
-                        "attention_word_search" to "Sopa de letras/números"
-                    )
-                    
-                    attentionGames.forEach { (type, name) ->
+
+                if (exercises.isEmpty()) {
+                    Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
+                } else {
+                    exercises.forEach { (type, name, desc) ->
                         ExerciseItem(
                             title = name,
-                            isSelected = selectedExercises.any { config -> config.type == type },
-                            onToggle = { onToggle(type, name, "Atención", "Entrenamiento de atención focalizada y selectiva.") }
+                            isSelected = selectedExercises.any { it.type == type },
+                            onToggle = { onToggle(type, name, category, desc) }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
-                }
-                "Memoria" -> {
-                    ExerciseItem(
-                        title = "Parejas de Memoria",
-                        isSelected = selectedExercises.any { config -> config.type == "memory_pairs" },
-                        onToggle = { onToggle("memory_pairs", "Parejas", "Memoria", "Encuentra las parejas de cartas iguales.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Cultura General",
-                        isSelected = selectedExercises.any { config -> config.type == "memory_cultural" },
-                        onToggle = { onToggle("memory_cultural", "Cultura", "Memoria", "Preguntas sobre geografía e historia.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Utilidad de Objetos",
-                        isSelected = selectedExercises.any { config -> config.type == "memory_utility" },
-                        onToggle = { onToggle("memory_utility", "Utilidad", "Memoria", "Relacionar objetos con su función.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Necesidades para Tareas",
-                        isSelected = selectedExercises.any { config -> config.type == "memory_needs" },
-                        onToggle = { onToggle("memory_needs", "Necesidades", "Memoria", "Identificar qué se necesita para una tarea.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Memoria Reciente",
-                        isSelected = selectedExercises.any { config -> config.type == "memory_recent" },
-                        onToggle = { onToggle("memory_recent", "Reciente", "Memoria", "Preguntas sobre eventos cercanos.") }
-                    )
-                }
-                "Lenguaje" -> {
-                    ExerciseItem(
-                        title = "Vocabulario: Palabra-Imagen",
-                        isSelected = selectedExercises.any { config -> config.type == "language_word_image" },
-                        onToggle = { onToggle("language_word_image", "Vocabulario", "Lenguaje", "Identifica la imagen que corresponde a la palabra.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Denominación de Objetos",
-                        isSelected = selectedExercises.any { config -> config.type == "language_naming_objects" },
-                        onToggle = { onToggle("language_naming_objects", "Denominación", "Lenguaje", "Elige el nombre correcto para la imagen mostrada.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Clasificación Semántica",
-                        isSelected = selectedExercises.any { config -> config.type == "language_semantic_category" },
-                        onToggle = { onToggle("language_semantic_category", "Clasificación Semántica", "Lenguaje", "Agrupa los objetos según su familia o categoría.") }
-                    )
-                }
-                "Cálculo" -> {
-                    ExerciseItem(
-                        title = "Cálculos Sencillos",
-                        isSelected = selectedExercises.any { config -> config.type == "calculation_simple" },
-                        onToggle = { onToggle("calculation_simple", "Cálculo Mental", "Cálculo", "Resuelve operaciones aritméticas básicas.") }
-                    )
-                }
-                "Funciones Ejecutivas" -> {
-                    ExerciseItem(
-                        title = "Secuencias Lógicas",
-                        isSelected = selectedExercises.any { config -> config.type == "executive_color_shape_sequence" },
-                        onToggle = { onToggle("executive_color_shape_sequence", "Secuencias", "Funciones Ejecutivas", "Completar series de colores y formas.") }
-                    )
-                }
-                "Percepción" -> {
-                    ExerciseItem(
-                        title = "Identificación de Colores",
-                        isSelected = selectedExercises.any { config -> config.type == "perception_color_identification" },
-                        onToggle = { onToggle("perception_color_identification", "Colores", "Percepción", "Toca el color que se indica por nombre.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Orden de Tamaños",
-                        isSelected = selectedExercises.any { config -> config.type == "perception_size_ordering" },
-                        onToggle = { onToggle("perception_size_ordering", "Tamaños", "Percepción", "Ordena los objetos de menor a mayor tamaño.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Dominancia Lateral (Izq/Der)",
-                        isSelected = selectedExercises.any { config -> config.type == "perception_lateral_dominance" },
-                        onToggle = { onToggle("perception_lateral_dominance", "Lateralidad", "Percepción", "Identificar izquierda y derecha.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Imagen en Espejo",
-                        isSelected = selectedExercises.any { config -> config.type == "perception_mirror" },
-                        onToggle = { onToggle("perception_mirror", "Espejo", "Percepción", "Reconocer formas y letras reflejadas.") }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ExerciseItem(
-                        title = "Partes del Cuerpo",
-                        isSelected = selectedExercises.any { config -> config.type == "perception_body_parts" },
-                        onToggle = { onToggle("perception_body_parts", "Cuerpo Humano", "Percepción", "Identificar y nombrar partes del cuerpo.") }
-                    )
-                }
-                "Lectoescritura" -> {
-                    ExerciseItem(
-                        title = "Trazos Básicos",
-                        isSelected = selectedExercises.any { config -> config.type == "literacy_tracing" },
-                        onToggle = { onToggle("literacy_tracing", "Trazos", "Lectoescritura", "Sigue las líneas punteadas con precisión.") }
-                    )
-                }
-                else -> {
-                    Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
                 }
             }
         }
         
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(onClick = onNext, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), enabled = selectedExercises.isNotEmpty()) {
             Text("Siguiente")
         }
