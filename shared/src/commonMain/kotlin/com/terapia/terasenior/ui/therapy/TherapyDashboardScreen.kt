@@ -59,7 +59,7 @@ fun TherapyDashboardScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "v1.3.4 • Gestión clínica diaria.",
+                            text = "v1.3.5 • Gestión clínica diaria.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -196,7 +196,7 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(60.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(80.dp)) {
                 Text(
                     text = "${start.hour.toString().padStart(2, '0')}:${start.minute.toString().padStart(2, '0')}",
                     style = MaterialTheme.typography.titleMedium,
@@ -204,7 +204,7 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "${end.hour.toString().padStart(2, '0')}:${end.minute.toString().padStart(2, '0')}",
+                    text = "fin ${end.hour.toString().padStart(2, '0')}:${end.minute.toString().padStart(2, '0')}",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
@@ -214,16 +214,23 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
             
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(appt.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(
+                        text = appt.title, 
+                        style = MaterialTheme.typography.bodyLarge, 
+                        fontWeight = FontWeight.ExtraBold, 
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1
+                    )
+                    
                     Surface(
-                        color = statusColor.copy(alpha = 0.1f),
+                        color = statusColor.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
+                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.6f))
                     ) {
                         Text(
-                            text = statusLabel,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            text = statusLabel.uppercase(),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black, fontSize = 9.sp),
                             color = statusColor
                         )
                     }
@@ -232,12 +239,11 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
                 if (attendeeNames.isNotEmpty()) {
                     Text(
                         text = "Pacientes: ${attendeeNames.joinToString(", ")}",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
-                        maxLines = 1
+                        maxLines = 1,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
-                } else {
-                    Text(appt.interventionType ?: "Estimulación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)

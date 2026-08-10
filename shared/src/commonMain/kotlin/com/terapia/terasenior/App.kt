@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
-// Terasenior App Entry Point (v1.3.4 - Dashboard & Ficha Enhancements)
+// Terasenior App Entry Point (v1.3.5 - UI Precision & Logo Fix)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -107,21 +107,21 @@ fun App() {
                                     // LOGO DE LA ENTIDAD O ICONO DE USUARIO
                                     Surface(
                                         modifier = Modifier.size(44.dp),
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = RoundedCornerShape(10.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             if (!currentEntityLogoUrl.isNullOrBlank()) {
                                                 KamelImage(
                                                     resource = { asyncPainterResource(currentEntityLogoUrl!!) },
                                                     contentDescription = "Logo Centro",
-                                                    modifier = Modifier.fillMaxSize().padding(2.dp).clip(RoundedCornerShape(6.dp)),
+                                                    modifier = Modifier.fillMaxSize().padding(2.dp).clip(RoundedCornerShape(8.dp)),
                                                     onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
                                                     onFailure = {
                                                         Icon(
                                                             Icons.Default.Business,
-                                                            contentDescription = null,
+                                                            contentDescription = "Error carga",
                                                             modifier = Modifier.size(28.dp),
                                                             tint = MaterialTheme.colorScheme.primary
                                                         )
@@ -130,7 +130,7 @@ fun App() {
                                             } else {
                                                 Icon(
                                                     Icons.Default.AccountCircle,
-                                                    contentDescription = null,
+                                                    contentDescription = "Perfil",
                                                     modifier = Modifier.size(32.dp),
                                                     tint = MaterialTheme.colorScheme.primary
                                                 )
