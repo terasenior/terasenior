@@ -1,7 +1,9 @@
 package com.terapia.terasenior.ui.admin.entities
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ fun EditEntityDialog(
     var name by remember { mutableStateOf(entity.name) }
     var cif by remember { mutableStateOf(entity.cif) }
     var address by remember { mutableStateOf(entity.address ?: "") }
+    var logoUrl by remember { mutableStateOf(entity.logoUrl ?: "") }
     var status by remember { mutableStateOf(entity.status) }
     var licenseExpiry by remember { mutableStateOf(entity.licenseExpiresAt?.take(10) ?: "") }
 
@@ -25,7 +28,10 @@ fun EditEntityDialog(
         title = { Text("Editar Centro", style = MaterialTheme.typography.headlineSmall) },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedTextField(
@@ -40,6 +46,14 @@ fun EditEntityDialog(
                     value = cif,
                     onValueChange = { cif = it },
                     label = { Text("CIF") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = logoUrl,
+                    onValueChange = { logoUrl = it },
+                    label = { Text("URL del Logo") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -102,12 +116,14 @@ fun EditEntityDialog(
             Button(
                 onClick = {
                     val finalExpiry = if (licenseExpiry.isBlank()) null else licenseExpiry
+                    val finalLogo = if (logoUrl.isBlank()) null else logoUrl
                     onConfirm(entity.copy(
                         name = name, 
                         cif = cif, 
                         address = address, 
                         status = status,
-                        licenseExpiresAt = finalExpiry
+                        licenseExpiresAt = finalExpiry,
+                        logoUrl = finalLogo
                     ))
                 },
                 enabled = name.isNotBlank() && cif.isNotBlank()
@@ -117,6 +133,7 @@ fun EditEntityDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
+        },
+        shape = RoundedCornerShape(24.dp)
     )
 }

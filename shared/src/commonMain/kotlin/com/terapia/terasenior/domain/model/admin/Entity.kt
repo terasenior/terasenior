@@ -7,5 +7,6 @@ data class Entity(
     val address: String?,
     val status: String,
     val createdAt: String,
-    val licenseExpiresAt: String? = null
+    val licenseExpiresAt: String? = null,
+    val logoUrl: String? = null
 )

@@ -19,6 +19,9 @@ class AdminEntitiesViewModel(
     private val _allEntities = MutableStateFlow<List<Entity>>(emptyList())
     private val _searchQuery = MutableStateFlow("")
     private val _statusFilter = MutableStateFlow(EntityStatusFilter.ALL)
+    private val _currentPage = MutableStateFlow(1)
+    private val _pageSize = 4
+    
     private val _isLoading = MutableStateFlow(true)
     private val _globalError = MutableStateFlow<String?>(null)
     private val _tempErrorMessage = MutableStateFlow<String?>(null)
@@ -27,17 +30,25 @@ class AdminEntitiesViewModel(
         _allEntities, 
         _searchQuery, 
         _statusFilter, 
+        _currentPage,
         _isLoading, 
         combine(_globalError, _tempErrorMessage) { g, t -> g to t }
-    ) { entities, query, filter, loading, errors ->
-        val (gError, tempError) = errors
-        buildUiState(entities, query, filter, loading, gError, tempError)
+    ) { values ->
+        val entities = values[0] as List<Entity>
+        val query = values[1] as String
+        val filter = values[2] as EntityStatusFilter
+        val page = values[3] as Int
+        val loading = values[4] as Boolean
+        val (gError, tempError) = values[5] as Pair<String?, String?>
+        
+        buildUiState(entities, query, filter, page, loading, gError, tempError)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AdminEntitiesUiState.Loading)
 
     private fun buildUiState(
         entities: List<Entity>,
         query: String,
         filter: EntityStatusFilter,
+        page: Int,
         loading: Boolean,
         gError: String?,
         tempError: String?
@@ -56,10 +67,19 @@ class AdminEntitiesViewModel(
             matchesQuery && matchesFilter
         }
 
+        val totalPages = kotlin.math.ceil(filtered.size.toDouble() / _pageSize).toInt().coerceAtLeast(1)
+        val validatedPage = page.coerceIn(1, totalPages)
+        
+        val startIndex = (validatedPage - 1) * _pageSize
+        val paginatedList = filtered.drop(startIndex).take(_pageSize)
+
         return AdminEntitiesUiState.Success(
-            entities = filtered,
+            entities = paginatedList,
             searchQuery = query,
             selectedFilter = filter,
+            currentPage = validatedPage,
+            totalPages = totalPages,
+            pageSize = _pageSize,
             errorMessage = tempError
         )
     }
@@ -86,13 +106,19 @@ class AdminEntitiesViewModel(
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
+        _currentPage.value = 1
     }
 
     fun onFilterChanged(filter: EntityStatusFilter) {
         _statusFilter.value = filter
+        _currentPage.value = 1
     }
 
-    fun createEntity(name: String, cif: String, address: String, licenseExpiry: String?) {
+    fun onPageChanged(page: Int) {
+        _currentPage.value = page
+    }
+
+    fun createEntity(name: String, cif: String, address: String, licenseExpiry: String?, logoUrl: String? = null) {
         viewModelScope.launch {
             val newEntity = Entity(
                 id = "", 
@@ -101,7 +127,8 @@ class AdminEntitiesViewModel(
                 address = address,
                 status = "ACTIVE",
                 createdAt = "",
-                licenseExpiresAt = licenseExpiry
+                licenseExpiresAt = licenseExpiry,
+                logoUrl = logoUrl
             )
 
             createEntityUseCase(newEntity)

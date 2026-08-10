@@ -13,6 +13,9 @@ sealed interface AdminEntitiesUiState {
         val entities: List<Entity>,
         val searchQuery: String = "",
         val selectedFilter: EntityStatusFilter = EntityStatusFilter.ALL,
+        val currentPage: Int = 1,
+        val totalPages: Int = 1,
+        val pageSize: Int = 4,
         val errorMessage: String? = null
     ) : AdminEntitiesUiState
     data class Error(val message: String) : AdminEntitiesUiState

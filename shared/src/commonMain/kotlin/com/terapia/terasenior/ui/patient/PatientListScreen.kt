@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
+import com.terapia.terasenior.ui.components.PaginationControls
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,59 +131,6 @@ fun PatientListScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun PaginationControls(
-    currentPage: Int,
-    totalPages: Int,
-    onPageClick: (Int) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            onClick = { onPageClick(currentPage - 1) },
-            enabled = currentPage > 1
-        ) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Anterior")
-        }
-        
-        Spacer(modifier = Modifier.width(8.dp))
-        
-        repeat(totalPages) { index ->
-            val page = index + 1
-            val isSelected = page == currentPage
-            
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onPageClick(page) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = page.toString(),
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    fontSize = 14.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-        }
-
-        Spacer(modifier = Modifier.width(4.dp))
-
-        IconButton(
-            onClick = { onPageClick(currentPage + 1) },
-            enabled = currentPage < totalPages
-        ) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Siguiente")
         }
     }
 }

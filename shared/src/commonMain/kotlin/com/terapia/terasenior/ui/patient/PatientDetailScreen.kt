@@ -32,6 +32,7 @@ import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.domain.model.patient.SupportLevel
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.results.ActivityResult
+import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import com.terapia.terasenior.util.DateUtils
 import kotlinx.datetime.TimeZone
