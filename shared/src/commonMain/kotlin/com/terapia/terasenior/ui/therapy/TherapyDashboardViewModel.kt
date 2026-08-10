@@ -11,7 +11,7 @@ import kotlinx.datetime.*
 
 data class DashboardUiState(
     val summary: Map<String, Int> = emptyMap(),
-    val todayAppointments: List<Appointment> = emptyList(),
+    val todayAppointments: List<Pair<Appointment, List<String>>> = emptyList(), // Cita y nombres de asistentes
     val todayPatients: List<Pair<String, String>> = emptyList(), // ID y Nombre
     val isLoading: Boolean = false,
     val error: String? = null
@@ -42,21 +42,28 @@ class TherapyDashboardViewModel(
                     val start = Instant.parse(it.startAt).toLocalDateTime(TimeZone.currentSystemDefault()).date
                     start == today
                 } catch(e: Exception) { false }
-            }
+            }.sortedBy { it.startAt }
 
-            // 2. Cargar pacientes de hoy con sus IDs para navegación
+            // 2. Cargar asistentes para cada cita y consolidar pacientes
+            val appointmentsWithAttendees = mutableListOf<Pair<Appointment, List<String>>>()
             val patientsInfo = mutableListOf<Pair<String, String>>()
+            
             todayAppts.forEach { appt ->
-                agendaRepository.getAttendees(appt.id).onSuccess { attendees ->
+                val attendeeResult = agendaRepository.getAttendees(appt.id)
+                val names = if (attendeeResult.isSuccess) {
+                    val attendees = attendeeResult.getOrThrow()
                     attendees.forEach { patientsInfo.add(it.patientId to it.patientName) }
-                }
+                    attendees.map { it.patientName }
+                } else emptyList()
+                
+                appointmentsWithAttendees.add(appt to names)
             }
 
-            // Actualizamos el estado con los datos de hoy
+            // Actualizamos el estado con los datos de hoy vinculados
             _uiState.update { state ->
                 state.copy(
                     summary = summaryResult.getOrDefault(emptyMap()),
-                    todayAppointments = todayAppts,
+                    todayAppointments = appointmentsWithAttendees,
                     todayPatients = patientsInfo.distinctBy { it.first },
                     isLoading = false
                 )

@@ -58,7 +58,7 @@ fun TherapyDashboardScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "v1.2.5 • Gestión clínica diaria.",
+                            text = "v1.2.6 • Gestión clínica diaria.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -121,8 +121,12 @@ fun TherapyDashboardScreen(
                     }
                 }
             } else {
-                items(uiState.todayAppointments) { appt ->
-                    TodayAppointmentItem(appt, onClick = { onAppointmentClick(appt.id) })
+                items(uiState.todayAppointments) { pair ->
+                    TodayAppointmentItem(
+                        appt = pair.first, 
+                        attendeeNames = pair.second,
+                        onClick = { onAppointmentClick(pair.first.id) }
+                    )
                 }
             }
 
@@ -175,7 +179,7 @@ private fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.ve
 }
 
 @Composable
-private fun TodayAppointmentItem(appt: Appointment, onClick: () -> Unit) {
+private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>, onClick: () -> Unit) {
     val start = kotlinx.datetime.Instant.parse(appt.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
     Card(
         onClick = onClick,
@@ -194,7 +198,16 @@ private fun TodayAppointmentItem(appt: Appointment, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(appt.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                Text(appt.interventionType ?: "Estimulación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                if (attendeeNames.isNotEmpty()) {
+                    Text(
+                        text = "Pacientes: ${attendeeNames.joinToString(", ")}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1
+                    )
+                } else {
+                    Text(appt.interventionType ?: "Estimulación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                }
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
         }

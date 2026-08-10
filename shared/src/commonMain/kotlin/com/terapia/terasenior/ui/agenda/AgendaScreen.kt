@@ -105,10 +105,11 @@ fun AgendaScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(state.filteredAppointments) { appointment ->
+                            items(state.filteredAppointments) { pair ->
                                 AppointmentCard(
-                                    appointment = appointment,
-                                    onClick = { onAppointmentClick(appointment.id) }
+                                    appointment = pair.first,
+                                    attendeeNames = pair.second,
+                                    onClick = { onAppointmentClick(pair.first.id) }
                                 )
                             }
                         }
@@ -236,6 +237,7 @@ private fun DateSelector(
 @Composable
 private fun AppointmentCard(
     appointment: Appointment,
+    attendeeNames: List<String>,
     onClick: () -> Unit
 ) {
     val statusColor = when(appointment.status) {
@@ -287,16 +289,25 @@ private fun AppointmentCard(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val icon = if (appointment.type == AppointmentType.INDIVIDUAL) Icons.Default.Person else Icons.Default.Groups
-                    Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    val typeLabel = if (appointment.type == AppointmentType.INDIVIDUAL) "Sesión Individual" else "Taller Grupal"
+                if (attendeeNames.isNotEmpty()) {
                     Text(
-                        text = typeLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        text = "Pacientes: ${attendeeNames.joinToString(", ")}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1
                     )
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val icon = if (appointment.type == AppointmentType.INDIVIDUAL) Icons.Default.Person else Icons.Default.Groups
+                        Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        val typeLabel = if (appointment.type == AppointmentType.INDIVIDUAL) "Sesión Individual" else "Taller Grupal"
+                        Text(
+                            text = typeLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
 
