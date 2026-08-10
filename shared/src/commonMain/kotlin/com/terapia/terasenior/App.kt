@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
-// Terasenior App Entry Point (v1.3.6 - UX & Bug Fixes)
+// Terasenior App Entry Point (v1.3.8 - Entity Branding & UX Fixes)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -104,19 +104,19 @@ fun App() {
                         TopAppBar(
                             title = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // LOGO DE LA ENTIDAD O ICONO DE USUARIO
+                                    // LOGO DE LA ENTIDAD O ICONO DE USUARIO (v1.3.8)
                                     Surface(
-                                        modifier = Modifier.size(44.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
-                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                                        modifier = Modifier.size(48.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             if (!currentEntityLogoUrl.isNullOrBlank()) {
                                                 KamelImage(
                                                     resource = { asyncPainterResource(currentEntityLogoUrl!!.trim()) },
                                                     contentDescription = "Logo Centro",
-                                                    modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(6.dp)),
+                                                    modifier = Modifier.fillMaxSize().padding(3.dp).clip(RoundedCornerShape(10.dp)),
                                                     onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
                                                     onFailure = {
                                                         Icon(
@@ -131,13 +131,13 @@ fun App() {
                                                 Icon(
                                                     Icons.Default.AccountCircle,
                                                     contentDescription = "Perfil",
-                                                    modifier = Modifier.size(32.dp),
+                                                    modifier = Modifier.size(36.dp),
                                                     tint = MaterialTheme.colorScheme.primary
                                                 )
                                             }
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(14.dp))
                                     Column {
                                         Text(
                                             text = currentUserProfile?.fullName ?: "Usuario",
