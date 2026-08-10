@@ -46,7 +46,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
-// Terasenior App Entry Point (v1.2.7 - Auth Diagnostics)
+// Terasenior App Entry Point (v1.2.9 - Entity Branding)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -57,6 +57,7 @@ fun App() {
         var activeTherapyPatientId by remember { mutableStateOf<String?>(null) }
         var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
         var currentEntityName by remember { mutableStateOf<String?>(null) }
+        var currentEntityLogoUrl by remember { mutableStateOf<String?>(null) }
         var activeSessionId by remember { mutableStateOf<String?>(null) }
         
         val scope = rememberCoroutineScope()
@@ -73,9 +74,13 @@ fun App() {
             currentUserProfile?.let { profile ->
                 if (profile.role != UserRole.SUPER_ADMIN && profile.entityId != null) {
                     entityRepository.getEntityById(profile.entityId)
-                        .onSuccess { entity -> currentEntityName = entity?.name }
+                        .onSuccess { entity -> 
+                            currentEntityName = entity?.name 
+                            currentEntityLogoUrl = entity?.logoUrl
+                        }
                 } else {
                     currentEntityName = "Administración Global"
+                    currentEntityLogoUrl = null
                 }
             }
         }
@@ -96,20 +101,32 @@ fun App() {
                         TopAppBar(
                             title = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // ICONO PEQUEÑO DE USUARIO
+                                    // LOGO DE LA ENTIDAD O ICONO DE USUARIO
                                     Box(
                                         modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
+                                            .size(42.dp)
+                                            .clip(RoundedCornerShape(8.dp))
                                             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            Icons.Default.AccountCircle,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(28.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
+                                        if (!currentEntityLogoUrl.isNullOrBlank()) {
+                                            // Cargador de imagen básico para Web/KMP
+                                            // Nota: En una versión real usaríamos Coil, pero aquí 
+                                            // mostramos el icono si la URL está presente hasta integrar el cargador
+                                            Icon(
+                                                Icons.Default.Business,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(28.dp),
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        } else {
+                                            Icon(
+                                                Icons.Default.AccountCircle,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(28.dp),
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
