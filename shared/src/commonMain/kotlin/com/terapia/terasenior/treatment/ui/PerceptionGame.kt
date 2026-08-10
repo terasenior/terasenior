@@ -1,10 +1,12 @@
 package com.terapia.terasenior.treatment.ui
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -13,12 +15,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @Composable
 fun PerceptionGame(
@@ -85,7 +91,7 @@ fun PerceptionGame(
                 strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Pregunta
             Card(
@@ -95,14 +101,58 @@ fun PerceptionGame(
             ) {
                 Text(
                     text = state.questionText,
-                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ÁREA DE ESTÍMULO (v1.3.10)
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                state.stimulus?.let { stim ->
+                    when (stim) {
+                        is PerceptionStimulus.ColorCircle -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(0.8f),
+                                horizontalArrangement = if (stim.side == "Derecha") Arrangement.End else Arrangement.Start
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(CircleShape)
+                                        .background(stim.color)
+                                )
+                            }
+                        }
+                        is PerceptionStimulus.Text -> {
+                            Text(
+                                text = stim.text,
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 120.sp
+                                ),
+                                modifier = Modifier.graphicsLayer(scaleX = if (stim.isMirror) -1f else 1f)
+                            )
+                        }
+                        is PerceptionStimulus.Image -> {
+                            KamelImage(
+                                resource = { asyncPainterResource(stim.imageUrl) },
+                                contentDescription = "Estímulo",
+                                modifier = Modifier.size(240.dp).clip(RoundedCornerShape(24.dp)),
+                                onLoading = { CircularProgressIndicator() }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Opciones
             Box(modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp)) {

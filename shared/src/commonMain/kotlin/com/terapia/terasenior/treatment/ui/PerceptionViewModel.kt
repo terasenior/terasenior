@@ -18,6 +18,7 @@ enum class PerceptionType {
 data class PerceptionUiState(
     val currentType: PerceptionType = PerceptionType.LATERAL_DOMINANCE,
     val questionText: String = "",
+    val stimulus: PerceptionStimulus? = null,
     val options: List<String> = emptyList(),
     val correctAnswer: String = "",
     val isCorrect: Boolean? = null,
@@ -29,6 +30,13 @@ data class PerceptionUiState(
     val currentStep: Int = 0,
     val totalSteps: Int = 3
 )
+
+sealed interface PerceptionStimulus {
+    data class ColorCircle(val color: androidx.compose.ui.graphics.Color, val side: String) : PerceptionStimulus
+    data class Text(val text: String, val isMirror: Boolean = false) : PerceptionStimulus
+    data class Image(val imageUrl: String) : PerceptionStimulus
+}
+
 
 @OptIn(kotlin.time.ExperimentalTime::class)
 class PerceptionViewModel(
@@ -44,16 +52,34 @@ class PerceptionViewModel(
         Triple("¿Qué mano usas para escribir si eres diestro?", listOf("Derecha", "Izquierda"), "Derecha")
     )
 
+    private val lateralStimuli = listOf(
+        PerceptionStimulus.ColorCircle(androidx.compose.ui.graphics.Color.Red, "Derecha"),
+        null,
+        null
+    )
+
     private val mirrorQuestions = listOf(
         Triple("Si ves una 'b' en el espejo, ¿qué letra parece?", listOf("d", "p", "q", "b"), "d"),
         Triple("Si levantas la mano derecha frente al espejo, ¿qué mano levanta tu reflejo?", listOf("Izquierda", "Derecha"), "Izquierda"),
         Triple("¿Cuál es el reflejo de la palabra 'AMA'?", listOf("AMA", "OMA", "AMI", "EMA"), "AMA")
     )
 
+    private val mirrorStimuli = listOf(
+        PerceptionStimulus.Text("b", isMirror = true),
+        null,
+        PerceptionStimulus.Text("AMA", isMirror = true)
+    )
+
     private val bodyPartsQuestions = listOf(
         Triple("¿Con qué parte del cuerpo hueles las flores?", listOf("Nariz", "Boca", "Ojos", "Orejas"), "Nariz"),
         Triple("¿Cómo se llama la parte del brazo que se dobla?", listOf("Codo", "Rodilla", "Muñeca", "Hombro"), "Codo"),
         Triple("¿Cuántos dedos tenemos en una mano normal?", listOf("5", "4", "6", "10"), "5")
+    )
+
+    private val bodyPartsStimuli = listOf(
+        PerceptionStimulus.Image("https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400"), // Yoga/Body
+        null,
+        null
     )
 
     fun startNewGame(type: PerceptionType, level: Int = 1) {
@@ -75,6 +101,11 @@ class PerceptionViewModel(
             PerceptionType.MIRROR -> mirrorQuestions
             PerceptionType.BODY_PARTS -> bodyPartsQuestions
         }
+        val stimuli = when(state.currentType) {
+            PerceptionType.LATERAL_DOMINANCE -> lateralStimuli
+            PerceptionType.MIRROR -> mirrorStimuli
+            PerceptionType.BODY_PARTS -> bodyPartsStimuli
+        }
 
         if (state.currentStep >= questions.size) {
             _uiState.update { it.copy(isCompleted = true) }
@@ -82,8 +113,11 @@ class PerceptionViewModel(
         }
 
         val question = questions[state.currentStep]
+        val stimulus = stimuli.getOrNull(state.currentStep)
+        
         _uiState.update { it.copy(
             questionText = question.first,
+            stimulus = stimulus,
             options = question.second.shuffled(),
             correctAnswer = question.third,
             isCorrect = null,
