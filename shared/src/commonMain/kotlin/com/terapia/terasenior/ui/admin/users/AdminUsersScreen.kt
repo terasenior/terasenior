@@ -270,10 +270,15 @@ private fun UserCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(user.fullName.take(1).uppercase(), style = MaterialTheme.typography.headlineSmall)
+                Icon(
+                    Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
