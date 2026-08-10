@@ -130,6 +130,19 @@ fun PerceptionGame(
                                 )
                             }
                         }
+                        is PerceptionStimulus.Shape -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(0.8f),
+                                horizontalArrangement = if (stim.side == "Derecha") Arrangement.End else Arrangement.Start
+                            ) {
+                                Icon(
+                                    imageVector = stim.icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(120.dp),
+                                    tint = stim.color
+                                )
+                            }
+                        }
                         is PerceptionStimulus.Text -> {
                             Text(
                                 text = stim.text,

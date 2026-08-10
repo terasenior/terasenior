@@ -1,5 +1,7 @@
 package com.terapia.terasenior.treatment.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
@@ -33,6 +35,7 @@ data class PerceptionUiState(
 
 sealed interface PerceptionStimulus {
     data class ColorCircle(val color: androidx.compose.ui.graphics.Color, val side: String) : PerceptionStimulus
+    data class Shape(val icon: androidx.compose.ui.graphics.vector.ImageVector, val color: androidx.compose.ui.graphics.Color, val side: String) : PerceptionStimulus
     data class Text(val text: String, val isMirror: Boolean = false) : PerceptionStimulus
     data class Image(val imageUrl: String) : PerceptionStimulus
 }
@@ -48,14 +51,14 @@ class PerceptionViewModel(
 
     private val lateralQuestions = listOf(
         Triple("¿De qué lado está el círculo rojo?", listOf("Izquierda", "Derecha"), "Derecha"),
-        Triple("Toca el botón que está a la IZQUIERDA", listOf("Botón A (Izq)", "Botón B (Der)"), "Botón A (Izq)"),
-        Triple("¿Qué mano usas para escribir si eres diestro?", listOf("Derecha", "Izquierda"), "Derecha")
+        Triple("¿De qué lado está el cuadrado azul?", listOf("Izquierda", "Derecha"), "Izquierda"),
+        Triple("¿De qué lado está la estrella amarilla?", listOf("Izquierda", "Derecha"), "Derecha")
     )
 
     private val lateralStimuli = listOf(
         PerceptionStimulus.ColorCircle(androidx.compose.ui.graphics.Color.Red, "Derecha"),
-        null,
-        null
+        PerceptionStimulus.Shape(Icons.Default.AccountBox, androidx.compose.ui.graphics.Color.Blue, "Izquierda"),
+        PerceptionStimulus.Shape(Icons.Default.Favorite, androidx.compose.ui.graphics.Color(0xFFFFC107), "Derecha")
     )
 
     private val mirrorQuestions = listOf(
