@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.treatment.repository.ExerciseContentCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,12 +20,14 @@ import kotlin.time.ExperimentalTime
 data class VisualAttentionItem(
     val content: Any,
     val isFound: Boolean = false,
-    val isWrong: Boolean = false
+    val isWrong: Boolean = false,
+    val isRealImage: Boolean = false // Marcador para usar Kamel
 )
 
 data class VisualAttentionUiState(
     val variation: String = "",
     val target: Any? = null,
+    val isTargetRealImage: Boolean = false,
     val items: List<VisualAttentionItem> = emptyList(),
     val items2: List<VisualAttentionItem> = emptyList(),
     val gridSize: Int = 4,
@@ -55,7 +58,21 @@ class VisualAttentionViewModel(
         Icons.Default.Chair, Icons.Default.WatchLater, Icons.Default.MedicalServices, Icons.Default.Build
     )
 
+    // Catálogo de imágenes reales para pacientes mayores (v1.3.3)
+    private val realImageCatalog = listOf(
+        "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200", // Manzana
+        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200", // Perro
+        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200", // Gato
+        "https://images.unsplash.com/photo-1571771894821-ad9b5886419a?w=200", // Plátano
+        "https://images.unsplash.com/photo-1585059895324-582b12879c73?w=200", // Taza
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200", // Reloj
+        "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=200", // Silla
+        "https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?w=200"  // Mesa
+    )
+
     private val letterCatalog = ('A'..'Z').toList()
+    
+    // ... rest of catalogs ...
 
     private val wordCategories = mapOf(
         "Animales" to listOf("PERRO", "GATO", "LEON", "TIGRE", "CEBRA", "MONO", "VACA"),
@@ -80,30 +97,62 @@ class VisualAttentionViewModel(
         var target: Any? = null
         val items = mutableListOf<VisualAttentionItem>()
         var totalTargets = 0
+        var isTargetReal = false
+
+        // Decidir si usamos imágenes reales (50% de probabilidad en niveles de símbolos)
+        val useRealImages = level >= 2 && variation in listOf("attention_different", "attention_equals_model", "attention_symbols") && Random.nextFloat() > 0.5f
 
         when (variation) {
             "attention_different" -> {
-                val shuffledSymbols = symbolCatalog.shuffled()
-                val normalSymbol = shuffledSymbols[0]
-                val oddSymbol = shuffledSymbols[1]
-                repeat(totalCells) { items.add(VisualAttentionItem(normalSymbol)) }
-                val oddIndex = Random.nextInt(totalCells)
-                items[oddIndex] = VisualAttentionItem(oddSymbol)
-                target = null
-                totalTargets = 1
+                if (useRealImages) {
+                    val shuffled = realImageCatalog.shuffled()
+                    val normal = shuffled[0]
+                    val odd = shuffled[1]
+                    repeat(totalCells) { items.add(VisualAttentionItem(normal, isRealImage = true)) }
+                    val oddIndex = Random.nextInt(totalCells)
+                    items[oddIndex] = VisualAttentionItem(odd, isRealImage = true)
+                    target = null
+                    totalTargets = 1
+                } else {
+                    val shuffledSymbols = symbolCatalog.shuffled()
+                    val normalSymbol = shuffledSymbols[0]
+                    val oddSymbol = shuffledSymbols[1]
+                    repeat(totalCells) { items.add(VisualAttentionItem(normalSymbol)) }
+                    val oddIndex = Random.nextInt(totalCells)
+                    items[oddIndex] = VisualAttentionItem(oddSymbol)
+                    target = null
+                    totalTargets = 1
+                }
             }
             "attention_equals_model", "attention_symbols" -> {
-                val shuffledSymbols = symbolCatalog.shuffled()
-                val t = shuffledSymbols[0]
-                target = t
-                val distractors = shuffledSymbols.subList(1, shuffledSymbols.size)
-                repeat(totalCells) {
-                    val isTarget = Random.nextFloat() < 0.2f || items.isEmpty()
-                    if (isTarget) {
-                        items.add(VisualAttentionItem(t))
-                        totalTargets++
-                    } else {
-                        items.add(VisualAttentionItem(distractors.random()))
+                if (useRealImages) {
+                    val shuffled = realImageCatalog.shuffled()
+                    val t = shuffled[0]
+                    target = t
+                    isTargetReal = true
+                    val distractors = shuffled.subList(1, shuffled.size)
+                    repeat(totalCells) {
+                        val isTarget = Random.nextFloat() < 0.2f || items.isEmpty()
+                        if (isTarget) {
+                            items.add(VisualAttentionItem(t, isRealImage = true))
+                            totalTargets++
+                        } else {
+                            items.add(VisualAttentionItem(distractors.random(), isRealImage = true))
+                        }
+                    }
+                } else {
+                    val shuffledSymbols = symbolCatalog.shuffled()
+                    val t = shuffledSymbols[0]
+                    target = t
+                    val distractors = shuffledSymbols.subList(1, shuffledSymbols.size)
+                    repeat(totalCells) {
+                        val isTarget = Random.nextFloat() < 0.2f || items.isEmpty()
+                        if (isTarget) {
+                            items.add(VisualAttentionItem(t))
+                            totalTargets++
+                        } else {
+                            items.add(VisualAttentionItem(distractors.random()))
+                        }
                     }
                 }
             }
@@ -198,16 +247,16 @@ class VisualAttentionViewModel(
                 }
             }
             "attention_count" -> {
-                val shuffledSymbols = symbolCatalog.shuffled()
+                val pool = if (useRealImages) realImageCatalog else symbolCatalog.map { it }
                 val count = when(level) {
                     1 -> Random.nextInt(3, 6)
                     2 -> Random.nextInt(5, 10)
                     else -> Random.nextInt(8, 15)
                 }
                 repeat(count) {
-                    items.add(VisualAttentionItem(shuffledSymbols.random()))
+                    items.add(VisualAttentionItem(pool.random(), isRealImage = useRealImages))
                 }
-                totalTargets = count // Not used for tapping, but for logic
+                totalTargets = count
             }
             "attention_differences" -> {
                 val shuffledSymbols = symbolCatalog.shuffled()
@@ -299,6 +348,7 @@ class VisualAttentionViewModel(
         _uiState.value = VisualAttentionUiState(
             variation = variation,
             target = target,
+            isTargetRealImage = isTargetReal,
             items = items,
             items2 = items2,
             gridSize = when (variation) {

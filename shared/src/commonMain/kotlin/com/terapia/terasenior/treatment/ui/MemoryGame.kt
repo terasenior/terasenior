@@ -105,42 +105,35 @@ fun MemoryGame(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Opciones
-            Box(modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp)) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(state.options) { option ->
-                        val isCorrect = state.isCorrect == true && option == state.correctAnswer
-                        val isError = state.isCorrect == false && option != state.correctAnswer
+            // Opciones (v1.3.3 - Responsive)
+            Box(modifier = Modifier.fillMaxWidth().weight(1f).widthIn(max = 900.dp), contentAlignment = Alignment.Center) {
+                ResponsiveGrid(items = state.options, columns = 2, spacing = 16.dp) { _, option, size ->
+                    val isCorrect = state.isCorrect == true && option == state.correctAnswer
+                    val isError = state.isCorrect == false && option != state.correctAnswer
 
-                        Button(
-                            onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                            modifier = Modifier.height(110.dp).fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = when {
-                                    isCorrect -> Color(0xFF4CAF50)
-                                    isError -> Color(0xFFF44336)
-                                    else -> MaterialTheme.colorScheme.secondaryContainer
-                                },
-                                contentColor = when {
-                                    isCorrect || isError -> Color.White
-                                    else -> MaterialTheme.colorScheme.onSecondaryContainer
-                                }
-                            )
-                        ) {
-                            Text(
-                                text = option,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 28.sp
-                            )
-                        }
+                    Button(
+                        onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
+                        modifier = Modifier.height(size).fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = when {
+                                isCorrect -> Color(0xFF4CAF50)
+                                isError -> Color(0xFFF44336)
+                                else -> MaterialTheme.colorScheme.secondaryContainer
+                            },
+                            contentColor = when {
+                                isCorrect || isError -> Color.White
+                                else -> MaterialTheme.colorScheme.onSecondaryContainer
+                            }
+                        )
+                    ) {
+                        Text(
+                            text = option,
+                            fontSize = (size.value * 0.22f).coerceAtMost(28f).sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            lineHeight = (size.value * 0.25f).coerceAtMost(32f).sp
+                        )
                     }
                 }
             }

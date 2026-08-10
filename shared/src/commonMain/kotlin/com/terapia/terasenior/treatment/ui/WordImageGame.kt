@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,28 +106,17 @@ fun WordImageGame(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Cuadrícula de Opciones
-            val columns = when(state.currentLevel) {
-                1 -> 2
-                2 -> 2
-                else -> 3
-            }
+            // Cuadrícula de Opciones (v1.3.3 - Responsive)
+            val columns = if (state.currentLevel <= 2) 2 else 3
 
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columns),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(state.options) { item ->
-                        OptionCard(
-                            item = item,
-                            isSelected = false, // No necesitamos selección persistente aquí
-                            isCorrect = if (state.isCorrect == true && item == state.targetItem) true else null,
-                            onClick = { viewModel.onOptionSelected(item, patientId, professionalId, appointmentId) }
-                        )
-                    }
+            Box(modifier = Modifier.weight(1f).widthIn(max = 800.dp), contentAlignment = Alignment.Center) {
+                ResponsiveGrid(items = state.options, columns = columns, spacing = 16.dp) { _, item, size ->
+                    OptionCard(
+                        item = item,
+                        size = size,
+                        isCorrect = if (state.isCorrect == true && item == state.targetItem) true else null,
+                        onClick = { viewModel.onOptionSelected(item, patientId, professionalId, appointmentId) }
+                    )
                 }
             }
 
@@ -159,8 +150,8 @@ fun WordImageGame(
 
 @Composable
 private fun OptionCard(
-    item: GameItem,
-    isSelected: Boolean,
+    item: WordImageItem,
+    size: androidx.compose.ui.unit.Dp,
     isCorrect: Boolean?,
     onClick: () -> Unit
 ) {
@@ -172,19 +163,29 @@ private fun OptionCard(
 
     Surface(
         onClick = onClick,
-        modifier = Modifier.aspectRatio(1f).fillMaxWidth(),
+        modifier = Modifier.size(size),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
         border = if (isCorrect != null) androidx.compose.foundation.BorderStroke(4.dp, borderColor) else null
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.name,
-                modifier = Modifier.size(64.dp),
-                tint = if (isCorrect == true) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
-            )
+            if (!item.imageUrl.isNullOrBlank()) {
+                KamelImage(
+                    resource = { asyncPainterResource(item.imageUrl!!) },
+                    contentDescription = item.name,
+                    modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(12.dp)),
+                    onLoading = { CircularProgressIndicator() },
+                    onFailure = { Icon(item.icon, null, modifier = Modifier.size(size * 0.6f), tint = Color.Gray) }
+                )
+            } else {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.name,
+                    modifier = Modifier.size(size * 0.6f),
+                    tint = if (isCorrect == true) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }

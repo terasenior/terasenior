@@ -123,30 +123,23 @@ fun ColorShapeSequenceGame(
 
             // Opciones
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.widthIn(max = 400.dp)
-                ) {
-                    items(state.options) { item ->
-                        val isCorrectSelection = state.isCorrect == true && item == state.targetItem
-                        
-                        Surface(
-                            onClick = { viewModel.onOptionSelected(item, patientId, professionalId, appointmentId) },
-                            modifier = Modifier.height(100.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isCorrectSelection) Color(0xFFC8E6C9) else MaterialTheme.colorScheme.secondaryContainer,
-                            border = if (isCorrectSelection) androidx.compose.foundation.BorderStroke(4.dp, Color(0xFF4CAF50)) else null
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = item.shape,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = item.color
-                                )
-                            }
+                ResponsiveGrid(items = state.options, columns = 2, spacing = 16.dp, modifier = Modifier.widthIn(max = 400.dp)) { _, item, size ->
+                    val isCorrectSelection = state.isCorrect == true && item == state.targetItem
+                    
+                    Surface(
+                        onClick = { viewModel.onOptionSelected(item, patientId, professionalId, appointmentId) },
+                        modifier = Modifier.height(size),
+                        shape = RoundedCornerShape(20.dp),
+                        color = if (isCorrectSelection) Color(0xFFC8E6C9) else MaterialTheme.colorScheme.secondaryContainer,
+                        border = if (isCorrectSelection) androidx.compose.foundation.BorderStroke(4.dp, Color(0xFF4CAF50)) else null
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = item.shape,
+                                contentDescription = null,
+                                modifier = Modifier.size(size * 0.6f),
+                                tint = item.color
+                            )
                         }
                     }
                 }

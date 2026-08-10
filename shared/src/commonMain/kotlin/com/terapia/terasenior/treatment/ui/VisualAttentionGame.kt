@@ -2,11 +2,12 @@ package com.terapia.terasenior.treatment.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
@@ -14,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,115 +142,97 @@ fun VisualAttentionGame(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     targets.forEach { t ->
-                        if (t != null) TargetDisplayCard(content = t)
+                        if (t != null) TargetDisplayCard(content = t, isRealImage = state.isTargetRealImage)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Game Grid
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (state.variation == "attention_differences") {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(24.dp)
-                        ) {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(state.gridSize),
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(state.items) { index, item ->
-                                    VisualAttentionItemCard(item = item, onClick = { })
-                                }
-                            }
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(state.gridSize),
-                                modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                itemsIndexed(state.items2) { index, item ->
-                                    VisualAttentionItemCard(
-                                        item = item,
-                                        onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId, isGrid2 = true) }
-                                    )
-                                }
+            // Game Grid (v1.3.3 - Responsive Layout)
+            Box(modifier = Modifier.weight(if (state.isCountingPhase) 0.7f else 1f).fillMaxWidth()) {
+                if (state.variation == "attention_differences") {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResponsiveGrid(items = state.items, columns = state.gridSize) { _, item, size ->
+                                VisualAttentionItemCard(item = item, size = size, onClick = { })
                             }
                         }
-                    } else if (state.variation == "attention_longest") {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            state.items.forEachIndexed { index, item ->
-                                Button(
-                                    onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) },
-                                    modifier = Modifier.fillMaxWidth(0.8f).height(72.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = when {
-                                            item.isFound -> Color(0xFFC8E6C9)
-                                            item.isWrong -> Color(0xFFFFCDD2)
-                                            else -> MaterialTheme.colorScheme.primaryContainer
-                                        },
-                                        contentColor = if (item.isFound || item.isWrong) Color.Black else MaterialTheme.colorScheme.onPrimaryContainer
-                                    ),
-                                    border = if (item.isFound) BorderStroke(3.dp, Color(0xFF4CAF50)) else if (item.isWrong) BorderStroke(3.dp, Color.Red) else null
-                                ) {
-                                    Text(item.content.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-                                }
-                            }
-                        }
-                    } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(state.gridSize),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(8.dp),
-                            modifier = Modifier.weight(if (state.isCountingPhase) 0.7f else 1f)
-                        ) {
-                            itemsIndexed(state.items) { index, item ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            ResponsiveGrid(items = state.items2, columns = state.gridSize) { index, item, size ->
                                 VisualAttentionItemCard(
                                     item = item,
-                                    onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) }
+                                    size = size,
+                                    onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId, isGrid2 = true) }
                                 )
                             }
                         }
                     }
-
-                    if (state.isCountingPhase) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                } else if (state.variation == "attention_longest") {
+                    Column(
+                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        state.items.forEachIndexed { index, item ->
+                            Button(
+                                onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) },
+                                modifier = Modifier.fillMaxWidth(0.8f).height(72.dp).padding(vertical = 4.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = when {
+                                        item.isFound -> Color(0xFFC8E6C9)
+                                        item.isWrong -> Color(0xFFFFCDD2)
+                                        else -> MaterialTheme.colorScheme.primaryContainer
+                                    },
+                                    contentColor = if (item.isFound || item.isWrong) Color.Black else MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
+                                border = if (item.isFound) BorderStroke(3.dp, Color(0xFF4CAF50)) else if (item.isWrong) BorderStroke(3.dp, Color.Red) else null
                             ) {
-                                Text(
-                                    text = "¿Cuántos hay en total?",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                Text(item.content.toString(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                            }
+                        }
+                    }
+                } else {
+                    ResponsiveGrid(items = state.items, columns = state.gridSize) { index, item, size ->
+                        VisualAttentionItemCard(
+                            item = item,
+                            size = size,
+                            onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) }
+                        )
+                    }
+                }
+            }
+
+            if (state.isCountingPhase) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "¿Cuántos hay en total?",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            state.numericOptions.forEach { option ->
+                                FilledTonalButton(
+                                    onClick = { viewModel.onNumericOptionSelected(option, patientId, professionalId, appointmentId) },
+                                    modifier = Modifier.size(width = 80.dp, height = 60.dp),
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    state.numericOptions.forEach { option ->
-                                        FilledTonalButton(
-                                            onClick = { viewModel.onNumericOptionSelected(option, patientId, professionalId, appointmentId) },
-                                            modifier = Modifier.size(width = 80.dp, height = 60.dp),
-                                            shape = RoundedCornerShape(12.dp)
-                                        ) {
-                                            Text(option.toString(), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
+                                    Text(option.toString(), fontSize = 22.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -283,7 +269,7 @@ fun VisualAttentionGame(
 }
 
 @Composable
-fun TargetDisplayCard(content: Any) {
+fun TargetDisplayCard(content: Any, isRealImage: Boolean = false) {
     Surface(
         modifier = Modifier.size(80.dp),
         shape = RoundedCornerShape(16.dp),
@@ -291,7 +277,7 @@ fun TargetDisplayCard(content: Any) {
         tonalElevation = 4.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
-            ItemContent(content = content, size = 48.dp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            ItemContent(content = content, size = 48.dp, color = MaterialTheme.colorScheme.onPrimaryContainer, isRealImage = isRealImage)
         }
     }
 }
@@ -299,6 +285,7 @@ fun TargetDisplayCard(content: Any) {
 @Composable
 fun VisualAttentionItemCard(
     item: VisualAttentionItem,
+    size: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit
 ) {
     val borderColor = when {
@@ -315,7 +302,7 @@ fun VisualAttentionItemCard(
 
     Surface(
         onClick = onClick,
-        modifier = Modifier.aspectRatio(1f).fillMaxWidth(),
+        modifier = Modifier.size(size),
         shape = RoundedCornerShape(16.dp),
         color = containerColor,
         tonalElevation = 2.dp,
@@ -324,46 +311,56 @@ fun VisualAttentionItemCard(
         Box(contentAlignment = Alignment.Center) {
             ItemContent(
                 content = item.content,
-                size = 40.dp,
-                color = if (item.isFound) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
+                size = size * 0.7f,
+                color = if (item.isFound) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface,
+                isRealImage = item.isRealImage
             )
         }
     }
 }
 
 @Composable
-fun ItemContent(content: Any, size: androidx.compose.ui.unit.Dp, color: Color) {
-    when (content) {
-        is ImageVector -> {
-            Icon(imageVector = content, contentDescription = null, modifier = Modifier.size(size), tint = color)
-        }
-        is Char -> {
-            Text(text = content.toString(), fontSize = (size.value * 0.8f).sp, fontWeight = FontWeight.Black, color = color)
-        }
-        is String -> {
-            Text(text = content, fontSize = (size.value * 0.6f).sp, fontWeight = FontWeight.Black, color = color, textAlign = TextAlign.Center)
-        }
-        is Int -> {
-            Text(text = content.toString(), fontSize = (size.value * 0.7f).sp, fontWeight = FontWeight.Black, color = color)
-        }
-        is Pair<*, *> -> {
-            val icon = content.first as ImageVector
-            val rotation = content.second as Float
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(size).rotate(rotation),
-                tint = color
-            )
-        }
-        is Float -> {
-            // If it's just a float, assume it's a rotation for a default arrow
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(size).rotate(content),
-                tint = color
-            )
+fun ItemContent(content: Any, size: androidx.compose.ui.unit.Dp, color: Color, isRealImage: Boolean = false) {
+    if (isRealImage && content is String) {
+        KamelImage(
+            resource = { asyncPainterResource(content) },
+            contentDescription = null,
+            modifier = Modifier.size(size).clip(RoundedCornerShape(8.dp)),
+            onLoading = { CircularProgressIndicator(modifier = Modifier.size(size * 0.5f)) },
+            onFailure = { Icon(Icons.Default.BrokenImage, null, tint = color) }
+        )
+    } else {
+        when (content) {
+            is ImageVector -> {
+                Icon(imageVector = content, contentDescription = null, modifier = Modifier.size(size), tint = color)
+            }
+            is Char -> {
+                Text(text = content.toString(), fontSize = (size.value * 0.8f).sp, fontWeight = FontWeight.Black, color = color)
+            }
+            is String -> {
+                Text(text = content, fontSize = (size.value * 0.6f).sp, fontWeight = FontWeight.Black, color = color, textAlign = TextAlign.Center)
+            }
+            is Int -> {
+                Text(text = content.toString(), fontSize = (size.value * 0.7f).sp, fontWeight = FontWeight.Black, color = color)
+            }
+            is Pair<*, *> -> {
+                val icon = content.first as ImageVector
+                val rotation = content.second as Float
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(size).rotate(rotation),
+                    tint = color
+                )
+            }
+            is Float -> {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(size).rotate(content),
+                    tint = color
+                )
+            }
         }
     }
 }

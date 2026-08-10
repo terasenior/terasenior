@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -24,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -226,13 +229,23 @@ private fun MultipleChoiceLayout(
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                if (state.type == "language_denomination" && state.icon != null) {
-                    Icon(
-                        imageVector = state.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(160.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                if (state.type == "language_denomination") {
+                    if (!state.imageUrl.isNullOrBlank()) {
+                        KamelImage(
+                            resource = { asyncPainterResource(state.imageUrl) },
+                            contentDescription = "Objeto",
+                            modifier = Modifier.fillMaxSize().padding(16.dp).clip(RoundedCornerShape(24.dp)),
+                            onLoading = { CircularProgressIndicator() },
+                            onFailure = { Icon(Icons.Default.Close, null, modifier = Modifier.size(120.dp), tint = Color.Gray) }
+                        )
+                    } else if (state.icon != null) {
+                        Icon(
+                            imageVector = state.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(160.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 } else if (state.type == "language_semantic_naming") {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -248,20 +261,15 @@ private fun MultipleChoiceLayout(
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Cuadrícula de opciones
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(state.options) { option ->
+        // Cuadrícula de opciones (v1.3.3 - Responsive)
+        Box(modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp)) {
+            ResponsiveGrid(items = state.options, columns = 2, spacing = 16.dp) { _, option, size ->
                 val isSelected = state.isCompleted && option == state.targetValue
                 val isWrong = state.isCorrect == false && option == state.userInput
                 
                 Button(
                     onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                    modifier = Modifier.height(80.dp),
+                    modifier = Modifier.height(size),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = when {

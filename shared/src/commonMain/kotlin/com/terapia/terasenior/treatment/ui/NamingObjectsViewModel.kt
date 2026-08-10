@@ -1,13 +1,14 @@
 package com.terapia.terasenior.treatment.ui
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.treatment.repository.ExerciseContentCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,8 +18,10 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
+data class NamingGameItem(val name: String, val icon: ImageVector, val imageUrl: String? = null)
+
 data class NamingObjectsUiState(
-    val targetItem: GameItem? = null,
+    val targetItem: NamingGameItem? = null,
     val options: List<String> = emptyList(),
     val isCorrect: Boolean? = null,
     val isCompleted: Boolean = false,
@@ -35,23 +38,6 @@ class NamingObjectsViewModel(
     private val _uiState = MutableStateFlow(NamingObjectsUiState())
     val uiState: StateFlow<NamingObjectsUiState> = _uiState.asStateFlow()
 
-    private val catalog = listOf(
-        GameItem("Cama", Icons.Default.Bed, "Hogar"),
-        GameItem("Silla", Icons.Default.Chair, "Hogar"),
-        GameItem("Lámpara", Icons.Default.Light, "Hogar"),
-        GameItem("Teléfono", Icons.Default.Phone, "Hogar"),
-        GameItem("Reloj", Icons.Default.WatchLater, "Hogar"),
-        GameItem("Médico", Icons.Default.MedicalServices, "Salud"),
-        GameItem("Medicina", Icons.Default.Medication, "Salud"),
-        GameItem("Corazón", Icons.Default.Favorite, "Salud"),
-        GameItem("Caminar", Icons.AutoMirrored.Filled.DirectionsWalk, "Salud"),
-        GameItem("Herramienta", Icons.Default.Build, "Trabajo"),
-        GameItem("Maleta", Icons.Default.Work, "Trabajo"),
-        GameItem("Libro", Icons.AutoMirrored.Filled.MenuBook, "Ocio"),
-        GameItem("Cámara", Icons.Default.PhotoCamera, "Ocio"),
-        GameItem("Música", Icons.Default.MusicNote, "Ocio")
-    )
-
     @OptIn(ExperimentalTime::class)
     fun startNewGame(level: Int = 1) {
         val numOptions = when (level) {
@@ -63,6 +49,7 @@ class NamingObjectsViewModel(
             else -> 4
         }
 
+        val catalog = ExerciseContentCatalog.items.map { NamingGameItem(it.name, it.icon, it.imageUrl) }
         val shuffledCatalog = catalog.shuffled()
         val target = shuffledCatalog[0]
         val otherOptions = shuffledCatalog.drop(1).take(numOptions - 1).map { it.name }

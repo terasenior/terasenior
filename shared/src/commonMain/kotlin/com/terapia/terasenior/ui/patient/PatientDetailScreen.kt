@@ -450,8 +450,16 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 private fun AssessmentField(label: String, placeholder: String, value: String, onValueChange: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        OutlinedTextField(value = value, onValueChange = onValueChange, placeholder = { Text(placeholder, fontSize = 14.sp) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), minLines = 3, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next))
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, fontSize = 14.sp) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp), // Altura mínima más generosa
+            shape = RoundedCornerShape(12.dp),
+            minLines = 4,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+        )
     }
 }

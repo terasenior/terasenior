@@ -310,17 +310,13 @@ private fun CompleteLettersLayout(
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(state.options) { option ->
+        // Cuadrícula de opciones (v1.3.3 - Responsive)
+        Box(modifier = Modifier.fillMaxWidth().heightIn(max = 250.dp)) {
+            ResponsiveGrid(items = state.options, columns = 2, spacing = 16.dp) { _, option, size ->
                 val isSelected = state.isCompleted && option == state.targetValue
                 Button(
                     onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                    modifier = Modifier.height(80.dp),
+                    modifier = Modifier.height(size),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isSelected) Color(0xFF4CAF50) else MaterialTheme.colorScheme.surfaceVariant,

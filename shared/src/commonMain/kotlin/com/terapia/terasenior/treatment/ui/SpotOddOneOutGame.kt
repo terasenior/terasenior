@@ -89,20 +89,15 @@ fun SpotOddOneOutGame(
                 else -> 3
             }
 
+            // Cuadrícula (v1.3.3 - Responsive)
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columns),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    itemsIndexed(state.items) { index, item ->
-                        OddOneOutOptionCard(
-                            item = item,
-                            isCorrect = if (state.isCorrect == true && index == state.oddItemIndex) true else if (state.isCorrect == false && index != state.oddItemIndex) false else null,
-                            onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) }
-                        )
-                    }
+                ResponsiveGrid(items = state.items, columns = columns, spacing = 16.dp) { index, item, size ->
+                    OddOneOutOptionCard(
+                        item = item,
+                        size = size,
+                        isCorrect = if (state.isCorrect == true && index == state.oddItemIndex) true else if (state.isCorrect == false && index != state.oddItemIndex) false else null,
+                        onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) }
+                    )
                 }
             }
 
@@ -135,7 +130,8 @@ fun SpotOddOneOutGame(
 
 @Composable
 private fun OddOneOutOptionCard(
-    item: GameItem,
+    item: OddOneOutItem,
+    size: androidx.compose.ui.unit.Dp,
     isCorrect: Boolean?,
     onClick: () -> Unit
 ) {
@@ -147,7 +143,7 @@ private fun OddOneOutOptionCard(
 
     Surface(
         onClick = onClick,
-        modifier = Modifier.aspectRatio(1f).fillMaxWidth(),
+        modifier = Modifier.size(size),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
@@ -157,7 +153,7 @@ private fun OddOneOutOptionCard(
             Icon(
                 imageVector = item.icon,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
+                modifier = Modifier.size(size * 0.6f),
                 tint = if (isCorrect == true) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
             )
         }

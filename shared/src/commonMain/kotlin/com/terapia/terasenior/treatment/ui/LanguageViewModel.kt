@@ -31,6 +31,7 @@ data class LanguageUiState(
     val currentLevel: Int = 1,
     val startTimeMs: Long = 0,
     val icon: ImageVector? = null,
+    val imageUrl: String? = null,
     val images: List<ImageVector> = emptyList()
 )
 
@@ -49,13 +50,15 @@ class LanguageViewModel(
         "Frutas" to listOf("Manzana", "Pera", "Plátano", "Uva", "Naranja", "Fresa")
     )
 
+    data class GameItem(val name: String, val icon: ImageVector, val category: String, val imageUrl: String? = null)
+
     private val objects = listOf(
-        GameItem("Hospital", Icons.Default.LocalHospital, "Lugares"),
-        GameItem("Escuela", Icons.Default.School, "Lugares"),
-        GameItem("Herramientas", Icons.Default.Build, "Objetos"),
-        GameItem("Reloj", Icons.Default.WatchLater, "Objetos"),
-        GameItem("Cama", Icons.Default.Bed, "Hogar"),
-        GameItem("Silla", Icons.Default.Chair, "Hogar")
+        GameItem("Manzana", Icons.Default.Restaurant, "Frutas", "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400"),
+        GameItem("Perro", Icons.Default.Pets, "Animales", "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400"),
+        GameItem("Reloj", Icons.Default.WatchLater, "Objetos", "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400"),
+        GameItem("Taza", Icons.Default.Coffee, "Hogar", "https://images.unsplash.com/photo-1585059895324-582b12879c73?w=400"),
+        GameItem("Silla", Icons.Default.Chair, "Hogar", "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=400"),
+        GameItem("Mesa", Icons.Default.TableBar, "Hogar", "https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?w=400")
     )
 
     @OptIn(ExperimentalTime::class)
@@ -65,102 +68,41 @@ class LanguageViewModel(
         when (type) {
             "language_start_letter" -> {
                 val letter = config["value"] ?: listOf("A", "B", "C", "D", "E", "F", "G", "M", "P", "S").random()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = letter,
-                    targetValue = letter,
-                    instruction = "Escribe una palabra que empiece por la letra $letter",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = letter, targetValue = letter, instruction = "Escribe una palabra que empiece por la letra $letter", currentLevel = level, startTimeMs = startTime)
             }
             "language_start_syllable" -> {
                 val syllable = config["value"] ?: listOf("MA", "PA", "CA", "LA", "DE", "TE").random()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = syllable,
-                    targetValue = syllable,
-                    instruction = "Escribe una palabra que empiece por la sílaba $syllable",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = syllable, targetValue = syllable, instruction = "Escribe una palabra que empiece por la sílaba $syllable", currentLevel = level, startTimeMs = startTime)
             }
             "language_end_letter" -> {
                 val letter = config["value"] ?: listOf("A", "O", "E", "R", "S", "N").random()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = letter,
-                    targetValue = letter,
-                    instruction = "Escribe una palabra que termine en la letra $letter",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = letter, targetValue = letter, instruction = "Escribe una palabra que termine en la letra $letter", currentLevel = level, startTimeMs = startTime)
             }
             "language_end_syllable" -> {
                 val syllable = config["value"] ?: listOf("ON", "AS", "ES", "AR", "ER").random()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = syllable,
-                    targetValue = syllable,
-                    instruction = "Escribe una palabra que termine en la sílaba $syllable",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = syllable, targetValue = syllable, instruction = "Escribe una palabra que termine en la sílaba $syllable", currentLevel = level, startTimeMs = startTime)
             }
             "language_complex_cluster" -> {
                 val cluster = config["value"] ?: listOf("CL", "PL", "BR", "DR", "TR", "FL").random()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = cluster,
-                    targetValue = cluster,
-                    instruction = "Escribe una palabra que contenga el grupo $cluster",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = cluster, targetValue = cluster, instruction = "Escribe una palabra que contenga el grupo $cluster", currentLevel = level, startTimeMs = startTime)
             }
             "language_denomination" -> {
                 val target = objects.random()
                 val otherOptions = objects.filter { it.name != target.name }.shuffled().take(3).map { it.name }
                 val options = (otherOptions + target.name).shuffled()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = target.name,
-                    icon = target.icon,
-                    options = options,
-                    targetValue = target.name,
-                    instruction = "Nombra el objeto que ves en la imagen",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = target.name, icon = if (target.imageUrl == null) target.icon else null, imageUrl = target.imageUrl, options = options, targetValue = target.name, instruction = "Nombra el objeto que ves en la imagen", currentLevel = level, startTimeMs = startTime)
             }
             "language_semantic_completion" -> {
                 val category = categories.keys.random()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = category,
-                    targetValue = category,
-                    instruction = "Escribe un ejemplo de la categoría: $category",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = category, targetValue = category, instruction = "Escribe un ejemplo de la categoría: $category", currentLevel = level, startTimeMs = startTime)
             }
             "language_semantic_naming" -> {
                 val category = categories.keys.random()
                 val items = categories[category]!!.shuffled().take(3)
-                // Usamos iconos genéricos para los items por ahora o placeholders
                 val itemIcons = items.map { Icons.AutoMirrored.Filled.Label } 
                 val otherCategories = categories.keys.filter { it != category }.shuffled().take(3)
                 val options = (otherCategories + category).shuffled()
-                _uiState.value = LanguageUiState(
-                    type = type,
-                    prompt = category,
-                    options = options,
-                    targetValue = category,
-                    images = itemIcons,
-                    instruction = "¿A qué categoría pertenecen estos elementos?",
-                    currentLevel = level,
-                    startTimeMs = startTime
-                )
+                _uiState.value = LanguageUiState(type = type, prompt = category, options = options, targetValue = category, images = itemIcons, instruction = "¿A qué categoría pertenecen estos elementos?", currentLevel = level, startTimeMs = startTime)
             }
         }
     }
@@ -181,7 +123,6 @@ class LanguageViewModel(
             "language_end_syllable" -> input.endsWith(state.targetValue, ignoreCase = true)
             "language_complex_cluster" -> input.contains(state.targetValue, ignoreCase = true)
             "language_semantic_completion" -> {
-                // Validación básica: que esté en la lista o simplemente que no esté vacío (más flexible para el profesional)
                 categories[state.targetValue]?.any { it.equals(input, ignoreCase = true) } ?: (input.length > 2)
             }
             else -> false

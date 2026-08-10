@@ -92,27 +92,20 @@ fun SemanticCategoryGame(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Cuadrícula
+            // Cuadrícula (v1.3.3 - Responsive)
             Box(modifier = Modifier.weight(1f).widthIn(max = 800.dp), contentAlignment = Alignment.Center) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    itemsIndexed(state.items) { index, item ->
-                        val isError = state.errorIndex == index
-                        Surface(
-                            onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) },
-                            modifier = Modifier.aspectRatio(1f).fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            color = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface,
-                            tonalElevation = 2.dp,
-                            border = if (isError) androidx.compose.foundation.BorderStroke(4.dp, Color.Red) else null
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(item.icon, contentDescription = item.name, modifier = Modifier.size(64.dp))
-                            }
+                ResponsiveGrid(items = state.items, columns = 3, spacing = 16.dp) { index, item, size ->
+                    val isError = state.errorIndex == index
+                    Surface(
+                        onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) },
+                        modifier = Modifier.size(size),
+                        shape = RoundedCornerShape(24.dp),
+                        color = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface,
+                        tonalElevation = 2.dp,
+                        border = if (isError) androidx.compose.foundation.BorderStroke(4.dp, Color.Red) else null
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(item.icon, contentDescription = item.name, modifier = Modifier.size(size * 0.6f))
                         }
                     }
                 }

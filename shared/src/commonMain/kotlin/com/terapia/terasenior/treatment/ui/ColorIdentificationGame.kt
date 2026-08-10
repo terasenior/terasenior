@@ -113,37 +113,29 @@ fun ColorIdentificationGame(
                 else -> 3
             }
 
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columns),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp),
-                    contentPadding = PaddingValues(16.dp),
-                    modifier = Modifier.widthIn(max = 600.dp)
-                ) {
-                    items(state.options) { item ->
-                        val isCorrectSelection = state.isCorrect == true && item == state.targetColor
-                        
-                        Box(
-                            modifier = Modifier
-                                .aspectRatio(1f)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(item.color)
-                                .border(
-                                    width = if (isCorrectSelection) 6.dp else 1.dp,
-                                    color = if (isCorrectSelection) Color(0xFF4CAF50) else Color.LightGray,
-                                    shape = RoundedCornerShape(24.dp)
-                                )
-                                .clickable { viewModel.onColorSelected(item, patientId, professionalId, appointmentId) }
-                        ) {
-                            if (isCorrectSelection) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.align(Alignment.Center).size(64.dp),
-                                    tint = Color.White
-                                )
-                            }
+            Box(modifier = Modifier.weight(1f).widthIn(max = 600.dp), contentAlignment = Alignment.Center) {
+                ResponsiveGrid(items = state.options, columns = columns, spacing = 24.dp) { _, item, size ->
+                    val isCorrectSelection = state.isCorrect == true && item == state.targetColor
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(size)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(item.color)
+                            .border(
+                                width = if (isCorrectSelection) 6.dp else 1.dp,
+                                color = if (isCorrectSelection) Color(0xFF4CAF50) else Color.LightGray,
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .clickable { viewModel.onColorSelected(item, patientId, professionalId, appointmentId) }
+                    ) {
+                        if (isCorrectSelection) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.align(Alignment.Center).size(size * 0.6f),
+                                tint = Color.White
+                            )
                         }
                     }
                 }
