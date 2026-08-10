@@ -51,7 +51,7 @@ fun AdminEntitiesScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.1",
+                                text = "v1.3.4",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -310,9 +310,9 @@ private fun EntityCard(
                     ) {
                         if (!entity.logoUrl.isNullOrBlank()) {
                             KamelImage(
-                                resource = asyncPainterResource(entity.logoUrl!!),
+                                resource = { asyncPainterResource(entity.logoUrl!!) },
                                 contentDescription = "Logo",
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(6.dp)),
                                 onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
                                 onFailure = {
                                     Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))

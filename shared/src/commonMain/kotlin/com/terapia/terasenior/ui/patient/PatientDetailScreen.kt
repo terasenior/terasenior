@@ -61,7 +61,7 @@ fun PatientDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.2",
+                                text = "v1.3.4",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -168,7 +168,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.3.2 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("v1.3.4 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -328,7 +328,11 @@ fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: Patient
         }
 
         Box(modifier = Modifier.weight(1f)) {
-            Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 when (subTab) {
                     0 -> {
                         AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
@@ -344,7 +348,7 @@ fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: Patient
                         AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
                     }
                 }
-                Spacer(modifier = Modifier.height(120.dp)) // Más espacio para evitar que el botón tape los campos
+                Spacer(modifier = Modifier.height(140.dp)) // Aún más espacio para evitar cortes
             }
 
             Surface(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 8.dp) {
@@ -450,13 +454,13 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 private fun AssessmentField(label: String, placeholder: String, value: String, onValueChange: (String) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp).padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             placeholder = { Text(placeholder, fontSize = 14.sp) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp), // Altura mínima más generosa
+            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
             shape = RoundedCornerShape(12.dp),
             minLines = 4,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)

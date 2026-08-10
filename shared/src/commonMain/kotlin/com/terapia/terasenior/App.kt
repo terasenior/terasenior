@@ -1,5 +1,6 @@
 package com.terapia.terasenior
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -48,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
-// Terasenior App Entry Point (v1.3.3 - Responsive Games & Real Images)
+// Terasenior App Entry Point (v1.3.4 - Dashboard & Ficha Enhancements)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -104,35 +105,36 @@ fun App() {
                             title = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     // LOGO DE LA ENTIDAD O ICONO DE USUARIO
-                                    Box(
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
-                                        contentAlignment = Alignment.Center
+                                    Surface(
+                                        modifier = Modifier.size(44.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                                     ) {
-                                        if (!currentEntityLogoUrl.isNullOrBlank()) {
-                                            KamelImage(
-                                                resource = asyncPainterResource(currentEntityLogoUrl!!),
-                                                contentDescription = "Logo Centro",
-                                                modifier = Modifier.fillMaxSize(),
-                                                onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
-                                                onFailure = {
-                                                    Icon(
-                                                        Icons.Default.Business,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(28.dp),
-                                                        tint = MaterialTheme.colorScheme.primary
-                                                    )
-                                                }
-                                            )
-                                        } else {
-                                            Icon(
-                                                Icons.Default.AccountCircle,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(28.dp),
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
+                                        Box(contentAlignment = Alignment.Center) {
+                                            if (!currentEntityLogoUrl.isNullOrBlank()) {
+                                                KamelImage(
+                                                    resource = { asyncPainterResource(currentEntityLogoUrl!!) },
+                                                    contentDescription = "Logo Centro",
+                                                    modifier = Modifier.fillMaxSize().padding(2.dp).clip(RoundedCornerShape(6.dp)),
+                                                    onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
+                                                    onFailure = {
+                                                        Icon(
+                                                            Icons.Default.Business,
+                                                            contentDescription = null,
+                                                            modifier = Modifier.size(28.dp),
+                                                            tint = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    }
+                                                )
+                                            } else {
+                                                Icon(
+                                                    Icons.Default.AccountCircle,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(32.dp),
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
                                         }
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))

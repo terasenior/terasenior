@@ -1,5 +1,6 @@
 package com.terapia.terasenior.ui.therapy
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -58,7 +59,7 @@ fun TherapyDashboardScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "v1.3.3 • Gestión clínica diaria.",
+                            text = "v1.3.4 • Gestión clínica diaria.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -111,7 +112,7 @@ fun TherapyDashboardScreen(
 
             // SESIONES DE HOY
             item {
-                Text("Sesiones para Hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Sesiones programadas para hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
 
             if (uiState.todayAppointments.isEmpty()) {
@@ -180,7 +181,13 @@ private fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.ve
 
 @Composable
 private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>, onClick: () -> Unit) {
-    val start = kotlinx.datetime.Instant.parse(appt.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
+    val tz = TimeZone.currentSystemDefault()
+    val start = kotlinx.datetime.Instant.parse(appt.startAt).toLocalDateTime(tz)
+    val end = kotlinx.datetime.Instant.parse(appt.endAt).toLocalDateTime(tz)
+    
+    val statusLabel = if (appt.status == com.terapia.terasenior.domain.model.agenda.AppointmentStatus.COMPLETED) "Finalizado" else "Pendiente"
+    val statusColor = if (appt.status == com.terapia.terasenior.domain.model.agenda.AppointmentStatus.COMPLETED) Color(0xFF2E7D32) else Color(0xFFF57C00)
+
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -189,15 +196,39 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "${start.hour.toString().padStart(2, '0')}:${start.minute.toString().padStart(2, '0')}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(60.dp)) {
+                Text(
+                    text = "${start.hour.toString().padStart(2, '0')}:${start.minute.toString().padStart(2, '0')}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "${end.hour.toString().padStart(2, '0')}:${end.minute.toString().padStart(2, '0')}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
+            
             Spacer(modifier = Modifier.width(16.dp))
+            
             Column(modifier = Modifier.weight(1f)) {
-                Text(appt.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(appt.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Surface(
+                        color = statusColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = statusLabel,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = statusColor
+                        )
+                    }
+                }
+                
                 if (attendeeNames.isNotEmpty()) {
                     Text(
                         text = "Pacientes: ${attendeeNames.joinToString(", ")}",
