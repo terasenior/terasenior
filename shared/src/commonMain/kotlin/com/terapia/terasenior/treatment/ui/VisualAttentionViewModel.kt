@@ -396,6 +396,7 @@ class VisualAttentionViewModel(
             "attention_dual_task" -> (state.target as? List<*>)?.contains(item.content) ?: false
             "attention_consecutive" -> item.content == state.expectedNextValue
             "attention_longest" -> item.content == state.target
+            "attention_positions" -> (item.content as? Pair<*, *>)?.second == state.target
             "attention_word_search" -> {
                 val wordIndices = (state.target as? Pair<*, *>)?.second as? List<*>
                 wordIndices?.contains(index) == true

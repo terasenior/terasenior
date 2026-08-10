@@ -36,7 +36,7 @@ object ExerciseTranslationUtils {
         
         // Lenguaje
         "language_word_image" -> "Vocabulario: Imagen"
-        "language_denomination" -> "Denominación de Objetos"
+        "language_denomination", "language_naming_objects" -> "Denominación de Objetos"
         "language_semantic_category" -> "Categorías Semánticas"
         "language_start_letter" -> "Fluidez: Primera Letra"
         "language_start_syllable" -> "Fluidez: Primera Sílaba"

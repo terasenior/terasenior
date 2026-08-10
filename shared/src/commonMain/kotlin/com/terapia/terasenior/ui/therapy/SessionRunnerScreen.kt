@@ -224,9 +224,16 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             WordImageGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "language_naming_objects", "language_start_letter", "language_start_syllable", 
+        "language_denomination", "language_naming_objects" -> {
+            val gameViewModel = remember { NamingObjectsViewModel(saveUseCase) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
+            val gameState by gameViewModel.uiState.collectAsState()
+            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            NamingObjectsGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
+        }
+        "language_start_letter", "language_start_syllable", 
         "language_end_letter", "language_end_syllable", "language_complex_cluster", 
-        "language_denomination", "language_semantic_completion", "language_semantic_naming" -> {
+        "language_semantic_completion", "language_semantic_naming" -> {
             val gameViewModel = remember { LanguageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 gameViewModel.startNewGame(exercise.exerciseType, exercise.level, exercise.configuration) 

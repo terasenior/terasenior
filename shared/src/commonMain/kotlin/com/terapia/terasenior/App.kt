@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
-// Terasenior App Entry Point (v1.3.5 - UI Precision & Logo Fix)
+// Terasenior App Entry Point (v1.3.6 - UX & Bug Fixes)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -114,9 +114,9 @@ fun App() {
                                         Box(contentAlignment = Alignment.Center) {
                                             if (!currentEntityLogoUrl.isNullOrBlank()) {
                                                 KamelImage(
-                                                    resource = { asyncPainterResource(currentEntityLogoUrl!!) },
+                                                    resource = { asyncPainterResource(currentEntityLogoUrl!!.trim()) },
                                                     contentDescription = "Logo Centro",
-                                                    modifier = Modifier.fillMaxSize().padding(2.dp).clip(RoundedCornerShape(8.dp)),
+                                                    modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(6.dp)),
                                                     onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
                                                     onFailure = {
                                                         Icon(
