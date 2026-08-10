@@ -111,28 +111,24 @@ class LoginViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = "No se pudo recuperar tu perfil de usuario."
+                                errorMessage = "Tu perfil de usuario no existe en la base de datos."
                             )
                         }
                     }
                 }.onFailure { error ->
-                    val userFriendlyError = when {
-                        error.message?.contains("invalid_credentials") == true -> "Correo o contraseña incorrectos."
-                        error.message?.contains("rate_limit") == true -> "Demasiados intentos. Inténtalo más tarde."
-                        else -> error.message ?: "Credenciales incorrectas o error de conexión."
-                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = userFriendlyError
+                            errorMessage = "Error al cargar el perfil: ${error.message}"
                         )
                     }
                 }
             }.onFailure { error ->
                 val userFriendlyError = when {
-                    error.message?.contains("invalid_credentials") == true -> "Correo o contraseña incorrectos."
-                    error.message?.contains("rate_limit") == true -> "Demasiados intentos. Inténtalo más tarde."
-                    else -> error.message ?: "Error al conectar con el servidor."
+                    error.message?.contains("invalid_credentials", ignoreCase = true) == true -> "Correo o contraseña incorrectos."
+                    error.message?.contains("rate_limit", ignoreCase = true) == true -> "Demasiados intentos. Inténtalo más tarde."
+                    error.message?.contains("Email not confirmed", ignoreCase = true) == true -> "Debes confirmar tu correo electrónico antes de entrar."
+                    else -> "Error de acceso: ${error.message}"
                 }
                 _uiState.update {
                     it.copy(

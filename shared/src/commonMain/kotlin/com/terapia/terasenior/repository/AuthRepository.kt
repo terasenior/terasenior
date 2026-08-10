@@ -111,6 +111,11 @@ class AuthRepository {
     @OptIn(kotlin.time.ExperimentalTime::class)
     suspend fun checkLicenseAndRecordLogin(profile: Profile): Result<Unit> {
         return runCatching {
+            // 1. Verificar si el usuario está activo
+            if (!profile.isActive) {
+                throw Exception("Tu cuenta de usuario está desactivada. Contacta con tu administrador.")
+            }
+
             runCatching { supabase.postgrest.rpc("check_and_deactivate_expired_licenses") }
 
             if (profile.role == UserRole.SUPER_ADMIN) {
