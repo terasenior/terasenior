@@ -22,6 +22,8 @@ import com.terapia.terasenior.ui.admin.AdminEntitiesViewModel
 import com.terapia.terasenior.ui.admin.EntityStatusFilter
 import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.util.DateUtils
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
@@ -49,7 +51,7 @@ fun AdminEntitiesScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.0",
+                                text = "v1.3.1",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -299,21 +301,27 @@ private fun EntityCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // LOGO DEL CENTRO (Imagen o Icono)
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!entity.logoUrl.isNullOrBlank()) {
-                    // Aquí iría el cargador de imágenes Async (ej: Coil/Kamel)
-                    // Por ahora usamos el icono si falla o placeholder
-                    Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                } else {
-                    Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                }
-            }
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (!entity.logoUrl.isNullOrBlank()) {
+                            KamelImage(
+                                resource = asyncPainterResource(entity.logoUrl!!),
+                                contentDescription = "Logo",
+                                modifier = Modifier.fillMaxSize(),
+                                onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
+                                onFailure = {
+                                    Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                                }
+                            )
+                        } else {
+                            Icon(Icons.Default.Business, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        }
+                    }
 
             Spacer(modifier = Modifier.width(12.dp))
 

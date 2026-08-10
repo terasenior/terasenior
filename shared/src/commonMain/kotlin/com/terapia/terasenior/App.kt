@@ -37,6 +37,8 @@ import com.terapia.terasenior.ui.patient.*
 import com.terapia.terasenior.ui.reports.ReportsScreen
 import com.terapia.terasenior.ui.therapy.*
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -46,7 +48,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY
 }
 
-// Terasenior App Entry Point (v1.2.9 - Entity Branding)
+// Terasenior App Entry Point (v1.3.1 - Entity Logo Support)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -110,14 +112,19 @@ fun App() {
                                         contentAlignment = Alignment.Center
                                     ) {
                                         if (!currentEntityLogoUrl.isNullOrBlank()) {
-                                            // Cargador de imagen básico para Web/KMP
-                                            // Nota: En una versión real usaríamos Coil, pero aquí 
-                                            // mostramos el icono si la URL está presente hasta integrar el cargador
-                                            Icon(
-                                                Icons.Default.Business,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(28.dp),
-                                                tint = MaterialTheme.colorScheme.primary
+                                            KamelImage(
+                                                resource = asyncPainterResource(currentEntityLogoUrl!!),
+                                                contentDescription = "Logo Centro",
+                                                modifier = Modifier.fillMaxSize(),
+                                                onLoading = { CircularProgressIndicator(modifier = Modifier.size(16.dp)) },
+                                                onFailure = {
+                                                    Icon(
+                                                        Icons.Default.Business,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(28.dp),
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
                                             )
                                         } else {
                                             Icon(
