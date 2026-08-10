@@ -209,7 +209,8 @@ private fun ExerciseSelectionStep(
                         Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
                         Triple("perception_lateral_dominance", "Dominancia Lateral (Izq/Der)", "Identificar izquierda y derecha."),
                         Triple("perception_mirror", "Imagen en Espejo", "Reconocer formas y letras reflejadas."),
-                        Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo.")
+                        Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo."),
+                        Triple("perception_shape_fitting", "Encaje de Formas", "Arrastra cada pieza hasta su silueta correspondiente.")
                     ).sortedBy { it.second }
                     "Lectoescritura" -> listOf(
                         Triple("literacy_tracing", "Trazos Básicos", "Sigue las líneas punteadas con precisión.")
