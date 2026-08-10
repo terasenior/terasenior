@@ -17,7 +17,8 @@ import kotlinx.coroutines.launch
 data class SemanticItem(
     val name: String,
     val icon: ImageVector,
-    val category: String
+    val category: String,
+    val isFound: Boolean = false
 )
 
 data class SemanticCategoryUiState(
@@ -31,6 +32,7 @@ data class SemanticCategoryUiState(
     val totalItemsToFind: Int = 0,
     val foundCount: Int = 0,
     val errorIndex: Int? = null,
+    val errorsCount: Int = 0,
     val startTimeMs: Long = 0
 )
 
@@ -81,14 +83,18 @@ class SemanticCategoryViewModel(
 
     fun onItemClicked(index: Int, patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        if (state.isCompleted || state.errorIndex != null) return
+        if (state.isCompleted || state.errorIndex != null || state.items[index].isFound) return
 
         val item = state.items[index]
         if (item.category == state.targetCategory) {
+            val newItems = state.items.toMutableList()
+            newItems[index] = item.copy(isFound = true)
+            
             val newFoundCount = state.foundCount + 1
             val completed = newFoundCount >= state.totalItemsToFind
             
             _uiState.update { it.copy(
+                items = newItems,
                 foundCount = newFoundCount,
                 isCompleted = completed
             ) }
@@ -97,7 +103,7 @@ class SemanticCategoryViewModel(
                 saveResult(patientId, professionalId, appointmentId)
             }
         } else {
-            _uiState.update { it.copy(errorIndex = index) }
+            _uiState.update { it.copy(errorIndex = index, errorsCount = state.errorsCount + 1) }
             viewModelScope.launch {
                 delay(800)
                 _uiState.update { it.copy(errorIndex = null) }
@@ -119,9 +125,9 @@ class SemanticCategoryViewModel(
                 professionalId = professionalId,
                 appointmentId = appointmentId,
                 activityType = "language_semantic_category",
-                score = 100, // Simplificado
+                score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,
-                errorsCount = 0,
+                errorsCount = state.errorsCount,
                 difficultyLevel = "NIVEL_${state.currentLevel}",
                 createdAt = ""
             )

@@ -96,16 +96,31 @@ fun SemanticCategoryGame(
             Box(modifier = Modifier.weight(1f).widthIn(max = 800.dp), contentAlignment = Alignment.Center) {
                 ResponsiveGrid(items = state.items, columns = 3, spacing = 16.dp) { index, item, size ->
                     val isError = state.errorIndex == index
+                    val isCorrect = item.isFound
+                    
                     Surface(
                         onClick = { viewModel.onItemClicked(index, patientId, professionalId, appointmentId) },
                         modifier = Modifier.size(size),
                         shape = RoundedCornerShape(24.dp),
-                        color = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface,
+                        color = when {
+                            isCorrect -> Color(0xFFC8E6C9)
+                            isError -> MaterialTheme.colorScheme.errorContainer
+                            else -> MaterialTheme.colorScheme.surface
+                        },
                         tonalElevation = 2.dp,
-                        border = if (isError) androidx.compose.foundation.BorderStroke(4.dp, Color.Red) else null
+                        border = when {
+                            isCorrect -> androidx.compose.foundation.BorderStroke(4.dp, Color(0xFF4CAF50))
+                            isError -> androidx.compose.foundation.BorderStroke(4.dp, Color.Red)
+                            else -> null
+                        }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(item.icon, contentDescription = item.name, modifier = Modifier.size(size * 0.6f))
+                            Icon(
+                                imageVector = item.icon, 
+                                contentDescription = item.name, 
+                                modifier = Modifier.size(size * 0.6f),
+                                tint = if (isCorrect) Color(0xFF1B5E20) else MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
