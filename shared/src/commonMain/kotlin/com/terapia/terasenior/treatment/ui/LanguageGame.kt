@@ -171,16 +171,19 @@ private fun TextEntryLayout(
                 modifier = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = state.prompt,
-                    style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Black),
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                if (state.prompt.isNotEmpty()) {
+                    Text(
+                        text = state.prompt,
+                        style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Black),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
                 Text(
                     text = state.instruction,
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.titleMedium
+                    style = if (state.prompt.isEmpty()) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleMedium,
+                    fontWeight = if (state.prompt.isEmpty()) FontWeight.Bold else FontWeight.Normal
                 )
             }
         }

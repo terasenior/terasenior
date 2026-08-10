@@ -42,8 +42,8 @@ fun NamingObjectsGame(
                     Icon(Icons.Default.Close, null, tint = MaterialTheme.colorScheme.error)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Lenguaje", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                    Text("Denominación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text("Lenguaje y Evocación", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text("Denominación de Objetos", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
                 IconButton(onClick = { speechManager.speak(instruction) }) { Icon(Icons.AutoMirrored.Filled.VolumeUp, null) }
             }
@@ -56,10 +56,16 @@ fun NamingObjectsGame(
                     state.targetItem?.let { item ->
                         KamelImage(
                             resource = { asyncPainterResource(item.imageUrl ?: "") },
-                            contentDescription = null,
+                            contentDescription = item.name,
                             modifier = Modifier.fillMaxSize().padding(12.dp).clip(RoundedCornerShape(16.dp)),
                             onLoading = { CircularProgressIndicator() },
-                            onFailure = { Icon(item.icon, null, modifier = Modifier.size(120.dp), tint = MaterialTheme.colorScheme.primary) }
+                            onFailure = {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                    Icon(item.icon, null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(item.name, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+                                }
+                            }
                         )
                     }
                 }

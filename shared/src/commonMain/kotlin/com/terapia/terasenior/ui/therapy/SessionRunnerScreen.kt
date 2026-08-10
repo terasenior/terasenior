@@ -334,9 +334,13 @@ private fun TransitionView(
     speechManager: SpeechManager
 ) {
     val message = if (state.isFirst) "¡Hola! Vamos a empezar la sesión." else "¡Muy bien! Vamos al siguiente ejercicio."
-    val subMessage = "El siguiente trabajo es: ${state.nextExerciseName}"
+    val subMessage = "Siguiente actividad: ${state.nextExerciseName}"
     LaunchedEffect(Unit) { speechManager.speak("$message $subMessage") }
     Column(modifier = Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Surface(color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)) {
+            Text("v1.3.6", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
         Text(message, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(16.dp))
         Text(subMessage, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center)

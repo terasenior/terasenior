@@ -17,7 +17,7 @@ data class CatalogItem(
  */
 object ExerciseContentCatalog {
     val items = listOf(
-        CatalogItem("Manzana", Icons.Default.Restaurant, "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400", "Frutas"),
+        CatalogItem("Manzana", Icons.Default.Fastfood, "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400", "Frutas"),
         CatalogItem("Perro", Icons.Default.Pets, "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400", "Animales"),
         CatalogItem("Reloj", Icons.Default.WatchLater, "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400", "Objetos"),
         CatalogItem("Taza", Icons.Default.Coffee, "https://images.unsplash.com/photo-1585059895324-582b12879c73?w=400", "Hogar"),
