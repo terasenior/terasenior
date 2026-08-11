@@ -156,8 +156,9 @@ class SessionRunnerViewModel(
         viewModelScope.launch {
             _uiState.value = SessionRunnerUiState.Loading
             
-            // Recuperamos la sesión actual de la DB para asegurar datos frescos
-            val currentSession = repository.getSessionDetails(sessionId).getOrNull() ?: return@launch
+            // 1. Recuperar sesión fresca
+            val currentSession = repository.getSessionDetails(sessionId).getOrNull() 
+                ?: return@launch _uiState.update { SessionRunnerUiState.Error("No se pudo recuperar la sesión para cerrar.") }
             
             val updatedSession = currentSession.copy(
                 status = SessionStatus.COMPLETED,
@@ -166,21 +167,33 @@ class SessionRunnerViewModel(
                 therapistNotes = notes
             )
             
-            repository.saveSessionClosing(updatedSession)
-                .onSuccess { 
-                    // ACTUALIZAR CITA SI EXISTE
-                    currentSession.appointmentId?.let { apptId ->
-                        agendaRepository.getAppointmentById(apptId).onSuccess { appt ->
-                            appt?.let {
-                                agendaRepository.updateAppointment(it.copy(status = AppointmentStatus.COMPLETED))
+            // 2. Guardar cierre de sesión
+            repository.saveSessionClosing(updatedSession).onSuccess { 
+                
+                // 3. Si viene de una cita, actualizar estado de la cita
+                currentSession.appointmentId?.let { apptId ->
+                    agendaRepository.getAppointmentById(apptId).onSuccess { appt ->
+                        appt?.let {
+                            agendaRepository.updateAppointment(it.copy(status = AppointmentStatus.COMPLETED))
+                            
+                            // 4. Marcar asistencia por defecto como PRESENT para los que no estén ABSENT
+                            agendaRepository.getAttendees(apptId).onSuccess { attendees ->
+                                attendees.forEach { attendee ->
+                                    if (attendee.status == com.terapia.terasenior.domain.model.agenda.AttendanceStatus.PENDING) {
+                                        agendaRepository.updateAttendeeStatus(attendee.id, "PRESENT", null)
+                                    }
+                                }
                             }
                         }
                     }
-                    _uiState.value = SessionRunnerUiState.Finished 
                 }
-                .onFailure { e ->
-                    _uiState.value = SessionRunnerUiState.Error("Fallo al cerrar sesión: ${e.message}")
-                }
+                
+                // 5. Finalizar flujo
+                _uiState.value = SessionRunnerUiState.Finished 
+                
+            }.onFailure { e ->
+                _uiState.value = SessionRunnerUiState.Error("Error al guardar la sesión clínica: ${e.message}. Asegúrate de tener las columnas participation_level, fatigue_level y therapist_notes en Supabase.")
+            }
         }
     }
 

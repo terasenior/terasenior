@@ -16,6 +16,10 @@ data class TherapySessionDto(
     @SerialName("appointment_id") val appointmentId: String? = null,
     @SerialName("mode") val mode: String,
     @SerialName("status") val status: String = "DRAFT",
+    @SerialName("participation_level") val participationLevel: String? = null,
+    @SerialName("fatigue_level") val fatigueLevel: String? = null,
+    @SerialName("therapist_notes") val therapistNotes: String? = null,
+    @SerialName("valuation") val valuation: Int = 5,
     @SerialName("started_at") val startedAt: String? = null,
     @SerialName("finished_at") val finishedAt: String? = null,
     @SerialName("created_at") val createdAt: String? = null
@@ -30,6 +34,10 @@ fun TherapySessionDto.toDomain() = TherapySession(
     appointmentId = appointmentId,
     mode = try { SessionMode.valueOf(mode) } catch (e: Exception) { SessionMode.WITHOUT_PATIENT },
     status = try { SessionStatus.valueOf(status) } catch (e: Exception) { SessionStatus.DRAFT },
+    participationLevel = participationLevel,
+    fatigueLevel = fatigueLevel,
+    therapistNotes = therapistNotes,
+    valuation = valuation,
     startedAt = startedAt,
     finishedAt = finishedAt,
     createdAt = createdAt.orEmpty()
@@ -44,6 +52,10 @@ fun TherapySession.toData() = TherapySessionDto(
     appointmentId = appointmentId,
     mode = mode.name,
     status = status.name,
+    participationLevel = participationLevel,
+    fatigueLevel = fatigueLevel,
+    therapistNotes = therapistNotes,
+    valuation = valuation,
     startedAt = startedAt,
     finishedAt = finishedAt
 )

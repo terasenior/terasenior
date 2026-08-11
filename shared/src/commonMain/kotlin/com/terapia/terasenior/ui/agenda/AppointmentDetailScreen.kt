@@ -45,7 +45,23 @@ fun AppointmentDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de la Sesión") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Detalle de la Sesión")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "v1.3.16",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -85,7 +101,6 @@ fun AppointmentDetailScreen(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     val startDateTime = kotlinx.datetime.Instant.parse(state.appointment.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
                                     val dateStr = DateUtils.toUserFormat(startDateTime.date.toString())
-                                    Text("Fecha: $dateStr • Estado: ", style = MaterialTheme.typography.labelMedium)
                                     val statusLabel = when(state.appointment.status) {
                                         AppointmentStatus.SCHEDULED -> "Programada"
                                         AppointmentStatus.CONFIRMED -> "Confirmada"
@@ -94,7 +109,7 @@ fun AppointmentDetailScreen(
                                         AppointmentStatus.CANCELLED -> "Cancelada"
                                         AppointmentStatus.MISSED -> "No presentado"
                                     }
-                                    Text("Estado: $statusLabel", style = MaterialTheme.typography.labelMedium)
+                                    Text("Fecha: $dateStr • Estado: $statusLabel", style = MaterialTheme.typography.labelMedium)
                                 }
 
                                 if (state.appointment.plannedExercises.isNotEmpty()) {
