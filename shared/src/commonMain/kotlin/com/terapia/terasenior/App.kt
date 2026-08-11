@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.18 - UX Refinement & UI Fixes)
+// Terasenior App Entry Point (v1.3.19 - UI/UX Consistency)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
