@@ -18,7 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,14 +63,24 @@ fun ShapeFittingGame(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ÁREA DE TRABAJO (v1.3.11)
-            BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            var containerOffset by remember { mutableStateOf(Offset.Zero) }
+
+            // ÁREA DE TRABAJO (v1.3.15 - Drag Fix)
+            BoxWithConstraints(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .onGloballyPositioned { containerOffset = it.positionInWindow() }
+            ) {
                 val areaWidth = constraints.maxWidth.toFloat()
                 val areaHeight = constraints.maxHeight.toFloat()
 
                 // 1. DIBUJAR SILUETAS (DESTINOS)
                 Row(
-                    modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(top = 40.dp),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     state.pieces.forEach { piece ->
@@ -80,8 +90,10 @@ fun ShapeFittingGame(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                 .onGloballyPositioned { layoutCoordinates ->
-                                    // Guardamos la posición real del hueco en el ViewModel para el imantado
-                                    viewModel.updatePieceTarget(piece.id, layoutCoordinates.positionInParent())
+                                    // Calculamos la posición relativa al contenedor principal
+                                    val windowPos = layoutCoordinates.positionInWindow()
+                                    val targetPos = windowPos - containerOffset
+                                    viewModel.updatePieceTarget(piece.id, targetPos)
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -93,7 +105,7 @@ fun ShapeFittingGame(
                 // 2. DIBUJAR PIEZAS (MÓVILES)
                 state.pieces.forEach { piece ->
                     // Calculamos posición inicial abajo si no se ha movido
-                    val initialOffset = remember(areaWidth, areaHeight) {
+                    val initialOffset = remember(areaWidth, areaHeight, state.pieces.size) {
                         val index = state.pieces.indexOf(piece)
                         val x = (areaWidth / (state.pieces.size + 1)) * (index + 1) - with(density) { 60.dp.toPx() }
                         val y = areaHeight - with(density) { 180.dp.toPx() }
@@ -101,6 +113,7 @@ fun ShapeFittingGame(
                     }
 
                     val currentPos = if (piece.currentOffset == Offset.Zero) initialOffset else piece.currentOffset
+                    val currentPosState = rememberUpdatedState(currentPos)
 
                     Box(
                         modifier = Modifier
@@ -108,12 +121,12 @@ fun ShapeFittingGame(
                             .size(120.dp)
                             .clip(RoundedCornerShape(20.dp))
                             .background(if (piece.isSnapped) Color(0xFFC8E6C9) else MaterialTheme.colorScheme.primaryContainer)
-                            .pointerInput(piece.isSnapped) {
+                            .pointerInput(piece.id, piece.isSnapped) {
                                 if (!piece.isSnapped) {
                                     detectDragGestures(
                                         onDrag = { change, dragAmount ->
                                             change.consume()
-                                            viewModel.updatePiecePosition(piece.id, currentPos + dragAmount)
+                                            viewModel.updatePiecePosition(piece.id, currentPosState.value + dragAmount)
                                         },
                                         onDragEnd = {
                                             viewModel.trySnapPiece(piece.id, patientId, professionalId, appointmentId)
