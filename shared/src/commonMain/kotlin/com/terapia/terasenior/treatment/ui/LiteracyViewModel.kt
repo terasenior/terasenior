@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,10 +83,26 @@ class LiteracyViewModel(
 
     fun onUserInputChange(input: String) {
         if (_uiState.value.isCompleted) return
-        _uiState.update { it.copy(userInput = input) }
+        _uiState.update { it.copy(userInput = input, isCorrect = null) }
+    }
+
+    fun validateTextInput(patientId: String?, professionalId: String?, appointmentId: String?) {
+        val state = _uiState.value
+        if (state.isCompleted || state.userInput.isBlank()) return
+
+        val isCorrect = state.userInput.trim().equals(state.targetValue, ignoreCase = true)
         
-        if (_uiState.value.variation == LiteracyVariation.COPY_WORDS && input.equals(_uiState.value.targetValue, ignoreCase = true)) {
+        if (isCorrect) {
             _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
+            if (patientId != null && professionalId != null) {
+                saveResult(patientId, professionalId, appointmentId)
+            }
+        } else {
+            _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
+            viewModelScope.launch {
+                delay(1500)
+                _uiState.update { it.copy(isCorrect = null) }
+            }
         }
     }
 

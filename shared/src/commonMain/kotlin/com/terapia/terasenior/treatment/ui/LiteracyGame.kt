@@ -360,7 +360,20 @@ private fun CopyWordsLayout(
             singleLine = true,
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { /* Handled by onValueChange check */ })
+            keyboardActions = KeyboardActions(onDone = { viewModel.validateTextInput(patientId, professionalId, appointmentId) })
         )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = { viewModel.validateTextInput(patientId, professionalId, appointmentId) },
+            modifier = Modifier.fillMaxWidth(0.6f).height(64.dp),
+            shape = RoundedCornerShape(16.dp),
+            enabled = state.userInput.isNotEmpty() && !state.isCompleted
+        ) {
+            Icon(Icons.Default.Check, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Comprobar palabra", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }

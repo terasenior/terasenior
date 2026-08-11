@@ -199,15 +199,22 @@ private fun TextEntryLayout(
             singleLine = true,
             shape = RoundedCornerShape(20.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { viewModel.validateInput(patientId, professionalId, appointmentId) }),
-            trailingIcon = {
-                if (state.userInput.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.validateInput(patientId, professionalId, appointmentId) }) {
-                        Icon(Icons.Default.Check, contentDescription = "Validar", tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
+            keyboardActions = KeyboardActions(onDone = { viewModel.validateInput(patientId, professionalId, appointmentId) })
         )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { viewModel.validateInput(patientId, professionalId, appointmentId) },
+            modifier = Modifier.fillMaxWidth(0.6f).height(64.dp),
+            shape = RoundedCornerShape(16.dp),
+            enabled = state.userInput.isNotEmpty() && !state.isCompleted,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Icon(Icons.Default.Check, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Comprobar palabra", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
