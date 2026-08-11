@@ -47,30 +47,30 @@ fun TherapyDashboardScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Panel de Trabajo",
-                            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "v1.3.16 • Gestión clínica diaria.",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "v1.3.17 • Gestión clínica diaria.",
+                            style = MaterialTheme.typography.labelSmall,
                             color = Color.Gray
                         )
                     }
                     
                     Surface(
                         color = Color(0xFFE8F5E9),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CloudDone, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(16.dp))
+                        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CloudDone, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Online", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32))
                         }
@@ -80,79 +80,58 @@ fun TherapyDashboardScreen(
 
             // ACCIONES RÁPIDAS
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // NUEVA SESIÓN
-                    QuickActionCard(
-                        title = "Nueva Sesión",
-                        icon = Icons.Default.PlayArrow,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f),
-                        onClick = onNewSessionClick
-                    )
-
-                    // NUEVO PACIENTE
-                    QuickActionCard(
-                        title = "Nuevo Paciente",
-                        icon = Icons.Default.PersonAdd,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.weight(1f),
-                        onClick = onNewPatientClick
-                    )
-
-                    // AGENDA
-                    QuickActionCard(
-                        title = "Agenda",
-                        icon = Icons.Default.Event,
-                        color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.weight(1f),
-                        onClick = onGoToAgenda
-                    )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    QuickActionCard(title = "Nueva Sesión", icon = Icons.Default.PlayArrow, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f), onClick = onNewSessionClick)
+                    QuickActionCard(title = "Nuevo Paciente", icon = Icons.Default.PersonAdd, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f), onClick = onNewPatientClick)
+                    QuickActionCard(title = "Agenda", icon = Icons.Default.Event, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.weight(1f), onClick = onGoToAgenda)
                 }
             }
 
-            // SESIONES DE HOY
+            // DISTRIBUCIÓN EN DOS COLUMNAS
             item {
-                Text("Sesiones programadas para hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            }
-
-            if (uiState.todayAppointments.isEmpty()) {
-                item {
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
-                        Text("No hay sesiones programadas para hoy.", modifier = Modifier.padding(16.dp), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                    // COLUMNA IZQUIERDA: SESIONES
+                    Column(modifier = Modifier.weight(1.2f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Sesiones programadas para hoy", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        
+                        if (uiState.todayAppointments.isEmpty()) {
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
+                                Text("Sin sesiones hoy.", modifier = Modifier.padding(12.dp), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                            }
+                        } else {
+                            uiState.todayAppointments.forEach { pair ->
+                                TodayAppointmentItem(
+                                    appt = pair.first, 
+                                    attendeeNames = pair.second,
+                                    onClick = { onAppointmentClick(pair.first.id) }
+                                )
+                            }
+                        }
                     }
-                }
-            } else {
-                items(uiState.todayAppointments) { pair ->
-                    TodayAppointmentItem(
-                        appt = pair.first, 
-                        attendeeNames = pair.second,
-                        onClick = { onAppointmentClick(pair.first.id) }
-                    )
-                }
-            }
 
-            // PACIENTES DE HOY (Numerados y Accesibles)
-            if (uiState.todayPatients.isNotEmpty()) {
-                item {
-                    Text("Pacientes del Día", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                }
-                item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            uiState.todayPatients.forEachIndexed { index, info ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth().clickable { onPatientClick(info.first) }.padding(vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "${index + 1}.", 
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.width(24.dp)
-                                    )
-                                    Text(info.second, style = MaterialTheme.typography.bodyMedium)
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(16.dp))
+                    // COLUMNA DERECHA: PACIENTES
+                    Column(modifier = Modifier.weight(0.8f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Pacientes del Día", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        
+                        if (uiState.todayPatients.isEmpty()) {
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
+                                Text("Sin pacientes.", modifier = Modifier.padding(12.dp), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                            }
+                        } else {
+                            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                                Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    uiState.todayPatients.forEachIndexed { index, info ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth().clickable { onPatientClick(info.first) }.padding(8.dp)
+                                        ) {
+                                            Text(text = "${index + 1}.", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary, modifier = Modifier.width(20.dp))
+                                            Text(info.second, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            Icon(Icons.Default.ChevronRight, null, tint = Color.LightGray, modifier = Modifier.size(14.dp))
+                                        }
+                                        if (index < uiState.todayPatients.size - 1) HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                    }
                                 }
                             }
                         }
@@ -167,14 +146,14 @@ fun TherapyDashboardScreen(
 private fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, modifier: Modifier, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(90.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.height(75.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = color)
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(title, color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Column(modifier = Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(title, color = Color.White, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
     }
 }
@@ -185,52 +164,52 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
     val start = kotlinx.datetime.Instant.parse(appt.startAt).toLocalDateTime(tz)
     val end = kotlinx.datetime.Instant.parse(appt.endAt).toLocalDateTime(tz)
     
-    val statusLabel = if (appt.status == com.terapia.terasenior.domain.model.agenda.AppointmentStatus.COMPLETED) "Finalizado" else "Pendiente"
+    val statusLabel = if (appt.status == com.terapia.terasenior.domain.model.agenda.AppointmentStatus.COMPLETED) "FIN" else "PEND"
     val statusColor = if (appt.status == com.terapia.terasenior.domain.model.agenda.AppointmentStatus.COMPLETED) Color(0xFF2E7D32) else Color(0xFFF57C00)
 
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(85.dp)) {
+        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(60.dp)) {
                 Text(
                     text = "${start.hour.toString().padStart(2, '0')}:${start.minute.toString().padStart(2, '0')}",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "fin ${end.hour.toString().padStart(2, '0')}:${end.minute.toString().padStart(2, '0')}",
+                    text = "${end.hour.toString().padStart(2, '0')}:${end.minute.toString().padStart(2, '0')}",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
             }
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = appt.title, 
-                        style = MaterialTheme.typography.bodyLarge, 
-                        fontWeight = FontWeight.ExtraBold, 
+                        style = MaterialTheme.typography.bodyMedium, 
+                        fontWeight = FontWeight.Bold, 
                         modifier = Modifier.weight(1f),
                         maxLines = 1
                     )
                     
                     Surface(
                         color = statusColor.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.6f))
+                        shape = RoundedCornerShape(4.dp),
+                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.4f))
                     ) {
                         Text(
-                            text = statusLabel.uppercase(),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black, fontSize = 9.sp),
+                            text = statusLabel,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black, fontSize = 8.sp),
                             color = statusColor
                         )
                     }
@@ -238,15 +217,15 @@ private fun TodayAppointmentItem(appt: Appointment, attendeeNames: List<String>,
                 
                 if (attendeeNames.isNotEmpty()) {
                     Text(
-                        text = "Pacientes: ${attendeeNames.joinToString(", ")}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary,
+                        text = attendeeNames.joinToString(", "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray,
                         maxLines = 1,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(16.dp))
         }
     }
 }
