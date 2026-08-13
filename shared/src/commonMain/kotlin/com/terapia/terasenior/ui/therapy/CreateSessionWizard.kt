@@ -84,7 +84,7 @@ fun CreateSessionWizard(
 @Composable
 private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -131,7 +131,10 @@ private fun PatientSelectionStep(patients: List<Patient>, isLoading: Boolean, on
 
 @Composable
 private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp).verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Text("Área Cognitiva", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         SelectionCard(title = "Orientación", description = "Tiempo, espacio y persona.", icon = Icons.Default.Event, onClick = { onCategorySelected("Orientación") })
         SelectionCard(title = "Atención", description = "Focalización y mantenimiento visual.", icon = Icons.Default.Visibility, onClick = { onCategorySelected("Atención") })
@@ -153,17 +156,17 @@ private fun ExerciseSelectionStep(
 ) {
     val scrollState = rememberScrollState()
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
         Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(end = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val exercises = when (category) {
                     "Orientación" -> listOf(
@@ -245,23 +248,23 @@ private fun ExerciseSelectionStep(
 private fun ExerciseItem(title: String, isSelected: Boolean, onToggle: () -> Unit, enabled: Boolean = true) {
     Surface(
         onClick = if(enabled) onToggle else ({}),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         color = if(isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = if(!isSelected) CardDefaults.outlinedCardBorder() else null,
         enabled = enabled,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = isSelected, onCheckedChange = { onToggle() }, enabled = enabled)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(title, color = if(enabled) Color.Unspecified else Color.Gray)
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = if(enabled) Color.Unspecified else Color.Gray)
         }
     }
 }
 
 @Composable
 private fun LevelSelectionStep(onLevelSelected: (Int) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Nivel de Dificultad (GDS)", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         (1..5).forEach { level ->
             Card(onClick = { onLevelSelected(level) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
@@ -276,7 +279,7 @@ private fun LevelSelectionStep(onLevelSelected: (Int) -> Unit) {
 
 @Composable
 private fun SessionSummaryStep(uiState: CreateSessionUiState, onCreateSession: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Confirmar Sesión", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -301,10 +304,15 @@ private fun SummaryRow(label: String, value: String) {
 
 @Composable
 private fun SelectionCard(title: String, description: String, icon: ImageVector, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Surface(modifier = Modifier.size(48.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(modifier = Modifier.size(40.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
