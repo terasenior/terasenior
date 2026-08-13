@@ -77,7 +77,8 @@ fun SessionPlannerComponent(
                 "executive_planning_steps" to "Planificación AVD",
                 "executive_money_calculation" to "Dinero",
                 "executive_time_logic" to "Tiempo",
-                "executive_logical_reasoning" to "Razonamiento"
+                "executive_logical_reasoning" to "Razonamiento",
+                "calculation_simple" to "Cálculos Sencillos"
             ).sortedBy { it.second },
             "Percepción" to listOf(
                 "perception_color_identification" to "Identificación Colores",

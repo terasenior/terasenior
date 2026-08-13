@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
@@ -132,18 +136,36 @@ private fun PatientSelectionStep(patients: List<Patient>, isLoading: Boolean, on
 @Composable
 private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
         Text("Área Cognitiva", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        SelectionCard(title = "Orientación", description = "Tiempo, espacio y persona.", icon = Icons.Default.Event, onClick = { onCategorySelected("Orientación") })
-        SelectionCard(title = "Atención", description = "Focalización y mantenimiento visual.", icon = Icons.Default.Visibility, onClick = { onCategorySelected("Atención") })
-        SelectionCard(title = "Memoria", description = "Codificación y recuperación.", icon = Icons.Default.Psychology, onClick = { onCategorySelected("Memoria") })
-        SelectionCard(title = "Lenguaje", description = "Fluidez y comprensión.", icon = Icons.Default.RecordVoiceOver, onClick = { onCategorySelected("Lenguaje") })
-        SelectionCard(title = "Cálculo", description = "Operaciones y razonamiento.", icon = Icons.Default.Calculate, onClick = { onCategorySelected("Cálculo") })
-        SelectionCard(title = "Funciones Ejecutivas", description = "Planificación y secuencias.", icon = Icons.Default.Settings, onClick = { onCategorySelected("Funciones Ejecutivas") })
-        SelectionCard(title = "Percepción", description = "Gnosias y capacidades visoespaciales.", icon = Icons.Default.Extension, onClick = { onCategorySelected("Percepción") })
-        SelectionCard(title = "Lectoescritura", description = "Grafomotricidad y trazos.", icon = Icons.Default.Edit, onClick = { onCategorySelected("Lectoescritura") })
+        Spacer(modifier = Modifier.height(16.dp))
+
+        val categories = listOf(
+            Triple("Orientación", "Tiempo, espacio y persona.", Icons.Default.Event),
+            Triple("Atención", "Focalización y mantenimiento visual.", Icons.Default.Visibility),
+            Triple("Memoria", "Codificación y recuperación.", Icons.Default.Psychology),
+            Triple("Lenguaje", "Fluidez y comprensión.", Icons.Default.RecordVoiceOver),
+            Triple("Funciones Ejecutivas", "Planificación, secuencias y cálculo.", Icons.Default.Settings),
+            Triple("Percepción", "Gnosias y capacidades visoespaciales.", Icons.Default.Extension),
+            Triple("Lectoescritura", "Grafomotricidad y trazos.", Icons.Default.Edit)
+        )
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(categories) { (title, desc, icon) ->
+                SelectionCard(
+                    title = title,
+                    description = desc,
+                    icon = icon,
+                    onClick = { onCategorySelected(title) }
+                )
+            }
+        }
     }
 }
 
@@ -202,12 +224,10 @@ private fun ExerciseSelectionStep(
                         Triple("language_naming_objects", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
                         Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
                     ).sortedBy { it.second }
-                    "Cálculo" -> listOf(
-                        Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
-                    )
                     "Funciones Ejecutivas" -> listOf(
-                        Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas.")
-                    )
+                        Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas."),
+                        Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
+                    ).sortedBy { it.second }
                     "Percepción" -> listOf(
                         Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
                         Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
