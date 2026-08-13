@@ -61,7 +61,7 @@ fun PatientDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.19",
+                                text = "v1.3.20",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -168,7 +168,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.3.19 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text("v1.3.20 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -402,7 +402,13 @@ private fun ExerciseHistoryRow(result: ActivityResult) {
                 Text(ExerciseTranslationUtils.getDisplayName(result.activityType), fontWeight = FontWeight.Bold)
                 Text("${DateUtils.toUserFormat(date)} • $time", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
-            Text("${result.score}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = if(result.score > 70) Color(0xFF2E7D32) else Color.Red)
+            Column(horizontalAlignment = Alignment.End) {
+                Text("${result.score}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = if(result.score > 70) Color(0xFF2E7D32) else Color.Red)
+                
+                // Conversión de dificultad a etiqueta GDS (v1.3.17)
+                val levelNum = result.difficultyLevel.takeLast(1).toIntOrNull() ?: 3
+                Text(text = ExerciseTranslationUtils.getGdsLabel(levelNum), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            }
         }
     }
 }

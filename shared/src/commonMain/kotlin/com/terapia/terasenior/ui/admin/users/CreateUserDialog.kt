@@ -20,13 +20,14 @@ import com.terapia.terasenior.models.UserRole
 fun CreateUserDialog(
     entities: List<Entity>,
     onDismiss: () -> Unit,
-    onConfirm: (fullName: String, email: String, password: String, phone: String, role: UserRole, entityId: String?, isActive: Boolean) -> Unit
+    onConfirm: (fullName: String, email: String, password: String, phone: String, role: UserRole, entityId: String?, isActive: Boolean, centerName: String?) -> Unit
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var centerName by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.TERAPEUTA) }
     var selectedEntity by remember { mutableStateOf<Entity?>(null) }
     var isActive by remember { mutableStateOf(true) }
@@ -97,6 +98,16 @@ fun CreateUserDialog(
                     value = phone,
                     onValueChange = { phone = it },
                     label = { Text("Teléfono (Opcional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = centerName,
+                    onValueChange = { centerName = it },
+                    label = { Text("Centro / Lugar de trabajo") },
+                    placeholder = { Text("Ej: Centro de Salud de Miajadas") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -187,7 +198,7 @@ fun CreateUserDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onConfirm(fullName, email, password, phone, selectedRole, selectedEntity?.id, isActive)
+                    onConfirm(fullName, email, password, phone, selectedRole, selectedEntity?.id, isActive, centerName.ifBlank { null })
                 },
                 enabled = fullName.isNotBlank() && email.contains("@") && 
                           password.length >= 6 && password == confirmPassword &&

@@ -24,6 +24,7 @@ fun EditUserDialog(
 ) {
     var fullName by remember { mutableStateOf(user.fullName) }
     var phone by remember { mutableStateOf(user.phone ?: "") }
+    var centerName by remember { mutableStateOf(user.centerName ?: "") }
     var selectedRole by remember { mutableStateOf(user.role) }
     var selectedEntityId by remember { mutableStateOf(user.entityId) }
     var isActive by remember { mutableStateOf(user.isActive) }
@@ -61,6 +62,16 @@ fun EditUserDialog(
                     value = phone,
                     onValueChange = { phone = it },
                     label = { Text("Teléfono") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = centerName,
+                    onValueChange = { centerName = it },
+                    label = { Text("Centro / Lugar de trabajo") },
+                    placeholder = { Text("Ej: Centro de Salud de Miajadas") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -135,7 +146,8 @@ fun EditUserDialog(
                         phone = phone,
                         role = selectedRole,
                         entityId = if (selectedRole == UserRole.SUPER_ADMIN) null else selectedEntityId,
-                        isActive = isActive
+                        isActive = isActive,
+                        centerName = centerName.ifBlank { null }
                     ))
                 },
                 enabled = fullName.isNotBlank()

@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.19 - UI/UX Consistency)
+// Terasenior App Entry Point (v1.3.20 - Clinical GDS & Center Branding)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -58,8 +58,9 @@ fun App() {
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
         var selectedPatientId by remember { mutableStateOf<String?>(null) }
         var activeTherapyPatientId by remember { mutableStateOf<String?>(null) }
-        var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
+        var currentAppointmentId by remember { mutableStateOf<String?>(null) }
         var currentEntityName by remember { mutableStateOf<String?>(null) }
+        var currentCenterName by remember { mutableStateOf<String?>(null) }
         var currentEntityLogoUrl by remember { mutableStateOf<String?>(null) }
         var activeSessionId by remember { mutableStateOf<String?>(null) }
         
@@ -75,6 +76,7 @@ fun App() {
         // Cargar nombre de la entidad
         LaunchedEffect(currentUserProfile) {
             currentUserProfile?.let { profile ->
+                currentCenterName = profile.centerName
                 if (profile.role != UserRole.SUPER_ADMIN && profile.entityId != null) {
                     entityRepository.getEntityById(profile.entityId)
                         .onSuccess { entity -> 
@@ -153,7 +155,13 @@ fun App() {
                                             )
                                             Text(" • ", style = MaterialTheme.typography.labelSmall)
                                             Text(
-                                                text = currentEntityName ?: "Cargando centro...",
+                                                text = buildString {
+                                                    append(currentEntityName ?: "Cargando centro...")
+                                                    if (!currentCenterName.isNullOrBlank()) {
+                                                        append(" - ")
+                                                        append(currentCenterName)
+                                                    }
+                                                },
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -252,7 +260,7 @@ fun App() {
                                 },
                                 onGoToAgenda = { currentScreen = Screen.AGENDA },
                                 onAppointmentClick = { id ->
-                                    selectedAppointmentId = id
+                                    currentAppointmentId = id
                                     currentScreen = Screen.APPOINTMENT_DETAIL
                                 },
                                 onPatientClick = { id ->
@@ -414,7 +422,7 @@ fun App() {
                                     showCreateDialog = true 
                                 },
                                 onAppointmentClick = { id ->
-                                    selectedAppointmentId = id
+                                    currentAppointmentId = id
                                     currentScreen = Screen.APPOINTMENT_DETAIL
                                 }
                             )
@@ -464,7 +472,7 @@ fun App() {
                         }
 
                         Screen.APPOINTMENT_DETAIL -> {
-                            val appointmentId = selectedAppointmentId ?: ""
+                            val appointmentId = currentAppointmentId ?: ""
                             val agendaRepository = remember { SupabaseAppointmentRepository() }
                             
                             val viewModel = remember(appointmentId) { 

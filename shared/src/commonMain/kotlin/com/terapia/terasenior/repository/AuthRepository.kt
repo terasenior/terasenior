@@ -28,7 +28,8 @@ class AuthRepository {
         role: UserRole,
         entityId: String?,
         phone: String?,
-        isActive: Boolean
+        isActive: Boolean,
+        centerName: String? = null
     ): Result<Unit> {
         return runCatching {
             // 1. Crear el usuario en Supabase Auth
@@ -48,7 +49,8 @@ class AuthRepository {
                 fullName = fullName,
                 entityId = entityId,
                 isActive = isActive,
-                phone = phone
+                phone = phone,
+                centerName = centerName
             )
 
             // 3. Insertar el objeto Profile en la tabla pública

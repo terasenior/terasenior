@@ -134,7 +134,8 @@ class AdminUsersViewModel(
         role: UserRole,
         entityId: String?,
         phone: String?,
-        isActive: Boolean
+        isActive: Boolean,
+        centerName: String? = null
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -147,7 +148,8 @@ class AdminUsersViewModel(
                 role = role,
                 entityId = entityId,
                 phone = phone,
-                isActive = isActive
+                isActive = isActive,
+                centerName = centerName
             ).onSuccess {
                 _errorMessage.value = null
                 loadUsers(currentEntityId)
@@ -176,7 +178,8 @@ class AdminUsersViewModel(
                 entityId = profile.entityId,
                 fullName = profile.fullName,
                 isActive = profile.isActive,
-                phone = profile.phone
+                phone = profile.phone,
+                centerName = profile.centerName
             )
             authRepository.updateUserProfile(profileToUpdate)
                 .onSuccess { loadUsers(currentEntityId) }

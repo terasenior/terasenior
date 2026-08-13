@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
+import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -261,11 +262,11 @@ private fun ExerciseItem(title: String, isSelected: Boolean, onToggle: () -> Uni
 @Composable
 private fun LevelSelectionStep(onLevelSelected: (Int) -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Nivel de Dificultad", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Nivel de Dificultad (GDS)", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         (1..5).forEach { level ->
             Card(onClick = { onLevelSelected(level) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Nivel $level", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(ExerciseTranslationUtils.getGdsLabel(level), fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Icon(Icons.Default.ChevronRight, contentDescription = null)
                 }
             }

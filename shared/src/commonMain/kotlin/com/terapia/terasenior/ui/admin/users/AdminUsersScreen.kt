@@ -49,7 +49,7 @@ fun AdminUsersScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.19",
+                                text = "v1.3.20",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -156,8 +156,8 @@ fun AdminUsersScreen(
                 CreateUserDialog(
                     entities = state.entities,
                     onDismiss = { showCreateDialog = false },
-                    onConfirm = { fullName, email, password, phone, role, entityId, isActive ->
-                        viewModel.createUser(fullName, email, password, role, entityId, phone, isActive)
+                    onConfirm = { fullName, email, password, phone, role, entityId, isActive, centerName ->
+                        viewModel.createUser(fullName, email, password, role, entityId, phone, isActive, centerName)
                         showCreateDialog = false
                     }
                 )
@@ -305,7 +305,17 @@ private fun UserCard(
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
                         Icon(Icons.Default.Business, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(entityName, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(
+                            text = buildString {
+                                append(entityName)
+                                if (!user.centerName.isNullOrBlank()) {
+                                    append(" - ")
+                                    append(user.centerName)
+                                }
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
                     }
                 }
 

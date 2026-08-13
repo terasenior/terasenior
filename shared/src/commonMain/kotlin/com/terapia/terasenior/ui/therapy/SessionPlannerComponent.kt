@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 
 // SessionPlannerComponent v1.3.19 - Planificador con Scroll y Ordenación
@@ -165,13 +166,13 @@ fun SessionPlannerComponent(
                 // Selector de Nivel y Botón Agregar
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("3. Nivel:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Text("3. Nivel Clínico:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         Row(modifier = Modifier.padding(top = 4.dp)) {
                             (1..5).forEach { level ->
                                 FilterChip(
                                     selected = selectedLevel == level,
                                     onClick = { selectedLevel = level },
-                                    label = { Text(level.toString()) },
+                                    label = { Text(ExerciseTranslationUtils.getGdsLabel(level), fontSize = 10.sp) },
                                     modifier = Modifier.padding(end = 4.dp)
                                 )
                             }
@@ -217,7 +218,7 @@ fun SessionPlannerComponent(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(config.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                                    Text("${config.category} • Nivel ${config.level}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                    Text("${config.category} • ${ExerciseTranslationUtils.getGdsLabel(config.level)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                 }
                                 IconButton(onClick = { onRemoveExercise(index) }, modifier = Modifier.size(32.dp)) {
                                     Icon(Icons.Default.Delete, contentDescription = "Quitar", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))

@@ -29,6 +29,8 @@ data class Profile(
     val isActive: Boolean = true,
     @SerialName("last_login_at")
     val lastLoginAt: String? = null,
+    @SerialName("center_name")
+    val centerName: String? = null,
     val phone: String? = null
 )
 

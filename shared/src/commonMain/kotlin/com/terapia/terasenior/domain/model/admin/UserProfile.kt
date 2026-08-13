@@ -10,5 +10,6 @@ data class UserProfile(
     val email: String,
     val phone: String?,
     val isActive: Boolean,
+    val centerName: String? = null,
     val lastLoginAt: String? = null
 )

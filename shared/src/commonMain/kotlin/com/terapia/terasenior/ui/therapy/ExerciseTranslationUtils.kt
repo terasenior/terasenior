@@ -79,4 +79,16 @@ object ExerciseTranslationUtils {
             else -> cleanType.replace("_", " ").replaceFirstChar { it.uppercase() }
         }
     }
+
+    /**
+     * Mapeo de niveles técnicos (1..5) a escala clínica GDS (v1.3.17).
+     */
+    fun getGdsLabel(level: Int): String = when (level) {
+        1 -> "GDS 3"
+        2 -> "GDS 3-4"
+        3 -> "GDS 4"
+        4 -> "GDS 4-5"
+        5 -> "GDS 5"
+        else -> "Nivel $level"
+    }
 }

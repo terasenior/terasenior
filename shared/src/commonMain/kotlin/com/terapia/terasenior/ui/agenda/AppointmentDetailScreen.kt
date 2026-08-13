@@ -54,7 +54,7 @@ fun AppointmentDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.16",
+                                text = "v1.3.20",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -122,7 +122,7 @@ fun AppointmentDetailScreen(
                                         state.appointment.plannedExercises.forEach { config ->
                                             SuggestionChip(
                                                 onClick = {},
-                                                label = { Text("${ExerciseTranslationUtils.getDisplayName(config.type)} (N${config.level})", fontSize = 11.sp) }
+                                                label = { Text("${ExerciseTranslationUtils.getDisplayName(config.type)} (${ExerciseTranslationUtils.getGdsLabel(config.level)})", fontSize = 11.sp) }
                                             )
                                         }
                                     }
