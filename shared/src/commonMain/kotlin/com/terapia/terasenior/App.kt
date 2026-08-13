@@ -49,7 +49,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, COLOR_SHAPE_SEQUENCE, COLOR_IDENTIFICATION, SIZE_ORDERING, TRACING, EXECUTIVE_FUNCTIONS, LITERACY, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.21 - Adaptive Layout & Scrolling Fix)
+// Terasenior App Entry Point (v1.3.22 - Login & Identity Fix)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -58,7 +58,7 @@ fun App() {
         var currentScreen by remember { mutableStateOf(Screen.LOGIN) }
         var selectedPatientId by remember { mutableStateOf<String?>(null) }
         var activeTherapyPatientId by remember { mutableStateOf<String?>(null) }
-        var currentAppointmentId by remember { mutableStateOf<String?>(null) }
+        var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
         var currentEntityName by remember { mutableStateOf<String?>(null) }
         var currentCenterName by remember { mutableStateOf<String?>(null) }
         var currentEntityLogoUrl by remember { mutableStateOf<String?>(null) }
@@ -260,7 +260,7 @@ fun App() {
                                 },
                                 onGoToAgenda = { currentScreen = Screen.AGENDA },
                                 onAppointmentClick = { id ->
-                                    currentAppointmentId = id
+                                    selectedAppointmentId = id
                                     currentScreen = Screen.APPOINTMENT_DETAIL
                                 },
                                 onPatientClick = { id ->
@@ -422,7 +422,7 @@ fun App() {
                                     showCreateDialog = true 
                                 },
                                 onAppointmentClick = { id ->
-                                    currentAppointmentId = id
+                                    selectedAppointmentId = id
                                     currentScreen = Screen.APPOINTMENT_DETAIL
                                 }
                             )
@@ -472,7 +472,7 @@ fun App() {
                         }
 
                         Screen.APPOINTMENT_DETAIL -> {
-                            val appointmentId = currentAppointmentId ?: ""
+                            val appointmentId = selectedAppointmentId ?: ""
                             val agendaRepository = remember { SupabaseAppointmentRepository() }
                             
                             val viewModel = remember(appointmentId) { 

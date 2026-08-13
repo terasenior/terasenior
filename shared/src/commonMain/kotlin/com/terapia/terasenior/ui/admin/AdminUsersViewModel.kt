@@ -174,7 +174,7 @@ class AdminUsersViewModel(
             val profileToUpdate = com.terapia.terasenior.models.Profile(
                 id = profile.id,
                 email = profile.email,
-                role = profile.role,
+                roleId = profile.role.name,
                 entityId = profile.entityId,
                 fullName = profile.fullName,
                 isActive = profile.isActive,

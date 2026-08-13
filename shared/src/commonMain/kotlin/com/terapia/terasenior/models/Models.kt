@@ -20,7 +20,7 @@ data class Profile(
     val id: String,
     val email: String,
     @SerialName("role_id")
-    val role: UserRole,
+    val roleId: String, // Usamos String para ser más robustos (v1.3.22)
     @SerialName("entity_id")
     val entityId: String? = null,
     @SerialName("full_name")
@@ -32,7 +32,9 @@ data class Profile(
     @SerialName("center_name")
     val centerName: String? = null,
     val phone: String? = null
-)
+) {
+    val role: UserRole get() = UserRole.fromId(roleId)
+}
 
 @Serializable
 data class Entity(
@@ -42,6 +44,8 @@ data class Entity(
     val status: String = "ACTIVE",
     @SerialName("license_expires_at")
     val licenseExpiresAt: String? = null,
+    @SerialName("logo_url")
+    val logoUrl: String? = null,
     @SerialName("created_at")
     val createdAt: String? = null
 )

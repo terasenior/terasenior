@@ -45,7 +45,7 @@ class AuthRepository {
             val newProfile = Profile(
                 id = newUserId,
                 email = email,
-                role = role,
+                roleId = role.name,
                 fullName = fullName,
                 entityId = entityId,
                 isActive = isActive,
