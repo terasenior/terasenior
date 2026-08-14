@@ -61,7 +61,7 @@ fun PatientDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.23",
+                                text = "v1.3.24",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -168,7 +168,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.3.23 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text("v1.3.24 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -374,16 +374,20 @@ fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: Patient
 
 @Composable
 fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
-    val allResults = state.rawResults.sortedByDescending { it.createdAt }
-    val totalPages = kotlin.math.ceil(allResults.size.toDouble() / state.historyPageSize).toInt().coerceAtLeast(1)
-    val paginated = allResults.drop((state.historyPage - 1) * state.historyPageSize).take(state.historyPageSize)
+    val history = state.sessionsHistory.sortedByDescending { it.session.createdAt }
+    val totalPages = kotlin.math.ceil(history.size.toDouble() / state.historyPageSize).toInt().coerceAtLeast(1)
+    val paginated = history.drop((state.historyPage - 1) * state.historyPageSize).take(state.historyPageSize)
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Historial Completo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Historial Clínico de Sesiones", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
-        LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(paginated) { ExerciseHistoryRow(it) }
+        
+        LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            items(paginated) { sessionHistory ->
+                SessionHistoryCard(sessionHistory)
+            }
         }
+        
         if (totalPages > 1) {
             PaginationControls(currentPage = state.historyPage, totalPages = totalPages, onPageClick = { viewModel.setHistoryPage(it) })
         }
@@ -391,23 +395,98 @@ fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDet
 }
 
 @Composable
-private fun ExerciseHistoryRow(result: ActivityResult) {
-    val date = result.createdAt.take(10)
-    val time = result.createdAt.drop(11).take(5)
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Psychology, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(ExerciseTranslationUtils.getDisplayName(result.activityType), fontWeight = FontWeight.Bold)
-                Text("${DateUtils.toUserFormat(date)} • $time", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.therapy.PatientSessionHistory) {
+    val session = history.session
+    val date = session.createdAt.take(10)
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = DateUtils.toUserFormat(date),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = session.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                if (session.valuation > 0) {
+                    Row {
+                        repeat(5) { i ->
+                            Icon(
+                                Icons.Default.Star,
+                                null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (i < session.valuation) Color(0xFFFFC107) else Color.LightGray
+                            )
+                        }
+                    }
+                }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("${result.score}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = if(result.score > 70) Color(0xFF2E7D32) else Color.Red)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Datos de la sesión
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Participación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(session.participationLevel ?: "N/A", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Fatiga", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(session.fatigueLevel ?: "N/A", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            if (!session.therapistNotes.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = session.therapistNotes,
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            if (history.results.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                Text("Resultados por Ejercicio:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 
-                // Conversión de dificultad a etiqueta GDS (v1.3.17)
-                val levelNum = result.difficultyLevel.takeLast(1).toIntOrNull() ?: 3
-                Text(text = ExerciseTranslationUtils.getGdsLabel(levelNum), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Column(modifier = Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    history.results.forEach { result ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = ExerciseTranslationUtils.getDisplayName(result.activityType),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "${result.score}%",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = if (result.score > 70) Color(0xFF2E7D32) else Color.Red
+                            )
+                        }
+                    }
+                }
             }
         }
     }
