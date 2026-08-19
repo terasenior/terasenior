@@ -130,6 +130,13 @@ fun SessionPlannerComponent(
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text("2. Ejercicio:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     var expanded by remember { mutableStateOf(false) }
+                    var searchText by remember { mutableStateOf("") }
+                    val filteredGames = remember(selectedCategory, searchText) {
+                        val games = gamesByCategory[selectedCategory] ?: emptyList()
+                        if (searchText.isBlank()) games
+                        else games.filter { it.second.contains(searchText, ignoreCase = true) }
+                    }
+
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
                             onClick = { expanded = true },
@@ -142,7 +149,8 @@ fun SessionPlannerComponent(
                                 Text(
                                     text = gamesByCategory[selectedCategory]?.find { it.first == selectedGameType }?.second ?: "Seleccionar...",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1
                                 )
                                 Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                             }
@@ -150,16 +158,32 @@ fun SessionPlannerComponent(
                         DropdownMenu(
                             expanded = expanded, 
                             onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth(0.8f).heightIn(max = 250.dp)
+                            modifier = Modifier.fillMaxWidth(0.9f).heightIn(max = 400.dp)
                         ) {
-                            gamesByCategory[selectedCategory]?.forEach { (type, name) ->
+                            // Buscador dentro del dropdown (v1.3.26)
+                            OutlinedTextField(
+                                value = searchText,
+                                onValueChange = { searchText = it },
+                                placeholder = { Text("Filtrar...", fontSize = 12.sp) },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp).height(48.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true,
+                                textStyle = MaterialTheme.typography.bodySmall
+                            )
+                            
+                            filteredGames.forEach { (type, name) ->
                                 DropdownMenuItem(
                                     text = { Text(name, fontSize = 13.sp) },
                                     onClick = {
                                         selectedGameType = type
                                         expanded = false
+                                        searchText = ""
                                     }
                                 )
+                            }
+                            
+                            if (filteredGames.isEmpty()) {
+                                Text("No se encontraron resultados", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                         }
                     }

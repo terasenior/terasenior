@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -176,81 +177,104 @@ private fun ExerciseSelectionStep(
     onToggle: (type: String, name: String, category: String, desc: String) -> Unit,
     onNext: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
     val orientationPool = remember { getOrientationPool() }
+    val exercises = remember(category) {
+        when (category) {
+            "Orientación" -> orientationPool
+            "Atención" -> listOf(
+                Triple("number_search", "Busca el Número", "Entrenamiento de atención focalizada."),
+                Triple("attention_different", "Rodear el diferente", "Buscar el elemento intruso."),
+                Triple("attention_equals_model", "Rodear los iguales al modelo", "Búsqueda visual selectiva."),
+                Triple("attention_positions", "Rodear posiciones iguales", "Orientación espacial."),
+                Triple("attention_differences", "Buscar diferencias", "Atención al detalle."),
+                Triple("attention_letters", "Rodear las letras iguales", "Búsqueda de grafemas."),
+                Triple("attention_symbols", "Rodear símbolos iguales", "Atención visual simbólica."),
+                Triple("attention_matrices", "Matrices (Animales/Símbolos)", "Atención en cuadrícula."),
+                Triple("attention_row_cancel", "Tachado por filas con recuento", "Cancelación y conteo."),
+                Triple("attention_consecutive", "Rodear números consecutivos", "Atención sostenida."),
+                Triple("attention_yes_no", "Tachar una sí y otra no", "Alternancia atencional."),
+                Triple("attention_dual_task", "Tarea Dual (Doble instrucción)", "Atención dividida."),
+                Triple("attention_count", "Contar dibujos", "Conteo visual."),
+                Triple("attention_longest", "Palabra/Cifra más larga", "Discriminación visual."),
+                Triple("attention_missing_part", "Parte del dibujo que falta", "Integración visual."),
+                Triple("attention_word_search", "Sopa de letras/números", "Búsqueda sistemática.")
+            ).sortedBy { it.second }
+            "Memoria" -> listOf(
+                Triple("memory_pairs", "Parejas de Memoria", "Encuentra las parejas de cartas iguales."),
+                Triple("memory_cultural", "Cultura General", "Preguntas sobre geografía e historia."),
+                Triple("memory_utility", "Utilidad de Objetos", "Relacionar objetos con su función."),
+                Triple("memory_needs", "Necesidades para Tareas", "Identificar qué se necesita para una tarea."),
+                Triple("memory_recent", "Memoria Reciente", "Preguntas sobre eventos cercanos.")
+            ).sortedBy { it.second }
+            "Lenguaje" -> listOf(
+                Triple("language_word_image", "Vocabulario: Palabra-Imagen", "Identifica la imagen que corresponde a la palabra."),
+                Triple("language_denomination", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
+                Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
+            ).sortedBy { it.second }
+            "Funciones Ejecutivas" -> listOf(
+                Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas."),
+                Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
+            ).sortedBy { it.second }
+            "Percepción" -> listOf(
+                Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
+                Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
+                Triple("perception_lateral_dominance", "Dominancia Lateral (Izq/Der)", "Identificar izquierda y derecha."),
+                Triple("perception_mirror", "Imagen en Espejo", "Reconocer formas y letras reflejadas."),
+                Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo."),
+                Triple("perception_shape_fitting", "Encaje de Formas", "Arrastra cada pieza hasta su silueta correspondiente.")
+            ).sortedBy { it.second }
+            "Lectoescritura" -> listOf(
+                Triple("literacy_tracing", "Trazos Básicos", "Sigue las líneas punteadas con precisión.")
+            )
+            else -> emptyList()
+        }
+    }
+
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredExercises = remember(exercises, searchQuery) {
+        if (searchQuery.isBlank()) exercises
+        else exercises.filter { it.second.contains(searchQuery, ignoreCase = true) }
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
-        Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("${selectedExercises.size} seleccionados", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Buscar ejercicio...", fontSize = 14.sp) },
+            leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            singleLine = true,
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { searchQuery = "" }) { Icon(Icons.Default.Clear, null, modifier = Modifier.size(20.dp)) }
+                }
+            }
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            val listState = rememberLazyListState()
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                val exercises = when (category) {
-                    "Orientación" -> orientationPool
-                    "Atención" -> listOf(
-                        Triple("number_search", "Busca el Número", "Entrenamiento de atención focalizada."),
-                        Triple("attention_different", "Rodear el diferente", "Buscar el elemento intruso."),
-                        Triple("attention_equals_model", "Rodear los iguales al modelo", "Búsqueda visual selectiva."),
-                        Triple("attention_positions", "Rodear posiciones iguales", "Orientación espacial."),
-                        Triple("attention_differences", "Buscar diferencias", "Atención al detalle."),
-                        Triple("attention_letters", "Rodear las letras iguales", "Búsqueda de grafemas."),
-                        Triple("attention_symbols", "Rodear símbolos iguales", "Atención visual simbólica."),
-                        Triple("attention_matrices", "Matrices (Animales/Símbolos)", "Atención en cuadrícula."),
-                        Triple("attention_row_cancel", "Tachado por filas con recuento", "Cancelación y conteo."),
-                        Triple("attention_consecutive", "Rodear números consecutivos", "Atención sostenida."),
-                        Triple("attention_yes_no", "Tachar una sí y otra no", "Alternancia atencional."),
-                        Triple("attention_dual_task", "Tarea Dual (Doble instrucción)", "Atención dividida."),
-                        Triple("attention_count", "Contar dibujos", "Conteo visual."),
-                        Triple("attention_longest", "Palabra/Cifra más larga", "Discriminación visual."),
-                        Triple("attention_missing_part", "Parte del dibujo que falta", "Integración visual."),
-                        Triple("attention_word_search", "Sopa de letras/números", "Búsqueda sistemática.")
-                    ).sortedBy { it.second }
-                    "Memoria" -> listOf(
-                        Triple("memory_pairs", "Parejas de Memoria", "Encuentra las parejas de cartas iguales."),
-                        Triple("memory_cultural", "Cultura General", "Preguntas sobre geografía e historia."),
-                        Triple("memory_utility", "Utilidad de Objetos", "Relacionar objetos con su función."),
-                        Triple("memory_needs", "Necesidades para Tareas", "Identificar qué se necesita para una tarea."),
-                        Triple("memory_recent", "Memoria Reciente", "Preguntas sobre eventos cercanos.")
-                    ).sortedBy { it.second }
-                    "Lenguaje" -> listOf(
-                        Triple("language_word_image", "Vocabulario: Palabra-Imagen", "Identifica la imagen que corresponde a la palabra."),
-                        Triple("language_naming_objects", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
-                        Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
-                    ).sortedBy { it.second }
-                    "Funciones Ejecutivas" -> listOf(
-                        Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas."),
-                        Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
-                    ).sortedBy { it.second }
-                    "Percepción" -> listOf(
-                        Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
-                        Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
-                        Triple("perception_lateral_dominance", "Dominancia Lateral (Izq/Der)", "Identificar izquierda y derecha."),
-                        Triple("perception_mirror", "Imagen en Espejo", "Reconocer formas y letras reflejadas."),
-                        Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo."),
-                        Triple("perception_shape_fitting", "Encaje de Formas", "Arrastra cada pieza hasta su silueta correspondiente.")
-                    ).sortedBy { it.second }
-                    "Lectoescritura" -> listOf(
-                        Triple("literacy_tracing", "Trazos Básicos", "Sigue las líneas punteadas con precisión.")
+                items(filteredExercises) { (type, name, desc) ->
+                    ExerciseItem(
+                        title = name,
+                        isSelected = selectedExercises.any { it.type == type },
+                        onToggle = { onToggle(type, name, category, desc) }
                     )
-                    else -> emptyList()
-                }
-
-                if (exercises.isEmpty()) {
-                    Text("No hay ejercicios disponibles para esta categoría.", color = Color.Gray)
-                } else {
-                    exercises.forEach { (type, name, desc) ->
-                        ExerciseItem(
-                            title = name,
-                            isSelected = selectedExercises.any { it.type == type },
-                            onToggle = { onToggle(type, name, category, desc) }
-                        )
-                    }
                 }
             }
         }
@@ -267,16 +291,16 @@ private fun ExerciseSelectionStep(
 private fun ExerciseItem(title: String, isSelected: Boolean, onToggle: () -> Unit, enabled: Boolean = true) {
     Surface(
         onClick = if(enabled) onToggle else ({}),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = if(isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = if(!isSelected) CardDefaults.outlinedCardBorder() else null,
         enabled = enabled,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = isSelected, onCheckedChange = { onToggle() }, enabled = enabled)
             Spacer(modifier = Modifier.width(12.dp))
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = if(enabled) Color.Unspecified else Color.Gray)
+            Text(title, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium), color = if(enabled) Color.Unspecified else Color.Gray)
         }
     }
 }
@@ -332,8 +356,8 @@ private fun getOrientationPool(): List<Triple<String, String, String>> {
         Triple("orientation_temporal_hour", "Hora aproximada", "Estimación del tiempo actual."),
         Triple("orientation_temporal_century", "Siglo actual", "Reconocimiento de la era actual."),
         Triple("orientation_temporal_decade", "Década actual", "Ubicación en la década."),
-        Triple("orientation_temporal_yesterday", "Día ayer", "Orientación temporal retrospectiva."),
-        Triple("orientation_temporal_tomorrow", "Día mañana", "Orientación temporal prospectiva."),
+        Triple("orientation_temporal_yesterday", "Ayer qué día fue", "Orientación temporal retrospectiva."),
+        Triple("orientation_temporal_tomorrow", "Mañana qué día será", "Orientación temporal prospectiva."),
         Triple("orientation_temporal_week_next", "Día próxima semana", "Cálculo de fechas futuras."),
         Triple("orientation_temporal_christmas", "Mes de Navidad", "Reconocimiento de festividades."),
         Triple("orientation_temporal_newyear", "Día Año Nuevo", "Inicio del ciclo anual."),
