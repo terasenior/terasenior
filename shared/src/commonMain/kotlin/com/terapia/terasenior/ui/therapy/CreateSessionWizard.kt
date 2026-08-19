@@ -177,6 +177,7 @@ private fun ExerciseSelectionStep(
     onNext: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val orientationPool = remember { getOrientationPool() }
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
         Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -191,9 +192,7 @@ private fun ExerciseSelectionStep(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val exercises = when (category) {
-                    "Orientación" -> listOf(
-                        Triple("orientation_temporal", "Orientación Temporal", "Preguntas sobre el día, mes, año y estación.")
-                    )
+                    "Orientación" -> orientationPool
                     "Atención" -> listOf(
                         Triple("number_search", "Busca el Número", "Entrenamiento de atención focalizada."),
                         Triple("attention_different", "Rodear el diferente", "Buscar el elemento intruso."),
@@ -320,6 +319,138 @@ private fun SummaryRow(label: String, value: String) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
         Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
+}
+
+private fun getOrientationPool(): List<Triple<String, String, String>> {
+    return listOf(
+        Triple("orientation_temporal_day", "Día del mes", "Identificar el número del día actual."),
+        Triple("orientation_temporal_month", "Mes del año", "Identificar en qué mes estamos."),
+        Triple("orientation_temporal_year", "Año actual", "Reconocer el año en curso."),
+        Triple("orientation_temporal_season", "Estación del año", "¿Es primavera, verano, otoño o invierno?"),
+        Triple("orientation_temporal_dayweek", "Día de la semana", "¿Qué día de la semana es hoy?"),
+        Triple("orientation_temporal_partday", "Parte del día", "Mañana, tarde o noche."),
+        Triple("orientation_temporal_hour", "Hora aproximada", "Estimación del tiempo actual."),
+        Triple("orientation_temporal_century", "Siglo actual", "Reconocimiento de la era actual."),
+        Triple("orientation_temporal_decade", "Década actual", "Ubicación en la década."),
+        Triple("orientation_temporal_yesterday", "Día ayer", "Orientación temporal retrospectiva."),
+        Triple("orientation_temporal_tomorrow", "Día mañana", "Orientación temporal prospectiva."),
+        Triple("orientation_temporal_week_next", "Día próxima semana", "Cálculo de fechas futuras."),
+        Triple("orientation_temporal_christmas", "Mes de Navidad", "Reconocimiento de festividades."),
+        Triple("orientation_temporal_newyear", "Día Año Nuevo", "Inicio del ciclo anual."),
+        Triple("orientation_temporal_night_light", "Luz nocturna", "Astronomía básica."),
+        Triple("orientation_temporal_day_light", "Luz diurna", "Astronomía básica."),
+        Triple("orientation_temporal_spring_month", "Mes de Primavera", "Ciclos estacionales."),
+        Triple("orientation_temporal_summer_month", "Mes de Verano", "Ciclos estacionales."),
+        Triple("orientation_temporal_autumn_month", "Mes de Otoño", "Ciclos estacionales."),
+        Triple("orientation_temporal_winter_month", "Mes de Invierno", "Ciclos estacionales."),
+        
+        Triple("orientation_spatial_city", "Ciudad o Pueblo", "¿En qué localidad se encuentra?"),
+        Triple("orientation_spatial_province", "Provincia", "¿En qué provincia estamos?"),
+        Triple("orientation_spatial_country", "País", "Reconocimiento nacional."),
+        Triple("orientation_spatial_continent", "Continente", "Ubicación geográfica global."),
+        Triple("orientation_spatial_planet", "Planeta", "Ubicación espacial cósmica."),
+        Triple("orientation_spatial_place", "Lugar actual", "Reconocimiento del entorno inmediato."),
+        Triple("orientation_spatial_floor", "Planta edificio", "Orientación en altura."),
+        Triple("orientation_spatial_kitchen", "Uso de cocina", "Funcionalidad de estancias."),
+        Triple("orientation_spatial_bedroom", "Uso de dormitorio", "Funcionalidad de estancias."),
+        Triple("orientation_spatial_library", "Uso de biblioteca", "Funcionalidad de estancias."),
+        Triple("orientation_spatial_pharmacy", "Uso de farmacia", "Servicios de salud."),
+        Triple("orientation_spatial_bakery", "Uso de panadería", "Servicios básicos."),
+        Triple("orientation_spatial_ceiling", "Objeto en techo", "Percepción espacial."),
+        Triple("orientation_spatial_ocean", "Océano mayor", "Geografía global."),
+        Triple("orientation_spatial_moon_orbit", "Orbita lunar", "Conocimiento cósmico."),
+        Triple("orientation_spatial_capital_spain", "Capital de España", "Geografía política."),
+        
+        Triple("orientation_personal_name", "Nombre propio", "Identidad personal básica."),
+        Triple("orientation_personal_surname", "Primer apellido", "Identidad personal básica."),
+        
+        Triple("orientation_calc_year_days", "Días del año", "Conocimiento matemático temporal."),
+        Triple("orientation_calc_year_months", "Meses del año", "Estructura del calendario."),
+        Triple("orientation_calc_week_days", "Días de la semana", "Estructura semanal."),
+        Triple("orientation_calc_day_hours", "Horas del día", "Estructura horaria."),
+        Triple("orientation_calc_minutes_hour", "Minutos en una hora", "División del tiempo."),
+        Triple("orientation_calc_seconds_minute", "Segundos en un minuto", "División del tiempo."),
+        Triple("orientation_calc_half_day", "Horas medio día", "Cálculo fraccional."),
+        Triple("orientation_calc_feet_count", "Número de pies", "Esquema corporal."),
+        Triple("orientation_calc_hands_count", "Número de manos", "Esquema corporal."),
+        Triple("orientation_calc_fingers_hand", "Dedos en una mano", "Conteo básico."),
+        Triple("orientation_calc_fingers_total", "Dedos totales", "Suma básica."),
+        Triple("orientation_calc_century_years", "Años en un siglo", "Escala histórica."),
+        Triple("orientation_calc_decade_years", "Años en una década", "Escala histórica."),
+        Triple("orientation_calc_dozen", "Unidades docena", "Unidades de medida."),
+        Triple("orientation_calc_half_dozen", "Unidades media docena", "Unidades de medida."),
+        Triple("orientation_calc_wheels_car", "Ruedas de coche", "Observación del entorno."),
+        Triple("orientation_calc_wheels_bike", "Ruedas de bicicleta", "Observación del entorno."),
+        Triple("orientation_calc_wheels_tricycle", "Ruedas de triciclo", "Observación del entorno."),
+
+        Triple("orientation_situational_currency", "Moneda actual", "Contexto económico."),
+        Triple("orientation_situational_language", "Idioma hablado", "Contexto cultural."),
+        Triple("orientation_situational_color_sky", "Color del cielo", "Percepción ambiental."),
+        Triple("orientation_situational_color_grass", "Color de hierba", "Percepción ambiental."),
+        Triple("orientation_situational_king", "Rey actual", "Orientación sociopolítica."),
+        Triple("orientation_situational_blood", "Color sangre", "Conocimiento biológico."),
+        Triple("orientation_situational_fire", "Sensación fuego", "Termoalgesia cognitiva."),
+        Triple("orientation_situational_ice", "Sensación hielo", "Termoalgesia cognitiva."),
+        Triple("orientation_situational_sun", "Salida del sol", "Orientación natural."),
+        Triple("orientation_situational_lemon_taste", "Sabor limón", "Gusto y memoria."),
+        Triple("orientation_situational_sugar_taste", "Sabor azúcar", "Gusto y memoria."),
+        Triple("orientation_situational_sea_water", "Sabor agua mar", "Conocimiento geográfico."),
+        Triple("orientation_situational_stop_color", "Color señal STOP", "Seguridad vial."),
+        Triple("orientation_situational_zebra_cross", "Color paso cebra", "Seguridad vial."),
+        Triple("orientation_situational_traffic_light_go", "Semaforo verde", "Seguridad vial."),
+        Triple("orientation_situational_traffic_light_stop", "Semaforo rojo", "Seguridad vial."),
+        Triple("orientation_situational_dog_sound", "Sonido perro", "Reconocimiento onomatopéyico."),
+        Triple("orientation_situational_cat_sound", "Sonido gato", "Reconocimiento onomatopéyico."),
+        Triple("orientation_situational_cow_sound", "Sonido vaca", "Reconocimiento onomatopéyico."),
+        Triple("orientation_situational_sheep_sound", "Sonido oveja", "Reconocimiento onomatopéyico."),
+        Triple("orientation_situational_milk_color", "Color de leche", "Propiedades de objetos."),
+        Triple("orientation_situational_coal_color", "Color de carbón", "Propiedades de objetos."),
+        Triple("orientation_situational_tomato_color", "Color de tomate", "Propiedades de objetos."),
+        Triple("orientation_situational_banana_color", "Color de plátano", "Propiedades de objetos."),
+        Triple("orientation_situational_dentist", "Médico de dientes", "Red social de apoyo."),
+        Triple("orientation_situational_umbrella", "Uso paraguas", "Pragmática de objetos."),
+        Triple("orientation_situational_glasses", "Uso gafas", "Pragmática de objetos."),
+        Triple("orientation_situational_shoes_wear", "Uso zapatos", "Pragmática de objetos."),
+        Triple("orientation_situational_hat_wear", "Uso sombrero", "Pragmática de objetos."),
+        Triple("orientation_situational_gloves_wear", "Uso guantes", "Pragmática de objetos."),
+        Triple("orientation_situational_fridge_use", "Uso frigorífico", "Pragmática de objetos."),
+        Triple("orientation_situational_chair_use", "Uso silla", "Pragmática de objetos."),
+        Triple("orientation_situational_bed_use", "Uso cama", "Pragmática de objetos."),
+        Triple("orientation_situational_eyes_count", "Número de ojos", "Esquema corporal."),
+        Triple("orientation_situational_ears_count", "Número de orejas", "Esquema corporal."),
+        Triple("orientation_situational_nose_count", "Número de narices", "Esquema corporal."),
+        Triple("orientation_situational_mouth_count", "Número de bocas", "Esquema corporal."),
+        Triple("orientation_situational_head_count", "Número de cabezas", "Esquema corporal."),
+        Triple("orientation_situational_arms_count", "Número de brazos", "Esquema corporal."),
+        Triple("orientation_situational_legs_count", "Número de piernas", "Esquema corporal."),
+        Triple("orientation_situational_hair_color", "Color pelo anciano", "Identidad física."),
+        Triple("orientation_situational_sun_shape", "Forma del sol", "Geometría natural."),
+        Triple("orientation_situational_ball_shape", "Forma de balón", "Geometría de objetos."),
+        Triple("orientation_situational_table_use", "Uso de mesa", "Pragmática funcional."),
+        Triple("orientation_situational_knife_use", "Uso de cuchillo", "Pragmática funcional."),
+        Triple("orientation_situational_spoon_use", "Uso de cuchara", "Pragmática funcional."),
+        Triple("orientation_situational_comb_use", "Uso de peine", "Pragmática funcional."),
+        Triple("orientation_situational_soap_use", "Uso de jabón", "Pragmática funcional."),
+        Triple("orientation_situational_towel_use", "Uso de toalla", "Pragmática funcional."),
+        Triple("orientation_situational_broom_use", "Uso de escoba", "Pragmática funcional."),
+        Triple("orientation_situational_oven_use" , "Uso de horno", "Pragmática funcional."),
+        Triple("orientation_situational_pill_use", "Uso de medicinas", "Conciencia de salud."),
+        Triple("orientation_situational_phone_use", "Uso de teléfono", "Tecnología básica."),
+        Triple("orientation_situational_keys_use", "Uso de llaves", "Seguridad del hogar."),
+        Triple("orientation_situational_glasses_use", "Uso de gafas", "Compensación sensorial."),
+        Triple("orientation_situational_watch_use", "Uso de reloj", "Orientación temporal externa."),
+        Triple("orientation_situational_wallet_use", "Uso de cartera", "Gestión instrumental."),
+        Triple("orientation_situational_calendar_use", "Uso de calendario", "Orientación temporal externa."),
+        Triple("orientation_situational_doctor_tool", "Herramienta médico", "Entorno sanitario."),
+        Triple("orientation_situational_firemen", "Función bomberos", "Seguridad ciudadana."),
+        Triple("orientation_situational_stewardess", "Lugar azafata", "Transporte público."),
+        Triple("orientation_situational_pilot", "Función piloto", "Transporte público."),
+        Triple("orientation_situational_ship_captain", "Función capitán", "Transporte marítimo."),
+        Triple("orientation_situational_cow_milk", "Origen leche", "Conocimiento animal."),
+        Triple("orientation_situational_hen_eggs", "Origen huevos", "Conocimiento animal."),
+        Triple("orientation_situational_bee_honey", "Origen miel", "Conocimiento animal."),
+        Triple("orientation_situational_spider_web", "Origen tela araña", "Conocimiento animal.")
+    ).sortedBy { it.second }
 }
 
 @Composable

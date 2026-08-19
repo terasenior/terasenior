@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 
-// SessionPlannerComponent v1.3.21 - Planificador Adaptive
+// SessionPlannerComponent v1.3.26 - Planificador Multi-Ejercicio
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionPlannerComponent(
@@ -33,16 +33,16 @@ fun SessionPlannerComponent(
     onAddExercise: (ExerciseConfig) -> Unit,
     onRemoveExercise: (Int) -> Unit
 ) {
-    var selectedCategory by remember { mutableStateOf("Atención") }
-    var selectedGameType by remember { mutableStateOf("number_search") }
+    var selectedCategory by remember { mutableStateOf("Orientación") }
+    var selectedGameType by remember { mutableStateOf("orientation_temporal_day") }
     var selectedLevel by remember { mutableStateOf(1) }
 
     val categories = listOf("Orientación", "Atención", "Memoria", "Lenguaje", "Funciones Ejecutivas", "Percepción", "Lectoescritura")
     
-    // Juegos ordenados por nombre (v1.3.21)
-    val gamesByCategory = remember {
+    // Juegos ordenados por nombre (v1.3.26)
+    val gamesByCategory: Map<String, List<Pair<String, String>>> = remember {
         mapOf(
-            "Orientación" to listOf("orientation_temporal" to "Orientación Temporal"),
+            "Orientación" to getOrientationPoolForPlanner(),
             "Atención" to listOf(
                 "number_search" to "Busca el Número",
                 "attention_different" to "El Intruso",
@@ -117,7 +117,7 @@ fun SessionPlannerComponent(
                                 selected = selectedCategory == cat,
                                 onClick = { 
                                     selectedCategory = cat
-                                    selectedGameType = gamesByCategory[cat]?.first()?.first ?: ""
+                                    selectedGameType = gamesByCategory[cat]?.firstOrNull()?.first ?: ""
                                 },
                                 label = { Text(cat, fontSize = 10.sp) },
                                 shape = RoundedCornerShape(6.dp)
@@ -228,4 +228,102 @@ fun SessionPlannerComponent(
             }
         }
     }
+}
+
+private fun getOrientationPoolForPlanner(): List<Pair<String, String>> {
+    return listOf(
+        "orientation_temporal_day" to "Día del mes",
+        "orientation_temporal_month" to "Mes del año",
+        "orientation_temporal_year" to "Año actual",
+        "orientation_temporal_season" to "Estación del año",
+        "orientation_temporal_dayweek" to "Día de la semana",
+        "orientation_temporal_partday" to "Parte del día",
+        "orientation_temporal_hour" to "Hora aproximada",
+        "orientation_temporal_century" to "Siglo actual",
+        "orientation_temporal_decade" to "Década actual",
+        "orientation_temporal_yesterday" to "Día ayer",
+        "orientation_temporal_tomorrow" to "Día mañana",
+        "orientation_spatial_city" to "Ciudad o Pueblo",
+        "orientation_spatial_province" to "Provincia",
+        "orientation_spatial_country" to "País",
+        "orientation_spatial_continent" to "Continente",
+        "orientation_spatial_planet" to "Planeta",
+        "orientation_spatial_place" to "Lugar actual",
+        "orientation_spatial_floor" to "Planta edificio",
+        "orientation_spatial_kitchen" to "Uso de cocina",
+        "orientation_spatial_bedroom" to "Uso de dormitorio",
+        "orientation_spatial_library" to "Uso de biblioteca",
+        "orientation_spatial_pharmacy" to "Uso de farmacia",
+        "orientation_spatial_bakery" to "Uso de panadería",
+        "orientation_personal_name" to "Nombre propio",
+        "orientation_calc_year_days" to "Cálculo días año",
+        "orientation_calc_year_months" to "Cálculo meses año",
+        "orientation_calc_week_days" to "Cálculo días semana",
+        "orientation_calc_day_hours" to "Cálculo horas día",
+        "orientation_calc_minutes_hour" to "Cálculo minutos hora",
+        "orientation_calc_seconds_minute" to "Cálculo segundos minuto",
+        "orientation_calc_half_day" to "Cálculo medio día",
+        "orientation_calc_feet_count" to "Cálculo pies",
+        "orientation_calc_hands_count" to "Cálculo manos",
+        "orientation_calc_fingers_hand" to "Cálculo dedos mano",
+        "orientation_calc_fingers_total" to "Cálculo dedos total",
+        "orientation_calc_dozen" to "Cálculo docena",
+        "orientation_calc_half_dozen" to "Cálculo media docena",
+        "orientation_calc_century_years" to "Cálculo años siglo",
+        "orientation_calc_decade_years" to "Cálculo años década",
+        "orientation_situational_currency" to "Moneda actual",
+        "orientation_situational_language" to "Idioma hablado",
+        "orientation_situational_color_sky" to "Color del cielo",
+        "orientation_situational_color_grass" to "Color de hierba",
+        "orientation_situational_king" to "Rey actual",
+        "orientation_situational_blood" to "Color sangre",
+        "orientation_situational_fire" to "Sensación fuego",
+        "orientation_situational_ice" to "Sensación hielo",
+        "orientation_situational_sun" to "Salida del sol",
+        "orientation_situational_snow_color" to "Color nieve",
+        "orientation_situational_lemon_taste" to "Sabor limón",
+        "orientation_situational_sugar_taste" to "Sabor azúcar",
+        "orientation_situational_sea_water" to "Sabor agua mar",
+        "orientation_situational_eyes_count" to "Número de ojos",
+        "orientation_situational_ears_count" to "Número de orejas",
+        "orientation_situational_nose_count" to "Número de narices",
+        "orientation_situational_mouth_count" to "Número de bocas",
+        "orientation_situational_head_count" to "Número de cabezas",
+        "orientation_situational_arms_count" to "Número de brazos",
+        "orientation_situational_legs_count" to "Número de piernas",
+        "orientation_situational_hair_color" to "Color de pelo",
+        "orientation_situational_sun_shape" to "Forma del sol",
+        "orientation_situational_ball_shape" to "Forma de balón",
+        "orientation_situational_table_use" to "Uso de mesa",
+        "orientation_situational_knife_use" to "Uso de cuchillo",
+        "orientation_situational_spoon_use" to "Uso de cuchara",
+        "orientation_situational_comb_use" to "Uso de peine",
+        "orientation_situational_soap_use" to "Uso de jabón",
+        "orientation_situational_towel_use" to "Uso de toalla",
+        "orientation_situational_broom_use" to "Uso de escoba",
+        "orientation_situational_oven_use" to "Uso de horno",
+        "orientation_situational_pill_use" to "Uso de medicinas",
+        "orientation_situational_phone_use" to "Uso de teléfono",
+        "orientation_situational_keys_use" to "Uso de llaves",
+        "orientation_situational_glasses_use" to "Uso de gafas",
+        "orientation_situational_watch_use" to "Uso de reloj",
+        "orientation_situational_wallet_use" to "Uso de cartera",
+        "orientation_situational_calendar_use" to "Uso de calendario",
+        "orientation_situational_stop_color" to "Color señal STOP",
+        "orientation_situational_zebra_cross" to "Color paso cebra",
+        "orientation_situational_traffic_light_go" to "Semaforo verde",
+        "orientation_situational_traffic_light_stop" to "Semaforo rojo",
+        "orientation_situational_dog_sound" to "Sonido perro",
+        "orientation_situational_cat_sound" to "Sonido gato",
+        "orientation_situational_cow_sound" to "Sonido vaca",
+        "orientation_situational_sheep_sound" to "Sonido oveja",
+        "orientation_situational_dentist" to "Médico de dientes",
+        "orientation_situational_umbrella" to "Uso paraguas",
+        "orientation_situational_shoes_wear" to "Donde van zapatos",
+        "orientation_situational_hat_wear" to "Donde va sombrero",
+        "orientation_situational_gloves_wear" to "Donde van guantes",
+        "orientation_situational_fridge_use" to "Uso frigorífico",
+        "orientation_situational_chair_use" to "Uso silla",
+        "orientation_situational_bed_use" to "Uso cama"
+    ).sortedBy { it.second }
 }

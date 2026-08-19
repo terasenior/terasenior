@@ -69,8 +69,8 @@ class LoginViewModel(
     }
 
     fun login() {
-        val currentEmail = _uiState.value.email
-        val currentPassword = _uiState.value.password
+        val currentEmail = _uiState.value.email.trim()
+        val currentPassword = _uiState.value.password.trim()
 
         if (currentEmail.isBlank() || currentPassword.isBlank()) {
             _uiState.update { it.copy(errorMessage = "Por favor, rellena todos los campos") }
@@ -128,7 +128,8 @@ class LoginViewModel(
                     error.message?.contains("invalid_credentials", ignoreCase = true) == true -> "Correo o contraseña incorrectos."
                     error.message?.contains("rate_limit", ignoreCase = true) == true -> "Demasiados intentos. Inténtalo más tarde."
                     error.message?.contains("Email not confirmed", ignoreCase = true) == true -> "Debes confirmar tu correo electrónico antes de entrar."
-                    else -> "Error de acceso: ${error.message}"
+                    error.message?.contains("Invalid login credentials", ignoreCase = true) == true -> "Credenciales no válidas. Revisa mayúsculas y espacios."
+                    else -> "Error de acceso: ${error.message ?: "Sin respuesta del servidor"}"
                 }
                 _uiState.update {
                     it.copy(

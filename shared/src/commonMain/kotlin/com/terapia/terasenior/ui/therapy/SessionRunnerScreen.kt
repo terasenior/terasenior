@@ -165,26 +165,26 @@ private fun ExerciseRouter(
     val resultsRepo = remember { SupabaseResultsRepository() }
     val saveUseCase = remember { SaveActivityResultUseCase(resultsRepo) }
 
-    when (exercise.exerciseType) {
-        "orientation_temporal" -> {
+    when {
+        exercise.exerciseType.startsWith("orientation") -> {
             val gameViewModel = remember { OrientationViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             OrientationGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "number_search" -> {
+        exercise.exerciseType == "number_search" -> {
             val gameViewModel = remember { NumberSearchViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             NumberSearchGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "attention_spot_odd_one_out", "attention_different", "attention_equals_model", 
+        exercise.exerciseType in listOf("attention_spot_odd_one_out", "attention_different", "attention_equals_model", 
         "attention_positions", "attention_letters", "attention_numbers", 
         "attention_symbols", "attention_matrices", "attention_row_cancel", 
         "attention_consecutive", "attention_yes_no", "attention_dual_task", 
-        "attention_count", "attention_word_search", "attention_differences", "attention_longest" -> {
+        "attention_count", "attention_word_search", "attention_differences", "attention_longest") -> {
             val gameViewModel = remember { VisualAttentionViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 val variation = if (exercise.exerciseType == "attention_spot_odd_one_out") "attention_different" else exercise.exerciseType
@@ -194,14 +194,14 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             VisualAttentionGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "memory_pairs" -> {
+        exercise.exerciseType == "memory_pairs" -> {
             val gameViewModel = remember { PairsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             PairsGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "memory_cultural", "memory_utility", "memory_needs", "memory_recent" -> {
+        exercise.exerciseType in listOf("memory_cultural", "memory_utility", "memory_needs", "memory_recent") -> {
             val gameViewModel = remember { MemoryViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) {
                 val type = when(exercise.exerciseType) {
@@ -217,23 +217,23 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             MemoryGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "language_word_image" -> {
+        exercise.exerciseType == "language_word_image" -> {
             val gameViewModel = remember { WordImageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             WordImageGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "language_denomination", "language_naming_objects" -> {
+        exercise.exerciseType in listOf("language_denomination", "language_naming_objects") -> {
             val gameViewModel = remember { NamingObjectsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             NamingObjectsGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "language_start_letter", "language_start_syllable", 
+        exercise.exerciseType in listOf("language_start_letter", "language_start_syllable", 
         "language_end_letter", "language_end_syllable", "language_complex_cluster", 
-        "language_semantic_completion", "language_semantic_naming" -> {
+        "language_semantic_completion", "language_semantic_naming") -> {
             val gameViewModel = remember { LanguageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 gameViewModel.startNewGame(exercise.exerciseType, exercise.level, exercise.configuration) 
@@ -242,51 +242,51 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             LanguageGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "language_semantic_category" -> {
+        exercise.exerciseType == "language_semantic_category" -> {
             val gameViewModel = remember { SemanticCategoryViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             SemanticCategoryGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "calculation_simple" -> {
+        exercise.exerciseType == "calculation_simple" -> {
             val gameViewModel = remember { CalculationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             CalculationGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "executive_color_shape_sequence" -> {
+        exercise.exerciseType == "executive_color_shape_sequence" -> {
             val gameViewModel = remember { ColorShapeSequenceViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             ColorShapeSequenceGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "executive_planning_steps", "executive_shopping_list", "executive_money_calculation", 
+        exercise.exerciseType in listOf("executive_planning_steps", "executive_shopping_list", "executive_money_calculation", 
         "executive_time_logic", "executive_logical_reasoning", "executive_analogies", 
-        "executive_abstractions", "executive_intrusos", "executive_math_advanced" -> {
+        "executive_abstractions", "executive_intrusos", "executive_math_advanced") -> {
             val gameViewModel = remember { ExecutiveFunctionsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             ExecutiveFunctionsGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "perception_color_identification" -> {
+        exercise.exerciseType == "perception_color_identification" -> {
             val gameViewModel = remember { ColorIdentificationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             ColorIdentificationGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "perception_size_ordering" -> {
+        exercise.exerciseType == "perception_size_ordering" -> {
             val gameViewModel = remember { SizeOrderingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             SizeOrderingGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "perception_lateral_dominance", "perception_mirror", "perception_body_parts" -> {
+        exercise.exerciseType in listOf("perception_lateral_dominance", "perception_mirror", "perception_body_parts") -> {
             val gameViewModel = remember { PerceptionViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) {
                 val type = when(exercise.exerciseType) {
@@ -301,21 +301,21 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             PerceptionGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "perception_shape_fitting" -> {
+        exercise.exerciseType == "perception_shape_fitting" -> {
             val gameViewModel = remember { ShapeFittingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             ShapeFittingGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "literacy_tracing" -> {
+        exercise.exerciseType == "literacy_tracing" -> {
             val gameViewModel = remember { TracingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             TracingGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        "literacy_tracing_basic", "literacy_complete_letters", "literacy_copy_words", "literacy_form_shapes" -> {
+        exercise.exerciseType in listOf("literacy_tracing_basic", "literacy_complete_letters", "literacy_copy_words", "literacy_form_shapes") -> {
             val gameViewModel = remember { LiteracyViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 val variation = when(exercise.exerciseType) {

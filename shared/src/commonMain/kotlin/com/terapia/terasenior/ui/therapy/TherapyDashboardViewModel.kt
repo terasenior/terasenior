@@ -33,7 +33,7 @@ class TherapyDashboardViewModel(
             val summaryResult = repository.getTherapistSummary(therapistId)
             
             // 1. Cargar Citas de Hoy
-            val now = kotlin.time.Clock.System.now()
+            val now = kotlinx.datetime.Clock.System.now()
             val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
             val appointmentsResult = agendaRepository.getAppointments().first()
             

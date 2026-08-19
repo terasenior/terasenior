@@ -127,7 +127,7 @@ private fun DateSelector(
     onDateSelected: (LocalDate) -> Unit
 ) {
     val today = remember {
-        kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     }
     
     val listState = rememberLazyListState()
@@ -212,7 +212,7 @@ private fun DateSelector(
                             fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Normal
                         )
                         Text(
-                            text = date.day.toString(),
+                            text = date.dayOfMonth.toString(),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )

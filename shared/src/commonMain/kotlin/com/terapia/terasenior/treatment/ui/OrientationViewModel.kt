@@ -4,22 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.treatment.repository.OrientationCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.*
 
 enum class OrientationType {
-    WEEKDAY, MONTH, YEAR, SEASON, WEATHER
+    GENERIC, WEEKDAY, MONTH, YEAR, SEASON, WEATHER
 }
 
 data class OrientationUiState(
+    val currentType: String = "orientation_temporal",
     val currentQuestionType: OrientationType = OrientationType.WEEKDAY,
     val questionText: String = "",
     val options: List<String> = emptyList(),
@@ -39,25 +38,44 @@ class OrientationViewModel(
     private val _uiState = MutableStateFlow(OrientationUiState())
     val uiState: StateFlow<OrientationUiState> = _uiState.asStateFlow()
 
-    private val days = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
-    private val months = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
-    private val seasons = listOf("Primavera", "Verano", "Otoño", "Invierno")
-    private val weatherOptions = listOf("Frío", "Calor", "Templado", "Mucho Calor")
-
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
-        val nowInstant = kotlin.time.Clock.System.now()
-        val now = nowInstant.toLocalDateTime(TimeZone.currentSystemDefault())
-        setupQuestion(OrientationType.WEEKDAY, now)
+    fun startNewGame(type: String, level: Int = 1) {
+        val nowInstant = kotlinx.datetime.Clock.System.now()
         _uiState.update { it.copy(
+            currentType = type,
             currentLevel = level,
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0
         ) }
+        
+        if (type == "orientation_temporal") {
+            setupClassicTemporal()
+        } else {
+            setupCatalogQuestion(type)
+        }
     }
 
-    private fun setupQuestion(type: OrientationType, now: LocalDateTime) {
+    private fun setupClassicTemporal() {
+        val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        setupLegacyQuestion(OrientationType.WEEKDAY, now)
+    }
+
+    private fun setupCatalogQuestion(type: String) {
+        val question = OrientationCatalog.getQuestion(type)
+        _uiState.update { it.copy(
+            questionText = question.text,
+            options = question.options.shuffled(),
+            correctAnswer = question.correctAnswer,
+            isCorrect = null
+        ) }
+    }
+
+    private fun setupLegacyQuestion(type: OrientationType, now: LocalDateTime) {
+        val days = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
+        val months = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+        val seasons = listOf("Primavera", "Verano", "Otoño", "Invierno")
+
         val (question, options, correct) = when(type) {
             OrientationType.WEEKDAY -> {
                 val correctDay = when(now.dayOfWeek) {
@@ -89,7 +107,7 @@ class OrientationViewModel(
                 }
                 Triple("¿En qué estación del año estamos?", seasons, correctSeason)
             }
-            OrientationType.WEATHER -> Triple("¿Qué tiempo hace hoy?", weatherOptions, "Templado")
+            else -> Triple("¿Qué tiempo hace hoy?", listOf("Sol", "Nubes", "Lluvia"), "Sol")
         }
 
         _uiState.update { it.copy(
@@ -109,7 +127,14 @@ class OrientationViewModel(
             _uiState.update { it.copy(isCorrect = true) }
             viewModelScope.launch {
                 delay(1500)
-                nextQuestion(patientId, professionalId, appointmentId)
+                if (state.currentType == "orientation_temporal") {
+                    nextLegacyQuestion(patientId, professionalId, appointmentId)
+                } else {
+                    _uiState.update { it.copy(isCompleted = true) }
+                    if (patientId != null && professionalId != null) {
+                        saveResult(patientId, professionalId, appointmentId)
+                    }
+                }
             }
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
@@ -121,12 +146,12 @@ class OrientationViewModel(
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    private fun nextQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
+        val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         when(_uiState.value.currentQuestionType) {
-            OrientationType.WEEKDAY -> setupQuestion(OrientationType.MONTH, now)
-            OrientationType.MONTH -> setupQuestion(OrientationType.YEAR, now)
-            OrientationType.YEAR -> setupQuestion(OrientationType.SEASON, now)
+            OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
+            OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)
+            OrientationType.YEAR -> setupLegacyQuestion(OrientationType.SEASON, now)
             OrientationType.SEASON -> {
                 _uiState.update { it.copy(isCompleted = true) }
                 if (patientId != null && professionalId != null) {
@@ -140,7 +165,7 @@ class OrientationViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
@@ -150,11 +175,11 @@ class OrientationViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
-                activityType = "orientation_temporal",
+                activityType = state.currentType,
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,
                 errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
+                difficultyLevel = "GDS_${state.currentLevel + 2}", 
                 createdAt = ""
             )
             saveResultUseCase(result)
