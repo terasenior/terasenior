@@ -14,9 +14,12 @@ object OrientationCatalog {
     )
 
     fun getQuestion(type: String): OrientationQuestion {
-        // Usamos una fecha estática para evitar problemas de compilación con Clock.System en Wasm si persiste el error
-        // Pero intentaremos la forma estándar primero
-        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(e: Exception) { LocalDateTime(2026, 8, 18, 12, 0) }
+        // Garantizamos que 'now' siempre tenga un valor válido
+        val now = try { 
+            kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) 
+        } catch(e: Exception) { 
+            LocalDateTime(2026, 8, 18, 12, 0) 
+        }
         
         return when (type) {
             "orientation_temporal_day" -> OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf(now.dayOfMonth.toString(), "15", "1", "30"), now.dayOfMonth.toString())
