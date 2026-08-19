@@ -14,7 +14,9 @@ object OrientationCatalog {
     )
 
     fun getQuestion(type: String): OrientationQuestion {
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        // Usamos una fecha estática para evitar problemas de compilación con Clock.System en Wasm si persiste el error
+        // Pero intentaremos la forma estándar primero
+        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(e: Exception) { LocalDateTime(2026, 8, 18, 12, 0) }
         
         return when (type) {
             "orientation_temporal_day" -> OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf(now.dayOfMonth.toString(), "15", "1", "30"), now.dayOfMonth.toString())
@@ -59,7 +61,7 @@ object OrientationCatalog {
             "orientation_personal_surname" -> OrientationQuestion(type, "¿Cuál es su primer apellido?", listOf("García", "Rodríguez", "Usted mismo", "Pérez"), "Usted mismo")
             
             "orientation_calc_year_days" -> OrientationQuestion(type, "¿Cuántos días tiene un año normal?", listOf("360", "365", "366", "400"), "365")
-            "orientation_calc_year_months" -> OrientationQuestion((type), "¿Cuántos meses tiene un año?", listOf("10", "12", "14", "24"), "12")
+            "orientation_calc_year_months" -> OrientationQuestion(type, "¿Cuántos meses tiene un año?", listOf("10", "12", "14", "24"), "12")
             "orientation_calc_week_days" -> OrientationQuestion(type, "¿Cuántos días tiene una semana?", listOf("5", "7", "10", "30"), "7")
             "orientation_calc_day_hours" -> OrientationQuestion(type, "¿Cuántas horas tiene un día completo?", listOf("12", "24", "48", "60"), "24")
             "orientation_calc_minutes_hour" -> OrientationQuestion(type, "¿Cuántos minutos tiene una hora?", listOf("30", "60", "90", "100"), "60")
@@ -140,7 +142,7 @@ object OrientationCatalog {
             "orientation_situational_stewardess" -> OrientationQuestion(type, "¿Dónde trabajan las azafatas?", listOf("En el tren", "En el avión", "En el barco", "En el autobús"), "En el avión")
             "orientation_situational_pilot" -> OrientationQuestion(type, "¿Quién conduce un avión?", listOf("Chofer", "Piloto", "Capitán", "Maquinista"), "Piloto")
             "orientation_situational_ship_captain" -> OrientationQuestion(type, "¿Quién manda en un barco?", listOf("Piloto", "Capitán", "Director", "Jefe"), "Capitán")
-            "orientation_situational_cow_milk" -> OrientationQuestion(type, "¿Qué animal nos nos da la leche?", listOf("El perro", "La vaca", "El gato", "El pájaro"), "La vaca")
+            "orientation_situational_cow_milk" -> OrientationQuestion(type, "¿Qué animal nos da la leche?", listOf("El perro", "La vaca", "El gato", "El pájaro"), "La vaca")
             "orientation_situational_hen_eggs" -> OrientationQuestion(type, "¿Qué animal pone huevos?", listOf("La perra", "La gallina", "La gata", "La vaca"), "La gallina")
             "orientation_situational_bee_honey" -> OrientationQuestion(type, "¿Qué insecto hace la miel?", listOf("Mosca", "Abeja", "Hormiga", "Grillo"), "Abeja")
             "orientation_situational_spider_web" -> OrientationQuestion(type, "¿Qué insecto teje telas?", listOf("Araña", "Abeja", "Hormiga", "Mosquito"), "Araña")

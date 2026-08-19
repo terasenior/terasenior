@@ -7,6 +7,7 @@ import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 import kotlinx.datetime.*
 
 data class DashboardUiState(
@@ -33,7 +34,7 @@ class TherapyDashboardViewModel(
             val summaryResult = repository.getTherapistSummary(therapistId)
             
             // 1. Cargar Citas de Hoy
-            val now = kotlinx.datetime.Clock.System.now()
+            val now = DateClock.System.now()
             val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
             val appointmentsResult = agendaRepository.getAppointments().first()
             

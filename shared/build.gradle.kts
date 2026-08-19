@@ -20,6 +20,9 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
+        compilerOptions {
+            freeCompilerArgs.add("-Xklib-duplicated-unique-name-strategy=allow-first-with-warning")
+        }
     }
 
     /*
@@ -69,12 +72,18 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
             // Supabase 3.7.0 + Ktor 3.5.1
-            implementation("io.github.jan-tennert.supabase:postgrest-kt:3.0.1")
-            implementation("io.github.jan-tennert.supabase:auth-kt:3.0.1")
-            implementation("io.github.jan-tennert.supabase:storage-kt:3.0.1")
+            implementation("io.github.jan-tennert.supabase:postgrest-kt:3.7.0") {
+                exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-datetime")
+            }
+            implementation("io.github.jan-tennert.supabase:auth-kt:3.7.0") {
+                exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-datetime")
+            }
+            implementation("io.github.jan-tennert.supabase:storage-kt:3.7.0") {
+                exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-datetime")
+            }
             implementation("io.ktor:ktor-client-core:3.0.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-            implementation(libs.kotlinx.datetime)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
             
             // Cargador de imágenes Multiplataforma (v1.3.0)
             implementation("media.kamel:kamel-image:1.0.9")

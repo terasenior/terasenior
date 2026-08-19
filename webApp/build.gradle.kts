@@ -10,6 +10,9 @@ kotlin {
     wasmJs {
         browser()
         binaries.executable()
+        compilerOptions {
+            freeCompilerArgs.add("-Xklib-duplicated-unique-name-strategy=allow-first-with-warning")
+        }
     }
 
     js {

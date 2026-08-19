@@ -40,7 +40,7 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1) {
-        val nowInstant = kotlinx.datetime.Clock.System.now()
+        val nowInstant = Clock.System.now()
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
@@ -57,7 +57,7 @@ class OrientationViewModel(
     }
 
     private fun setupClassicTemporal() {
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         setupLegacyQuestion(OrientationType.WEEKDAY, now)
     }
 
@@ -147,7 +147,7 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         when(_uiState.value.currentQuestionType) {
             OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
             OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)
@@ -165,7 +165,8 @@ class OrientationViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val now = Clock.System.now()
+        val endTime = now.toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
