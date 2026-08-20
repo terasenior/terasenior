@@ -69,50 +69,58 @@ fun OrientationGame(
 
             // Pregunta
             Card(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
+                modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).heightIn(min = 120.dp),
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Text(
-                    text = state.questionText,
-                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (state.questionText.isBlank()) "Cargando pregunta..." else state.questionText,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Opciones
-            Box(modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp)) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(16.dp)
-                ) {
-                    items(state.options) { option ->
-                        val isCorrect = state.isCorrect == true && option == state.correctAnswer
-                        val isError = state.isCorrect == false && option != state.correctAnswer
+            // Opciones (v1.3.29 - Blindaje contra listas vacías)
+            Box(modifier = Modifier.fillMaxWidth().weight(2f).widthIn(max = 800.dp)) {
+                if (state.options.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(16.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(state.options) { option ->
+                            val isCorrect = state.isCorrect == true && option == state.correctAnswer
+                            val isError = state.isCorrect == false && option != state.correctAnswer
 
-                        Button(
-                            onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                            modifier = Modifier.height(100.dp).fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = when {
-                                    isCorrect -> Color(0xFF4CAF50)
-                                    isError -> Color(0xFFF44336)
-                                    else -> MaterialTheme.colorScheme.secondaryContainer
-                                },
-                                contentColor = when {
-                                    isCorrect || isError -> Color.White
-                                    else -> MaterialTheme.colorScheme.onSecondaryContainer
-                                }
-                            )
-                        ) {
-                            Text(option, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                            Button(
+                                onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
+                                modifier = Modifier.height(100.dp).fillMaxWidth(),
+                                shape = RoundedCornerShape(24.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = when {
+                                        isCorrect -> Color(0xFF4CAF50)
+                                        isError -> Color(0xFFF44336)
+                                        else -> MaterialTheme.colorScheme.secondaryContainer
+                                    },
+                                    contentColor = when {
+                                        isCorrect || isError -> Color.White
+                                        else -> MaterialTheme.colorScheme.onSecondaryContainer
+                                    }
+                                )
+                            ) {
+                                Text(option, fontSize = 28.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                            }
                         }
                     }
                 }
