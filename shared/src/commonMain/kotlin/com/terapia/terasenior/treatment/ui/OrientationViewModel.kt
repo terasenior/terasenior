@@ -52,7 +52,7 @@ class OrientationViewModel(
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
-            questionText = "Cargando pregunta...", 
+            questionText = "Iniciando...", // v1.3.33
             options = emptyList(),
             isCorrect = null
         ) }
@@ -65,7 +65,7 @@ class OrientationViewModel(
                     setupCatalogQuestion(type)
                 }
             } catch (t: Throwable) {
-                _uiState.update { it.copy(questionText = "Error al iniciar: ${t.message ?: "Plataforma"}") }
+                _uiState.update { it.copy(questionText = "No se pudo cargar el ejercicio. Por favor, reintente.") }
             }
         }
     }
