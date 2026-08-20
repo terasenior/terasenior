@@ -40,7 +40,9 @@ object OrientationCatalog {
             }
             "orientation_temporal_dayweek" -> {
                 val correct = getDayName(now.dayOfWeek.ordinal + 1)
-                OrientationQuestion(type, "¿Qué día de la semana es hoy?", listOf(correct, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").shuffled().take(4).distinct(), correct)
+                val others = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").filter { it != correct }
+                val options = (others.shuffled().take(3) + correct).shuffled()
+                OrientationQuestion(type, "¿Qué día de la semana es hoy?", options, correct)
             }
             "orientation_temporal_hour" -> {
                 val correct = "Las ${now.hour}"
@@ -48,11 +50,15 @@ object OrientationCatalog {
             }
             "orientation_temporal_yesterday" -> {
                 val correct = getDayName(now.dayOfWeek.ordinal)
-                OrientationQuestion(type, "¿Qué día fue ayer?", listOf(correct, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").shuffled().take(4).distinct(), correct)
+                val others = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").filter { it != correct }
+                val options = (others.shuffled().take(3) + correct).shuffled()
+                OrientationQuestion(type, "¿Qué día fue ayer?", options, correct)
             }
             "orientation_temporal_tomorrow" -> {
                 val correct = getDayName((now.dayOfWeek.ordinal + 2) % 7)
-                OrientationQuestion(type, "¿Qué día será mañana?", listOf(correct, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").shuffled().take(4).distinct(), correct)
+                val others = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").filter { it != correct }
+                val options = (others.shuffled().take(3) + correct).shuffled()
+                OrientationQuestion(type, "¿Qué día será mañana?", options, correct)
             }
             "orientation_temporal_century" -> OrientationQuestion(type, "¿En qué siglo estamos?", listOf("Siglo XIX", "Siglo XX", "Siglo XXI", "Siglo XXII"), "Siglo XXI")
             "orientation_temporal_decade" -> OrientationQuestion(type, "¿En qué década estamos?", listOf("Los 90", "Años 2000", "Años 2020", "Años 2030"), "Años 2020")
