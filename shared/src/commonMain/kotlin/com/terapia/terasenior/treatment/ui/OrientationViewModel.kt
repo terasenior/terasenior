@@ -52,7 +52,7 @@ class OrientationViewModel(
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
-            questionText = "Preparando ejercicio...", 
+            questionText = "Cargando pregunta...", 
             options = emptyList(),
             isCorrect = null
         ) }
