@@ -40,51 +40,42 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1) {
-        val nowInstant = try { Clock.System.now() } catch(e: Exception) { Instant.fromEpochMilliseconds(1724140000000L) }
-        
-        // 1. Cargamos los datos inmediatamente para evitar la pantalla de carga (v1.3.30)
-        val question = if (type == "orientation_temporal") {
-            // Para el modo temporal clásico usamos un fallback dinámico
-            null 
-        } else {
-            try { OrientationCatalog.getQuestion(type) } catch(e: Exception) { null }
+        val nowInstant = try { 
+            Clock.System.now() 
+        } catch(t: Throwable) { 
+            Instant.fromEpochMilliseconds(1724140000000L) 
         }
 
-        if (question != null) {
-            _uiState.update { it.copy(
-                currentType = type,
-                currentLevel = level,
-                startTimeMs = nowInstant.toEpochMilliseconds(),
-                isCompleted = false,
-                errorsCount = 0,
-                questionText = question.text,
-                options = question.options.shuffled(),
-                correctAnswer = question.correctAnswer,
-                isCorrect = null
-            ) }
-        } else {
-            // Si es modo temporal o falló la carga, procedemos por la vía asíncrona segura
-            _uiState.update { it.copy(
-                currentType = type,
-                currentLevel = level,
-                startTimeMs = nowInstant.toEpochMilliseconds(),
-                isCompleted = false,
-                errorsCount = 0,
-                questionText = "" 
-            ) }
-            
-            viewModelScope.launch {
+        _uiState.update { it.copy(
+            currentType = type,
+            currentLevel = level,
+            startTimeMs = nowInstant.toEpochMilliseconds(),
+            isCompleted = false,
+            errorsCount = 0,
+            questionText = "Preparando ejercicio...", 
+            options = emptyList(),
+            isCorrect = null
+        ) }
+        
+        viewModelScope.launch {
+            try {
                 if (type == "orientation_temporal") {
                     setupClassicTemporal()
                 } else {
                     setupCatalogQuestion(type)
                 }
+            } catch (t: Throwable) {
+                _uiState.update { it.copy(questionText = "Error al iniciar: ${t.message ?: "Plataforma"}") }
             }
         }
     }
 
     private fun setupClassicTemporal() {
-        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(e: Exception) { LocalDateTime(2026, 8, 18, 12, 0) }
+        val now = try { 
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) 
+        } catch(t: Throwable) { 
+            LocalDateTime(2026, 8, 20, 12, 0) 
+        }
         setupLegacyQuestion(OrientationType.WEEKDAY, now)
     }
 
@@ -97,8 +88,8 @@ class OrientationViewModel(
                 correctAnswer = question.correctAnswer,
                 isCorrect = null
             ) }
-        } catch (e: Exception) {
-            _uiState.update { it.copy(questionText = "Error de carga. Reintente.") }
+        } catch (t: Throwable) {
+            _uiState.update { it.copy(questionText = "Error en catálogo: $type") }
         }
     }
 
@@ -178,7 +169,7 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(e: Exception) { LocalDateTime(2026, 8, 18, 12, 0) }
+        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(t: Throwable) { LocalDateTime(2026, 8, 20, 12, 0) }
         when(_uiState.value.currentQuestionType) {
             OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
             OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)
@@ -196,7 +187,7 @@ class OrientationViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val now = try { Clock.System.now() } catch(e: Exception) { Instant.fromEpochMilliseconds(1724140000000L) }
+        val now = try { Clock.System.now() } catch(t: Throwable) { Instant.fromEpochMilliseconds(1724140000000L) }
         val endTime = now.toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
