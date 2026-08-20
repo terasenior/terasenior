@@ -3,7 +3,7 @@ package com.terapia.terasenior.treatment.repository
 import kotlinx.datetime.*
 
 /**
- * Catálogo de 100 preguntas de orientación para la v1.3.26.
+ * Catálogo de 100 preguntas de orientación para la v1.3.30.
  */
 object OrientationCatalog {
     data class OrientationQuestion(
@@ -14,7 +14,6 @@ object OrientationCatalog {
     )
 
     fun getQuestion(type: String): OrientationQuestion {
-        // Garantizamos que 'now' siempre tenga un valor válido
         val now = try { 
             kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) 
         } catch(e: Exception) { 
@@ -22,17 +21,44 @@ object OrientationCatalog {
         }
         
         return when (type) {
-            "orientation_temporal_day" -> OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf(now.dayOfMonth.toString(), "15", "1", "30"), now.dayOfMonth.toString())
-            "orientation_temporal_month" -> OrientationQuestion(type, "¿En qué mes estamos?", listOf("Enero", "Febrero", "Marzo", "Abril"), getMonthName(now.monthNumber))
-            "orientation_temporal_year" -> OrientationQuestion(type, "¿En qué año estamos?", listOf("2024", "2025", "2026", "2027"), now.year.toString())
-            "orientation_temporal_season" -> OrientationQuestion(type, "¿En qué estación estamos?", listOf("Primavera", "Verano", "Otoño", "Invierno"), getSeason(now.monthNumber))
-            "orientation_temporal_dayweek" -> OrientationQuestion(type, "¿Qué día de la semana es hoy?", listOf("Lunes", "Martes", "Miércoles", "Jueves"), getDayName(now.dayOfWeek.ordinal + 1))
-            "orientation_temporal_hour" -> OrientationQuestion(type, "¿Qué hora es aproximadamente?", listOf("Las 10", "Las 12", "Las 17", "Las 20"), "Las ${now.hour}")
-            "orientation_temporal_yesterday" -> OrientationQuestion(type, "¿Qué día fue ayer?", listOf("Lunes", "Martes", "Miércoles", "Jueves"), getDayName(now.dayOfWeek.ordinal))
-            "orientation_temporal_tomorrow" -> OrientationQuestion(type, "¿Qué día será mañana?", listOf("Martes", "Miércoles", "Jueves", "Viernes"), getDayName((now.dayOfWeek.ordinal + 2) % 7))
+            "orientation_temporal_day" -> {
+                val correct = now.dayOfMonth.toString()
+                OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf(correct, "15", "1", "30").distinct(), correct)
+            }
+            "orientation_temporal_month" -> {
+                val correct = getMonthName(now.monthNumber)
+                OrientationQuestion(type, "¿En qué mes estamos?", listOf(correct, "Enero", "Mayo", "Agosto", "Diciembre").distinct(), correct)
+            }
+            "orientation_temporal_year" -> {
+                val correct = now.year.toString()
+                OrientationQuestion(type, "¿En qué año estamos?", listOf(correct, "2024", "2025", "2026", "2027").distinct(), correct)
+            }
+            "orientation_temporal_season" -> {
+                val correct = getSeason(now.monthNumber)
+                OrientationQuestion(type, "¿En qué estación estamos?", listOf(correct, "Primavera", "Verano", "Otoño", "Invierno").distinct(), correct)
+            }
+            "orientation_temporal_dayweek" -> {
+                val correct = getDayName(now.dayOfWeek.ordinal + 1)
+                OrientationQuestion(type, "¿Qué día de la semana es hoy?", listOf(correct, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").shuffled().take(4), correct)
+            }
+            "orientation_temporal_hour" -> {
+                val correct = "Las ${now.hour}"
+                OrientationQuestion(type, "¿Qué hora es aproximadamente?", listOf(correct, "Las 10", "Las 12", "Las 17", "Las 20").distinct(), correct)
+            }
+            "orientation_temporal_yesterday" -> {
+                val correct = getDayName(now.dayOfWeek.ordinal)
+                OrientationQuestion(type, "¿Qué día fue ayer?", listOf(correct, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").shuffled().take(4), correct)
+            }
+            "orientation_temporal_tomorrow" -> {
+                val correct = getDayName((now.dayOfWeek.ordinal + 2) % 7)
+                OrientationQuestion(type, "¿Qué día será mañana?", listOf(correct, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo").shuffled().take(4), correct)
+            }
             "orientation_temporal_century" -> OrientationQuestion(type, "¿En qué siglo estamos?", listOf("Siglo XIX", "Siglo XX", "Siglo XXI", "Siglo XXII"), "Siglo XXI")
             "orientation_temporal_decade" -> OrientationQuestion(type, "¿En qué década estamos?", listOf("Los 90", "Años 2000", "Años 2020", "Años 2030"), "Años 2020")
-            "orientation_temporal_partday" -> OrientationQuestion(type, "¿En qué parte del día estamos?", listOf("Mañana", "Tarde", "Noche", "Madrugada"), getPartDay(now.hour))
+            "orientation_temporal_partday" -> {
+                val correct = getPartDay(now.hour)
+                OrientationQuestion(type, "¿En qué parte del día estamos?", listOf(correct, "Mañana", "Tarde", "Noche", "Madrugada").distinct(), correct)
+            }
             "orientation_temporal_week_next" -> OrientationQuestion(type, "¿Qué día será hoy dentro de una semana?", listOf("El mismo día", "Mañana", "Ayer", "El próximo lunes"), "El mismo día")
             "orientation_temporal_christmas" -> OrientationQuestion(type, "¿En qué mes se celebra la Navidad?", listOf("Noviembre", "Diciembre", "Enero", "Agosto"), "Diciembre")
             "orientation_temporal_newyear" -> OrientationQuestion(type, "¿Qué día empieza el año?", listOf("1 de Enero", "31 de Diciembre", "6 de Enero", "1 de Mayo"), "1 de Enero")

@@ -40,35 +40,66 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1) {
-        val nowInstant = Clock.System.now()
-        _uiState.update { it.copy(
-            currentType = type,
-            currentLevel = level,
-            startTimeMs = nowInstant.toEpochMilliseconds(),
-            isCompleted = false,
-            errorsCount = 0
-        ) }
+        val nowInstant = try { Clock.System.now() } catch(e: Exception) { Instant.fromEpochMilliseconds(1724140000000L) }
         
-        if (type == "orientation_temporal") {
-            setupClassicTemporal()
+        // 1. Cargamos los datos inmediatamente para evitar la pantalla de carga (v1.3.30)
+        val question = if (type == "orientation_temporal") {
+            // Para el modo temporal clásico usamos un fallback dinámico
+            null 
         } else {
-            setupCatalogQuestion(type)
+            try { OrientationCatalog.getQuestion(type) } catch(e: Exception) { null }
+        }
+
+        if (question != null) {
+            _uiState.update { it.copy(
+                currentType = type,
+                currentLevel = level,
+                startTimeMs = nowInstant.toEpochMilliseconds(),
+                isCompleted = false,
+                errorsCount = 0,
+                questionText = question.text,
+                options = question.options.shuffled(),
+                correctAnswer = question.correctAnswer,
+                isCorrect = null
+            ) }
+        } else {
+            // Si es modo temporal o falló la carga, procedemos por la vía asíncrona segura
+            _uiState.update { it.copy(
+                currentType = type,
+                currentLevel = level,
+                startTimeMs = nowInstant.toEpochMilliseconds(),
+                isCompleted = false,
+                errorsCount = 0,
+                questionText = "" 
+            ) }
+            
+            viewModelScope.launch {
+                if (type == "orientation_temporal") {
+                    setupClassicTemporal()
+                } else {
+                    setupCatalogQuestion(type)
+                }
+            }
         }
     }
 
     private fun setupClassicTemporal() {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(e: Exception) { LocalDateTime(2026, 8, 18, 12, 0) }
         setupLegacyQuestion(OrientationType.WEEKDAY, now)
     }
 
     private fun setupCatalogQuestion(type: String) {
-        val question = OrientationCatalog.getQuestion(type)
-        _uiState.update { it.copy(
-            questionText = question.text,
-            options = question.options.shuffled(),
-            correctAnswer = question.correctAnswer,
-            isCorrect = null
-        ) }
+        try {
+            val question = OrientationCatalog.getQuestion(type)
+            _uiState.update { it.copy(
+                questionText = question.text,
+                options = question.options.shuffled(),
+                correctAnswer = question.correctAnswer,
+                isCorrect = null
+            ) }
+        } catch (e: Exception) {
+            _uiState.update { it.copy(questionText = "Error de carga. Reintente.") }
+        }
     }
 
     private fun setupLegacyQuestion(type: OrientationType, now: LocalDateTime) {
@@ -90,7 +121,7 @@ class OrientationViewModel(
                 Triple("¿Qué día de la semana es hoy?", days.shuffled(), correctDay)
             }
             OrientationType.MONTH -> {
-                val mOrdinal = now.month.ordinal
+                val mOrdinal = (now.monthNumber - 1).coerceIn(0, 11)
                 Triple("¿En qué mes estamos?", months.shuffled().take(4).let { if(it.contains(months[mOrdinal])) it else it.take(3) + months[mOrdinal] }.shuffled(), months[mOrdinal])
             }
             OrientationType.YEAR -> {
@@ -98,7 +129,7 @@ class OrientationViewModel(
                 Triple("¿En qué año estamos?", listOf(year, (now.year-1).toString(), (now.year+1).toString(), "2020").shuffled(), year)
             }
             OrientationType.SEASON -> {
-                val mNum = now.month.ordinal + 1
+                val mNum = now.monthNumber
                 val correctSeason = when(mNum) {
                     in 3..5 -> "Primavera"
                     in 6..8 -> "Verano"
@@ -147,7 +178,7 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(e: Exception) { LocalDateTime(2026, 8, 18, 12, 0) }
         when(_uiState.value.currentQuestionType) {
             OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
             OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)
@@ -165,7 +196,7 @@ class OrientationViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val now = Clock.System.now()
+        val now = try { Clock.System.now() } catch(e: Exception) { Instant.fromEpochMilliseconds(1724140000000L) }
         val endTime = now.toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
