@@ -52,27 +52,29 @@ class OrientationViewModel(
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
-            questionText = "Iniciando...", // v1.3.33
+            questionText = "Preparando v1.3.35...", 
             options = emptyList(),
             isCorrect = null
         ) }
         
         viewModelScope.launch {
             try {
+                // Pequeño retardo para asegurar que la UI respira
+                delay(200)
                 if (type == "orientation_temporal") {
                     setupClassicTemporal()
                 } else {
                     setupCatalogQuestion(type)
                 }
             } catch (t: Throwable) {
-                _uiState.update { it.copy(questionText = "No se pudo cargar el ejercicio. Por favor, reintente.") }
+                _uiState.update { it.copy(questionText = "Error de plataforma. Por favor, refresque la página.") }
             }
         }
     }
 
     private fun setupClassicTemporal() {
         val now = try { 
-            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) 
+            Clock.System.now().toLocalDateTime(TimeZone.UTC) 
         } catch(t: Throwable) { 
             LocalDateTime(2026, 8, 20, 12, 0) 
         }
@@ -169,7 +171,11 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = try { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) } catch(t: Throwable) { LocalDateTime(2026, 8, 20, 12, 0) }
+        val now = try { 
+            Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        } catch(t: Throwable) {
+            LocalDateTime(2026, 8, 20, 12, 0)
+        }
         when(_uiState.value.currentQuestionType) {
             OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
             OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)

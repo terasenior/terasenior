@@ -15,9 +15,9 @@ object OrientationCatalog {
     )
 
     fun getQuestion(type: String): OrientationQuestion {
-        // Garantizamos que 'now' siempre tenga un valor válido usando Throwable (v1.3.33)
+        // Motor de tiempo blindado (v1.3.35)
         val now = try { 
-            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) 
+            Clock.System.now().toLocalDateTime(TimeZone.UTC) 
         } catch(t: Throwable) { 
             LocalDateTime(2026, 8, 20, 12, 0) 
         }
@@ -26,38 +26,38 @@ object OrientationCatalog {
             when (type) {
                 "orientation_temporal_day" -> {
                     val correct = now.dayOfMonth.toString()
-                    OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf(correct, "1", "15", "30").distinct().shuffled(), correct)
+                    OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf(correct, "1", "15", "30").distinct(), correct)
                 }
                 "orientation_temporal_month" -> {
                     val correct = getMonthName(now.monthNumber)
-                    OrientationQuestion(type, "¿En qué mes estamos?", listOf(correct, "Enero", "Mayo", "Agosto", "Diciembre").distinct().shuffled(), correct)
+                    OrientationQuestion(type, "¿En qué mes estamos?", listOf(correct, "Enero", "Mayo", "Agosto", "Diciembre").distinct(), correct)
                 }
                 "orientation_temporal_year" -> {
                     val correct = now.year.toString()
-                    OrientationQuestion(type, "¿En qué año estamos?", listOf(correct, "2024", "2025", "2026", "2027").distinct().shuffled(), correct)
+                    OrientationQuestion(type, "¿En qué año estamos?", listOf(correct, "2024", "2025", "2026", "2027").distinct(), correct)
                 }
                 "orientation_temporal_season" -> {
                     val correct = getSeason(now.monthNumber)
-                    OrientationQuestion(type, "¿En qué estación estamos?", listOf("Primavera", "Verano", "Otoño", "Invierno"), correct)
+                    OrientationQuestion(type, "¿En qué estación estamos?", listOf(correct, "Primavera", "Verano", "Otoño", "Invierno").distinct(), correct)
                 }
                 "orientation_temporal_dayweek" -> {
                     val correct = getDayName(now.dayOfWeek.ordinal + 1)
                     val options = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
-                    OrientationQuestion(type, "¿Qué día de la semana es hoy?", options.shuffled().take(3).toMutableList().apply { if(!contains(correct)) add(correct) }.shuffled(), correct)
+                    OrientationQuestion(type, "¿Qué día de la semana es hoy?", options, correct)
                 }
                 "orientation_temporal_hour" -> {
                     val correct = "Las ${now.hour}"
-                    OrientationQuestion(type, "¿Qué hora es aproximadamente?", listOf(correct, "Las 10", "Las 12", "Las 17", "Las 20").distinct().shuffled(), correct)
+                    OrientationQuestion(type, "¿Qué hora es aproximadamente?", listOf(correct, "Las 10", "Las 12", "Las 17", "Las 20").distinct(), correct)
                 }
                 "orientation_temporal_yesterday" -> {
                     val correct = getDayName(now.dayOfWeek.ordinal)
                     val options = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
-                    OrientationQuestion(type, "¿Qué día fue ayer?", options.shuffled().take(3).toMutableList().apply { if(!contains(correct)) add(correct) }.shuffled(), correct)
+                    OrientationQuestion(type, "¿Qué día fue ayer?", options, correct)
                 }
                 "orientation_temporal_tomorrow" -> {
                     val correct = getDayName((now.dayOfWeek.ordinal + 2) % 7)
                     val options = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
-                    OrientationQuestion(type, "¿Qué día será mañana?", options.shuffled().take(3).toMutableList().apply { if(!contains(correct)) add(correct) }.shuffled(), correct)
+                    OrientationQuestion(type, "¿Qué día será mañana?", options, correct)
                 }
                 "orientation_temporal_century" -> OrientationQuestion(type, "¿En qué siglo estamos?", listOf("Siglo XIX", "Siglo XX", "Siglo XXI", "Siglo XXII"), "Siglo XXI")
                 "orientation_temporal_decade" -> OrientationQuestion(type, "¿En qué década estamos?", listOf("Los 90", "Años 2000", "Años 2020", "Años 2030"), "Años 2020")

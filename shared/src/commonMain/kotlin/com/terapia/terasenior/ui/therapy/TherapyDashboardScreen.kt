@@ -59,7 +59,7 @@ fun TherapyDashboardScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "v1.3.33 • Gestión clínica diaria.",
+                            text = "v1.3.35 • Gestión clínica diaria.",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.Gray
                         )
