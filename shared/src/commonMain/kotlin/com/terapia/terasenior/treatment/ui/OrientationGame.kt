@@ -67,43 +67,31 @@ fun OrientationGame(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Pregunta
+            // Pregunta (v1.3.39: Ajuste de altura para visibilidad de botones)
             Card(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).heightIn(min = 120.dp),
+                modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = if (state.questionText.isBlank()) "v1.3.38: Iniciando motor..." else state.questionText,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        
-                        if (state.questionText.contains("v1.3.38") || state.options.isEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "DIAGNÓSTICO: " + state.debugInfo,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Red.copy(alpha = 0.7f),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
+                Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (state.questionText.isBlank()) "Cargando..." else state.questionText,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Opciones (v1.3.29 - Blindaje contra listas vacías)
-            Box(modifier = Modifier.fillMaxWidth().weight(2f).widthIn(max = 800.dp)) {
-                if (state.options.isEmpty()) {
+            // Opciones (v1.3.39: Rejilla optimizada y siempre visible)
+            Box(modifier = Modifier.fillMaxWidth().weight(1f).widthIn(max = 800.dp)) {
+                if (state.options.isEmpty() && !state.isCompleted) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
-                } else {
+                } else if (!state.isCompleted) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -117,7 +105,7 @@ fun OrientationGame(
 
                             Button(
                                 onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                                modifier = Modifier.height(100.dp).fillMaxWidth(),
+                                modifier = Modifier.height(80.dp).fillMaxWidth(),
                                 shape = RoundedCornerShape(24.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = when {
@@ -131,7 +119,7 @@ fun OrientationGame(
                                     }
                                 )
                             ) {
-                                Text(option, fontSize = 28.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                Text(option, fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                             }
                         }
                     }
