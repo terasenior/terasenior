@@ -37,32 +37,35 @@ class MemoryViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1) {
-        // Blindaje contra errores de Clock (v1.3.44)
-        val nowInstant = try { 
-            Clock.System.now() 
-        } catch(t: Throwable) { 
-            Instant.fromEpochMilliseconds(1724310000000L) 
-        }
-        
+        // v1.3.45: Carga inmediata y blindaje total
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
-            startTimeMs = nowInstant.toEpochMilliseconds(),
+            startTimeMs = 1724310000000L, // Fixed time to avoid any clock issues
             isCompleted = false,
             errorsCount = 0,
-            questionText = "v1.3.44: Iniciando...",
+            questionText = "v1.3.45: Iniciando...",
             options = emptyList(),
             isCorrect = null,
-            debugInfo = "START"
+            debugInfo = "START_v45"
         ) }
         
         viewModelScope.launch {
             try {
-                delay(200)
                 _uiState.update { it.copy(debugInfo = it.debugInfo + " -> LAUNCH") }
-                setupCatalogQuestion(type)
+                val question = MemoryCatalog.getQuestion(type)
+                _uiState.update { it.copy(
+                    questionText = question.text,
+                    options = question.options.shuffled(),
+                    correctAnswer = question.correctAnswer,
+                    isCorrect = null,
+                    debugInfo = it.debugInfo + " -> OK"
+                ) }
             } catch (t: Throwable) {
-                _uiState.update { it.copy(questionText = "ERROR PLATAFORMA: ${t.message}", debugInfo = it.debugInfo + " -> CRASH") }
+                _uiState.update { it.copy(
+                    questionText = "ERROR: ${t.message}",
+                    debugInfo = it.debugInfo + " -> FAIL"
+                ) }
             }
         }
     }

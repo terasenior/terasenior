@@ -83,14 +83,14 @@ fun MemoryGame(
                 Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = if (state.questionText.isBlank()) "v1.3.44: Cargando..." else state.questionText,
+                            text = if (state.questionText.isBlank()) "v1.3.45: Cargando..." else state.questionText,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         
-                        if (state.questionText.contains("v1.3.44") || state.options.isEmpty()) {
+                        if (state.questionText.contains("v1.3.45") || state.options.isEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "DIAGNÓSTICO: " + state.debugInfo,
