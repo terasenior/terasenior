@@ -76,16 +76,16 @@ fun OrientationGame(
                 Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = if (state.questionText.isBlank()) "v1.3.37: Iniciando motor..." else state.questionText,
+                            text = if (state.questionText.isBlank()) "v1.3.38: Iniciando motor..." else state.questionText,
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         
-                        if (state.questionText.contains("Iniciando") || state.options.isEmpty()) {
+                        if (state.questionText.contains("v1.3.38") || state.options.isEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "DEBUG: " + state.debugLogs.joinToString(" -> "),
+                                text = "DIAGNÓSTICO: " + state.debugInfo,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.Red.copy(alpha = 0.7f),
                                 textAlign = TextAlign.Center
