@@ -63,14 +63,8 @@ fun MemoryGame(
                         modifier = Modifier.size(32.dp)
                     )
                 }
-                val title = when(state.currentType) {
-                    MemoryType.CULTURAL -> "Memoria Cultural"
-                    MemoryType.UTILITY -> "Utilidad de Objetos"
-                    MemoryType.NEEDS -> "Necesidades de Tareas"
-                    MemoryType.RECENT -> "Memoria Reciente"
-                }
                 Text(
-                    text = title,
+                    text = "Estimulación de Memoria",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 IconButton(onClick = { speechManager.speak(state.questionText) }) {
@@ -78,62 +72,64 @@ fun MemoryGame(
                 }
             }
 
-            LinearProgressIndicator(
-                progress = { (state.currentStep.toFloat() / state.totalSteps.toFloat()).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primaryContainer,
-                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Pregunta
             Card(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 700.dp),
+                modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Text(
-                    text = state.questionText,
-                    modifier = Modifier.padding(32.dp).fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (state.questionText.isBlank()) "Cargando..." else state.questionText,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Opciones (v1.3.3 - Responsive)
-            Box(modifier = Modifier.fillMaxWidth().weight(1f).widthIn(max = 900.dp), contentAlignment = Alignment.Center) {
-                ResponsiveGrid(items = state.options, columns = 2, spacing = 16.dp) { _, option, size ->
-                    val isCorrect = state.isCorrect == true && option == state.correctAnswer
-                    val isError = state.isCorrect == false && option != state.correctAnswer
-
-                    Button(
-                        onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                        modifier = Modifier.height(size).fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = when {
-                                isCorrect -> Color(0xFF4CAF50)
-                                isError -> Color(0xFFF44336)
-                                else -> MaterialTheme.colorScheme.secondaryContainer
-                            },
-                            contentColor = when {
-                                isCorrect || isError -> Color.White
-                                else -> MaterialTheme.colorScheme.onSecondaryContainer
-                            }
-                        )
+            // Opciones
+            Box(modifier = Modifier.fillMaxWidth().weight(2f).widthIn(max = 800.dp)) {
+                if (state.options.isEmpty() && !state.isCompleted) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (!state.isCompleted) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(16.dp),
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Text(
-                            text = option,
-                            fontSize = (size.value * 0.22f).coerceAtMost(28f).sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            lineHeight = (size.value * 0.25f).coerceAtMost(32f).sp
-                        )
+                        items(state.options) { option ->
+                            val isCorrect = state.isCorrect == true && option == state.correctAnswer
+                            val isError = state.isCorrect == false && option != state.correctAnswer
+
+                            Button(
+                                onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
+                                modifier = Modifier.height(80.dp).fillMaxWidth(),
+                                shape = RoundedCornerShape(24.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = when {
+                                        isCorrect -> Color(0xFF4CAF50)
+                                        isError -> Color(0xFFF44336)
+                                        else -> MaterialTheme.colorScheme.secondaryContainer
+                                    },
+                                    contentColor = when {
+                                        isCorrect || isError -> Color.White
+                                        else -> MaterialTheme.colorScheme.onSecondaryContainer
+                                    }
+                                )
+                            ) {
+                                Text(option, fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                            }
+                        }
                     }
                 }
             }
@@ -145,29 +141,28 @@ fun MemoryGame(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 Card(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp).padding(bottom = 16.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 500.dp).padding(bottom = 16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFC8E6C9)),
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                        modifier = Modifier.padding(20.dp).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "¡Muy bien! Has completado el ejercicio de memoria.",
+                            text = "¡Excelente! Has completado el ejercicio.",
                             textAlign = TextAlign.Center,
                             color = Color(0xFF1B5E20),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
+                            fontSize = 20.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = onBack,
-                            modifier = Modifier.height(56.dp).fillMaxWidth(0.7f),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                            modifier = Modifier.height(56.dp).fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text("Finalizar", fontSize = 18.sp)
+                            Text("Siguiente", fontSize = 18.sp)
                         }
                     }
                 }

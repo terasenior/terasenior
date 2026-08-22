@@ -201,18 +201,9 @@ private fun ExerciseRouter(
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             PairsGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
         }
-        exercise.exerciseType in listOf("memory_cultural", "memory_utility", "memory_needs", "memory_recent") -> {
-            val gameViewModel = remember { MemoryViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) {
-                val type = when(exercise.exerciseType) {
-                    "memory_cultural" -> MemoryType.CULTURAL
-                    "memory_utility" -> MemoryType.UTILITY
-                    "memory_needs" -> MemoryType.NEEDS
-                    "memory_recent" -> MemoryType.RECENT
-                    else -> MemoryType.CULTURAL
-                }
-                gameViewModel.startNewGame(type, exercise.level)
-            }
+        exercise.exerciseType.startsWith("memory") -> {
+            val gameViewModel = remember(exercise.id) { MemoryViewModel(saveUseCase) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
             MemoryGame(viewModel = gameViewModel, patientId = patientId, professionalId = professionalId, appointmentId = appointmentId, onBack = onAbort)
@@ -345,7 +336,7 @@ private fun TransitionView(
     LaunchedEffect(Unit) { speechManager.speak("$message $subMessage") }
     Column(modifier = Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Surface(color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)) {
-            Text("v1.3.42", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+            Text("v1.3.43", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(message, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
