@@ -249,6 +249,11 @@ fun App() {
                                     viewModel = remember { TherapyDashboardViewModel(therapyRepo, agendaRepo) },
                                     therapistId = currentUserProfile?.id ?: "",
                                     onNewSessionClick = { createSessionViewModel.resetWizard(); currentScreen = Screen.CREATE_SESSION },
+                                    onStandardizedSessionClick = { 
+                                        createSessionViewModel.resetWizard()
+                                        createSessionViewModel.startQuickEvaluationFlow()
+                                        currentScreen = Screen.CREATE_SESSION 
+                                    },
                                     onNewPatientClick = { currentScreen = Screen.PATIENTS },
                                     onGoToAgenda = { currentScreen = Screen.AGENDA },
                                     onAppointmentClick = { selectedAppointmentId = it; currentScreen = Screen.APPOINTMENT_DETAIL },

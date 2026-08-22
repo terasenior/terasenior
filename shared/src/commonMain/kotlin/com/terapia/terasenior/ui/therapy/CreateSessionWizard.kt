@@ -77,6 +77,7 @@ fun CreateSessionWizard(
                     onNext = viewModel::goNextFromExercises
                 )
                 WizardStep.LEVEL_SELECTION -> LevelSelectionStep(onLevelSelected = viewModel::onLevelSelected)
+                WizardStep.QUICK_LEVEL_SELECTION -> LevelSelectionStep(onLevelSelected = viewModel::onQuickLevelSelected)
                 WizardStep.SUMMARY -> SessionSummaryStep(
                     uiState = uiState,
                     onCreateSession = { viewModel.createSession(therapistId) }

@@ -30,6 +30,7 @@ fun TherapyDashboardScreen(
     viewModel: TherapyDashboardViewModel,
     therapistId: String,
     onNewSessionClick: () -> Unit,
+    onStandardizedSessionClick: () -> Unit, // v1.3.40
     onNewPatientClick: () -> Unit,
     onGoToAgenda: () -> Unit,
     onAppointmentClick: (String) -> Unit,
@@ -82,6 +83,12 @@ fun TherapyDashboardScreen(
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     QuickActionCard(title = "Nueva Sesión", icon = Icons.Default.PlayArrow, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f), onClick = onNewSessionClick)
+                    QuickActionCard(title = "Sesión Estándar", icon = Icons.Default.AutoFixHigh, color = Color(0xFF673AB7), modifier = Modifier.weight(1f), onClick = onStandardizedSessionClick)
+                }
+            }
+            
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     QuickActionCard(title = "Nuevo Paciente", icon = Icons.Default.PersonAdd, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f), onClick = onNewPatientClick)
                     QuickActionCard(title = "Agenda", icon = Icons.Default.Event, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.weight(1f), onClick = onGoToAgenda)
                 }
