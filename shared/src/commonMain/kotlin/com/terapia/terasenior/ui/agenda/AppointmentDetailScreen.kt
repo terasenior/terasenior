@@ -54,7 +54,7 @@ fun AppointmentDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.33",
+                                text = "v1.3.36",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary

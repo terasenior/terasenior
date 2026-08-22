@@ -52,29 +52,29 @@ class OrientationViewModel(
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
-            questionText = "Preparando v1.3.35...", 
+            questionText = "Cargando v1.3.36...", 
             options = emptyList(),
             isCorrect = null
         ) }
         
         viewModelScope.launch {
             try {
-                // Pequeño retardo para asegurar que la UI respira
-                delay(200)
+                // Mayor retardo y limpieza explícita (v1.3.36)
+                delay(300)
                 if (type == "orientation_temporal") {
                     setupClassicTemporal()
                 } else {
                     setupCatalogQuestion(type)
                 }
             } catch (t: Throwable) {
-                _uiState.update { it.copy(questionText = "Error de plataforma. Por favor, refresque la página.") }
+                _uiState.update { it.copy(questionText = "Error de plataforma. Use F5.") }
             }
         }
     }
 
     private fun setupClassicTemporal() {
         val now = try { 
-            Clock.System.now().toLocalDateTime(TimeZone.UTC) 
+            kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.UTC) 
         } catch(t: Throwable) { 
             LocalDateTime(2026, 8, 20, 12, 0) 
         }
