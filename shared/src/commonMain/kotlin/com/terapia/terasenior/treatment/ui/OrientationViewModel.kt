@@ -28,7 +28,8 @@ data class OrientationUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val startTimeMs: Long = 0,
-    val errorsCount: Int = 0
+    val errorsCount: Int = 0,
+    val debugLogs: List<String> = emptyList() // v1.3.37
 )
 
 class OrientationViewModel(
@@ -38,11 +39,18 @@ class OrientationViewModel(
     private val _uiState = MutableStateFlow(OrientationUiState())
     val uiState: StateFlow<OrientationUiState> = _uiState.asStateFlow()
 
+    private fun addLog(msg: String) {
+        _uiState.update { it.copy(debugLogs = it.debugLogs + msg) }
+    }
+
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1) {
         val nowInstant = try { 
-            Clock.System.now() 
+            val instant = Clock.System.now()
+            addLog("Clock.System.now() OK")
+            instant
         } catch(t: Throwable) { 
+            addLog("Clock.System.now() Error: ${t.message}")
             Instant.fromEpochMilliseconds(1724140000000L) 
         }
 
@@ -52,30 +60,36 @@ class OrientationViewModel(
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
-            questionText = "Cargando v1.3.36...", 
+            questionText = "v1.3.37: Iniciando motor...", 
             options = emptyList(),
-            isCorrect = null
+            isCorrect = null,
+            debugLogs = listOf("startNewGame($type, $level)")
         ) }
         
         viewModelScope.launch {
             try {
-                // Mayor retardo y limpieza explícita (v1.3.36)
-                delay(300)
+                delay(200)
                 if (type == "orientation_temporal") {
+                    addLog("Modo Temporal Clásico")
                     setupClassicTemporal()
                 } else {
+                    addLog("Modo Catálogo: $type")
                     setupCatalogQuestion(type)
                 }
             } catch (t: Throwable) {
-                _uiState.update { it.copy(questionText = "Error de plataforma. Use F5.") }
+                addLog("CRASH launch: ${t.message}")
+                _uiState.update { it.copy(questionText = "Error FATAL: ${t.message}") }
             }
         }
     }
 
     private fun setupClassicTemporal() {
         val now = try { 
-            kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.UTC) 
+            val ldt = Clock.System.now().toLocalDateTime(TimeZone.UTC) 
+            addLog("LDT UTC OK")
+            ldt
         } catch(t: Throwable) { 
+            addLog("LDT UTC Error: ${t.message}")
             LocalDateTime(2026, 8, 20, 12, 0) 
         }
         setupLegacyQuestion(OrientationType.WEEKDAY, now)
@@ -83,19 +97,24 @@ class OrientationViewModel(
 
     private fun setupCatalogQuestion(type: String) {
         try {
+            addLog("Buscando en catálogo...")
             val question = OrientationCatalog.getQuestion(type)
+            addLog("Pregunta obtenida: ${question.text.take(10)}...")
             _uiState.update { it.copy(
                 questionText = question.text,
                 options = question.options.shuffled(),
                 correctAnswer = question.correctAnswer,
                 isCorrect = null
             ) }
+            addLog("Estado actualizado con éxito")
         } catch (t: Throwable) {
+            addLog("Error Catálogo: ${t.message}")
             _uiState.update { it.copy(questionText = "Error en catálogo: $type") }
         }
     }
 
     private fun setupLegacyQuestion(type: OrientationType, now: LocalDateTime) {
+        addLog("setupLegacy($type)")
         val days = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
         val months = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
         val seasons = listOf("Primavera", "Verano", "Otoño", "Invierno")
@@ -141,6 +160,7 @@ class OrientationViewModel(
             correctAnswer = correct,
             isCorrect = null
         ) }
+        addLog("setupLegacy finalizado")
     }
 
     fun onOptionSelected(selected: String, patientId: String?, professionalId: String?, appointmentId: String?) {
@@ -171,11 +191,7 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
-        val now = try { 
-            Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        } catch(t: Throwable) {
-            LocalDateTime(2026, 8, 20, 12, 0)
-        }
+        val now = try { Clock.System.now().toLocalDateTime(TimeZone.UTC) } catch(t: Throwable) { LocalDateTime(2026, 8, 20, 12, 0) }
         when(_uiState.value.currentQuestionType) {
             OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
             OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)

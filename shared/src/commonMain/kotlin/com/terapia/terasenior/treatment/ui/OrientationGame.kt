@@ -74,12 +74,24 @@ fun OrientationGame(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = if (state.questionText.isBlank()) "Cargando pregunta..." else state.questionText,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = if (state.questionText.isBlank()) "v1.3.37: Iniciando motor..." else state.questionText,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        
+                        if (state.questionText.contains("Iniciando") || state.options.isEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "DEBUG: " + state.debugLogs.joinToString(" -> "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Red.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
 
