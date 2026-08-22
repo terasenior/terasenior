@@ -74,20 +74,32 @@ fun MemoryGame(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Pregunta
+            // Pregunta (v1.3.44: Diagnóstico)
             Card(
                 modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp),
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = if (state.questionText.isBlank()) "Cargando..." else state.questionText,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = if (state.questionText.isBlank()) "v1.3.44: Cargando..." else state.questionText,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        
+                        if (state.questionText.contains("v1.3.44") || state.options.isEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "DIAGNÓSTICO: " + state.debugInfo,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Red.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
 

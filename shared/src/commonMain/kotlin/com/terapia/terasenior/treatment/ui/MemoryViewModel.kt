@@ -24,7 +24,8 @@ data class MemoryUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val startTimeMs: Long = 0,
-    val errorsCount: Int = 0
+    val errorsCount: Int = 0,
+    val debugInfo: String = "" // v1.3.44
 )
 
 class MemoryViewModel(
@@ -36,7 +37,12 @@ class MemoryViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1) {
-        val nowInstant = try { Clock.System.now() } catch(t: Throwable) { Instant.fromEpochMilliseconds(1724310000000L) }
+        // Blindaje contra errores de Clock (v1.3.44)
+        val nowInstant = try { 
+            Clock.System.now() 
+        } catch(t: Throwable) { 
+            Instant.fromEpochMilliseconds(1724310000000L) 
+        }
         
         _uiState.update { it.copy(
             currentType = type,
@@ -44,24 +50,36 @@ class MemoryViewModel(
             startTimeMs = nowInstant.toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
-            questionText = "Cargando v1.3.43...",
+            questionText = "v1.3.44: Iniciando...",
             options = emptyList(),
-            isCorrect = null
+            isCorrect = null,
+            debugInfo = "START"
         ) }
-        setupCatalogQuestion(type)
+        
+        viewModelScope.launch {
+            try {
+                delay(200)
+                _uiState.update { it.copy(debugInfo = it.debugInfo + " -> LAUNCH") }
+                setupCatalogQuestion(type)
+            } catch (t: Throwable) {
+                _uiState.update { it.copy(questionText = "ERROR PLATAFORMA: ${t.message}", debugInfo = it.debugInfo + " -> CRASH") }
+            }
+        }
     }
 
     private fun setupCatalogQuestion(type: String) {
         try {
+            _uiState.update { it.copy(debugInfo = it.debugInfo + " -> CATALOG_REQ") }
             val question = MemoryCatalog.getQuestion(type)
             _uiState.update { it.copy(
                 questionText = question.text,
                 options = question.options,
                 correctAnswer = question.correctAnswer,
-                isCorrect = null
+                isCorrect = null,
+                debugInfo = it.debugInfo + " -> OK"
             ) }
         } catch (t: Throwable) {
-            _uiState.update { it.copy(questionText = "Error al cargar ejercicio de memoria.") }
+            _uiState.update { it.copy(questionText = "ERROR CATALOGO: $type", debugInfo = it.debugInfo + " -> ERR") }
         }
     }
 
