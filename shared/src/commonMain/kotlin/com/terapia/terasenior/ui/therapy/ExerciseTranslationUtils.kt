@@ -2,13 +2,13 @@ package com.terapia.terasenior.ui.therapy
 
 /**
  * Utilidad centralizada para traducir los nombres técnicos de los ejercicios
- * a lenguaje humano entendible por el usuario/terapeuta.
+ * a lenguaje humano entendible por el usuario/terapeuta. (v1.3.42)
  */
 object ExerciseTranslationUtils {
     fun getDisplayName(type: String): String {
         val cleanType = type.trim().lowercase()
         return when (cleanType) {
-            // Orientación
+            // --- ORIENTACIÓN TEMPORAL ---
             "orientation_temporal" -> "Orientación Temporal"
             "orientation_temporal_day" -> "Día del mes"
             "orientation_temporal_month" -> "Mes del año"
@@ -30,6 +30,17 @@ object ExerciseTranslationUtils {
             "orientation_temporal_lastseason" -> "Estación anterior"
             "orientation_temporal_nextseason" -> "Estación próxima"
             "orientation_temporal_holiday" -> "Festividad cercana"
+            "orientation_temporal_week_next" -> "Día próxima semana"
+            "orientation_temporal_christmas" -> "Mes de Navidad"
+            "orientation_temporal_newyear" -> "Día Año Nuevo"
+            "orientation_temporal_night_light" -> "Luz nocturna"
+            "orientation_temporal_day_light" -> "Luz diurna"
+            "orientation_temporal_spring_month" -> "Mes de Primavera"
+            "orientation_temporal_summer_month" -> "Mes de Verano"
+            "orientation_temporal_autumn_month" -> "Mes de Otoño"
+            "orientation_temporal_winter_month" -> "Mes de Invierno"
+
+            // --- ORIENTACIÓN ESPACIAL ---
             "orientation_spatial_city" -> "Ciudad o Pueblo"
             "orientation_spatial_province" -> "Provincia"
             "orientation_spatial_region" -> "Comunidad Autónoma"
@@ -60,6 +71,8 @@ object ExerciseTranslationUtils {
             "orientation_spatial_north" -> "País al norte"
             "orientation_spatial_west" -> "País al oeste"
             "orientation_spatial_planet" -> "Planeta"
+
+            // --- ORIENTACIÓN PERSONAL ---
             "orientation_personal_name" -> "Nombre propio"
             "orientation_personal_surname" -> "Primer apellido"
             "orientation_personal_birthdate" -> "Fecha de nacimiento"
@@ -81,6 +94,8 @@ object ExerciseTranslationUtils {
             "orientation_personal_anniversary" -> "Aniversario"
             "orientation_personal_grandchildren" -> "Nombre de nietos"
             "orientation_personal_breakfast" -> "Desayuno de hoy"
+
+            // --- ORIENTACIÓN SITUACIONAL ---
             "orientation_situational_why" -> "Motivo del ingreso"
             "orientation_situational_who" -> "Acompañante de hoy"
             "orientation_situational_feeling" -> "Estado de ánimo"
@@ -165,6 +180,8 @@ object ExerciseTranslationUtils {
             "orientation_situational_hen_eggs" -> "Origen huevos"
             "orientation_situational_bee_honey" -> "Origen miel"
             "orientation_situational_spider_web" -> "Origen tela araña"
+
+            // --- CÁLCULO ---
             "orientation_calc_year_days" -> "Días del año"
             "orientation_calc_year_months" -> "Meses del año"
             "orientation_calc_week_days" -> "Días de la semana"
@@ -185,8 +202,19 @@ object ExerciseTranslationUtils {
             "orientation_calc_neighbor_city" -> "Ciudad vecina"
             "orientation_calc_sepad" -> "Nombre entidad"
             "orientation_calc_appname" -> "Nombre aplicación"
+            "orientation_calc_feet_count" -> "Número de pies"
+            "orientation_calc_hands_count" -> "Número de manos"
+            "orientation_calc_fingers_hand" -> "Dedos en una mano"
+            "orientation_calc_fingers_total" -> "Dedos totales"
+            "orientation_calc_century_years" -> "Años en un siglo"
+            "orientation_calc_decade_years" -> "Años en una década"
+            "orientation_calc_dozen" -> "Unidades docena"
+            "orientation_calc_half_dozen" -> "Unidades media docena"
+            "orientation_calc_wheels_car" -> "Ruedas de coche"
+            "orientation_calc_wheels_bike" -> "Ruedas de bicicleta"
+            "orientation_calc_wheels_tricycle" -> "Ruedas de triciclo"
             
-            // Atención
+            // --- ATENCIÓN ---
             "number_search" -> "Busca el Número"
             "attention_different", "attention_spot_odd_one_out" -> "El Intruso"
             "attention_equals_model" -> "Buscar Iguales"
@@ -205,14 +233,14 @@ object ExerciseTranslationUtils {
             "attention_missing_part" -> "Completar Dibujo"
             "attention_word_search" -> "Sopa de Letras"
             
-            // Memoria
+            // --- MEMORIA ---
             "memory_cultural" -> "Memoria Cultural"
             "memory_utility" -> "Utilidad de Objetos"
             "memory_needs" -> "Necesidades de Tarea"
             "memory_recent" -> "Memoria Reciente"
             "memory_pairs" -> "Parejas de Memoria"
             
-            // Lenguaje
+            // --- LENGUAJE ---
             "language_word_image" -> "Vocabulario: Imagen"
             "language_denomination", "language_naming_objects" -> "Denominación de Objetos"
             "language_semantic_category" -> "Categorías Semánticas"
@@ -224,7 +252,7 @@ object ExerciseTranslationUtils {
             "language_semantic_completion" -> "Completar Categoría"
             "language_semantic_naming" -> "Nombrar Familia"
             
-            // Funciones Ejecutivas / Cálculo
+            // --- FUNCIONES EJECUTIVAS / CÁLCULO ---
             "calculation_simple" -> "Cálculo Mental"
             "executive_color_shape_sequence" -> "Secuencias Lógicas"
             "executive_planning_steps" -> "Planificación de Pasos"
@@ -237,15 +265,15 @@ object ExerciseTranslationUtils {
             "executive_intrusos" -> "Tachar el Intruso"
             "executive_math_advanced" -> "Cálculo Avanzado"
             
-            // Percepción
+            // --- PERCEPCIÓN ---
             "perception_color_identification" -> "Identificación de Colores"
             "perception_size_ordering" -> "Orden de Tamaños"
             "perception_lateral_dominance" -> "Derecha e Izquierda"
             "perception_mirror" -> "Imágenes en Espejo"
-        "perception_body_parts" -> "Esquema Corporal"
-        "perception_shape_fitting" -> "Encaje de Formas"
-        
-        // Lectoescritura
+            "perception_body_parts" -> "Esquema Corporal"
+            "perception_shape_fitting" -> "Encaje de Formas"
+            
+            // --- LECTOESCRITURA ---
             "literacy_tracing", "literacy_tracing_basic" -> "Trazos y Caligrafía"
             "literacy_complete_letters" -> "Completar Palabras"
             "literacy_copy_words" -> "Copia de Palabras"

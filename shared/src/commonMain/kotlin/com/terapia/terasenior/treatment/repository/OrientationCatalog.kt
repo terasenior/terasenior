@@ -3,7 +3,7 @@ package com.terapia.terasenior.treatment.repository
 import kotlinx.datetime.*
 
 /**
- * Catálogo completo de 100+ preguntas de orientación (v1.3.41).
+ * Catálogo completo de 100+ preguntas de orientación (v1.3.42).
  */
 object OrientationCatalog {
     data class OrientationQuestion(
