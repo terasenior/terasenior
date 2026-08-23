@@ -28,7 +28,8 @@ data class SpotOddOneOutUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class SpotOddOneOutViewModel(
@@ -39,7 +40,7 @@ class SpotOddOneOutViewModel(
     val uiState: StateFlow<SpotOddOneOutUiState> = _uiState.asStateFlow()
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numItems = when (level) {
             1 -> 4
             2 -> 4
@@ -61,6 +62,7 @@ class SpotOddOneOutViewModel(
             items = itemsList,
             oddItemIndex = oddIndex,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -96,6 +98,7 @@ class SpotOddOneOutViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "attention_spot_odd_one_out",
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

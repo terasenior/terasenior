@@ -35,7 +35,8 @@ data class LiteracyUiState(
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
     val startTimeMs: Long = 0,
-    val tracingAccuracy: Float = 0f
+    val tracingAccuracy: Float = 0f,
+    val sessionId: String = "" // v1.3.48
 )
 
 @OptIn(kotlin.time.ExperimentalTime::class)
@@ -46,7 +47,7 @@ class LiteracyViewModel(
     private val _uiState = MutableStateFlow(LiteracyUiState())
     val uiState: StateFlow<LiteracyUiState> = _uiState.asStateFlow()
 
-    fun startNewGame(variation: LiteracyVariation, level: Int = 1) {
+    fun startNewGame(variation: LiteracyVariation, level: Int = 1, sessionId: String = "") {
         val (instruction, prompt, target, options) = when (variation) {
             LiteracyVariation.TRACING_BASIC -> Quadruple(
                 "Sigue la línea de puntos con el dedo.",
@@ -77,6 +78,7 @@ class LiteracyViewModel(
             targetValue = target,
             options = options,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -203,6 +205,7 @@ class LiteracyViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "literacy_${state.variation.name.lowercase()}",
                 score = (state.tracingAccuracy * 100).toInt().coerceIn(0, 100).let { if (it == 0 && state.isCorrect == true) 100 else it },
                 durationSeconds = duration,

@@ -35,7 +35,8 @@ data class PairsUiState(
     val startTimeMs: Long = 0,
     val errorsCount: Int = 0,
     val currentLevel: Int = 3,
-    val useRealImages: Boolean = false
+    val useRealImages: Boolean = false,
+    val sessionId: String = "" // v1.3.48
 )
 
 class PairsViewModel(
@@ -65,7 +66,7 @@ class PairsViewModel(
     )
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(level: Int = 3) {
+    fun startNewGame(level: Int = 3, sessionId: String = "") {
         val numPairs = when(level) {
             1 -> 2
             2 -> 4
@@ -95,6 +96,7 @@ class PairsViewModel(
             cards = cards,
             totalPairs = numPairs,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds(),
             useRealImages = useReal
         )
@@ -155,6 +157,7 @@ class PairsViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = currentState.sessionId, // v1.3.48
                 activityType = "memory_pairs",
                 score = (100 - (currentState.errorsCount * 5)).coerceAtLeast(0),
                 durationSeconds = duration,

@@ -33,7 +33,8 @@ data class SemanticCategoryUiState(
     val foundCount: Int = 0,
     val errorIndex: Int? = null,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class SemanticCategoryViewModel(
@@ -59,7 +60,7 @@ class SemanticCategoryViewModel(
     )
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(level: Int = 3) {
+    fun startNewGame(level: Int = 3, sessionId: String = "") {
         val shuffled = allItems.shuffled()
         val numCategories = when(level) {
             1 -> 2
@@ -77,6 +78,7 @@ class SemanticCategoryViewModel(
             categories = categories,
             totalItemsToFind = totalToFind,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -124,6 +126,7 @@ class SemanticCategoryViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "language_semantic_category",
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

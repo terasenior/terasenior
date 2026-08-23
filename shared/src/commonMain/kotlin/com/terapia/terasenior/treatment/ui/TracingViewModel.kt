@@ -25,7 +25,8 @@ data class TracingUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class TracingViewModel(
@@ -36,7 +37,7 @@ class TracingViewModel(
     val uiState: StateFlow<TracingUiState> = _uiState.asStateFlow()
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val type = when (level) {
             1 -> TracingPathType.HORIZONTAL_LINE
             2 -> TracingPathType.VERTICAL_LINE
@@ -49,6 +50,7 @@ class TracingViewModel(
         _uiState.value = TracingUiState(
             pathType = type,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -84,6 +86,7 @@ class TracingViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "literacy_tracing",
                 score = 100, // Basado en precisión? Por ahora simplificado.
                 durationSeconds = duration,

@@ -30,6 +30,7 @@ data class LanguageUiState(
     val errorsCount: Int = 0,
     val currentLevel: Int = 1,
     val startTimeMs: Long = 0,
+    val sessionId: String = "", // v1.3.48
     val icon: ImageVector? = null,
     val imageUrl: String? = null,
     val images: List<ImageVector> = emptyList()
@@ -62,39 +63,39 @@ class LanguageViewModel(
     )
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(type: String, level: Int, config: Map<String, String> = emptyMap()) {
+    fun startNewGame(type: String, level: Int, sessionId: String = "", config: Map<String, String> = emptyMap()) {
         val startTime = Clock.System.now().toEpochMilliseconds()
         
         when (type) {
             "language_start_letter" -> {
                 val letter = config["value"] ?: listOf("A", "B", "C", "D", "E", "F", "G", "M", "P", "S").random()
-                _uiState.value = LanguageUiState(type = type, prompt = letter, targetValue = letter, instruction = "Escribe una palabra que empiece por la letra $letter", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = letter, targetValue = letter, instruction = "Escribe una palabra que empiece por la letra $letter", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_start_syllable" -> {
                 val syllable = config["value"] ?: listOf("MA", "PA", "CA", "LA", "DE", "TE").random()
-                _uiState.value = LanguageUiState(type = type, prompt = syllable, targetValue = syllable, instruction = "Escribe una palabra que empiece por la sílaba $syllable", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = syllable, targetValue = syllable, instruction = "Escribe una palabra que empiece por la sílaba $syllable", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_end_letter" -> {
                 val letter = config["value"] ?: listOf("A", "O", "E", "R", "S", "N").random()
-                _uiState.value = LanguageUiState(type = type, prompt = letter, targetValue = letter, instruction = "Escribe una palabra que termine en la letra $letter", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = letter, targetValue = letter, instruction = "Escribe una palabra que termine en la letra $letter", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_end_syllable" -> {
                 val syllable = config["value"] ?: listOf("ON", "AS", "ES", "AR", "ER").random()
-                _uiState.value = LanguageUiState(type = type, prompt = syllable, targetValue = syllable, instruction = "Escribe una palabra que termine en la sílaba $syllable", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = syllable, targetValue = syllable, instruction = "Escribe una palabra que termine en la sílaba $syllable", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_complex_cluster" -> {
                 val cluster = config["value"] ?: listOf("CL", "PL", "BR", "DR", "TR", "FL").random()
-                _uiState.value = LanguageUiState(type = type, prompt = cluster, targetValue = cluster, instruction = "Escribe una palabra que contenga el grupo $cluster", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = cluster, targetValue = cluster, instruction = "Escribe una palabra que contenga el grupo $cluster", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_denomination" -> {
                 val target = objects.random()
                 val otherOptions = objects.filter { it.name != target.name }.shuffled().take(3).map { it.name }
                 val options = (otherOptions + target.name).shuffled()
-                _uiState.value = LanguageUiState(type = type, prompt = target.name, icon = if (target.imageUrl == null) target.icon else null, imageUrl = target.imageUrl, options = options, targetValue = target.name, instruction = "Nombra el objeto que ves en la imagen", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = target.name, icon = if (target.imageUrl == null) target.icon else null, imageUrl = target.imageUrl, options = options, targetValue = target.name, instruction = "Nombra el objeto que ves en la imagen", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_semantic_completion" -> {
                 val category = categories.keys.random()
-                _uiState.value = LanguageUiState(type = type, prompt = category, targetValue = category, instruction = "Escribe un ejemplo de la categoría: $category", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = category, targetValue = category, instruction = "Escribe un ejemplo de la categoría: $category", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_semantic_naming" -> {
                 val category = categories.keys.random()
@@ -102,7 +103,7 @@ class LanguageViewModel(
                 val itemIcons = items.map { Icons.AutoMirrored.Filled.Label } 
                 val otherCategories = categories.keys.filter { it != category }.shuffled().take(3)
                 val options = (otherCategories + category).shuffled()
-                _uiState.value = LanguageUiState(type = type, prompt = category, options = options, targetValue = category, images = itemIcons, instruction = "¿A qué categoría pertenecen estos elementos?", currentLevel = level, startTimeMs = startTime)
+                _uiState.value = LanguageUiState(type = type, prompt = category, options = options, targetValue = category, images = itemIcons, instruction = "¿A qué categoría pertenecen estos elementos?", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
         }
     }
@@ -173,6 +174,7 @@ class LanguageViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = state.type,
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

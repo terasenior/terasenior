@@ -32,7 +32,8 @@ data class ExecutiveFunctionsUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 3,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class ExecutiveFunctionsViewModel(
@@ -42,7 +43,7 @@ class ExecutiveFunctionsViewModel(
     private val _uiState = MutableStateFlow(ExecutiveFunctionsUiState())
     val uiState: StateFlow<ExecutiveFunctionsUiState> = _uiState.asStateFlow()
 
-    fun startNewGame(mode: String, level: Int = 3) {
+    fun startNewGame(mode: String, level: Int = 3, sessionId: String = "") {
         val newState = when (mode) {
             "executive_planning_steps" -> generatePlanningSteps(level)
             "executive_shopping_list" -> generateShoppingList(level)
@@ -59,6 +60,7 @@ class ExecutiveFunctionsViewModel(
         _uiState.value = newState.copy(
             mode = mode,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -277,6 +279,7 @@ class ExecutiveFunctionsViewModel(
                     patientId = patientId,
                     professionalId = professionalId,
                     appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
                     activityType = state.mode,
                     score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                     durationSeconds = duration,

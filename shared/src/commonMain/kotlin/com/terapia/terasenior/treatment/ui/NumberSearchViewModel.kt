@@ -27,7 +27,8 @@ data class NumberSearchUiState(
     val isSaving: Boolean = false,
     val startTimeMs: Long = 0,
     val errorsCount: Int = 0,
-    val currentLevel: Int = 3
+    val currentLevel: Int = 3,
+    val sessionId: String = "" // v1.3.48
 )
 
 class NumberSearchViewModel(
@@ -38,7 +39,7 @@ class NumberSearchViewModel(
     val uiState: StateFlow<NumberSearchUiState> = _uiState.asStateFlow()
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(level: Int = 3) {
+    fun startNewGame(level: Int = 3, sessionId: String = "") {
         val target = Random.nextInt(10)
         val size = when(level) {
             1 -> 3
@@ -54,6 +55,7 @@ class NumberSearchViewModel(
             grid = grid,
             gridSize = size,
             currentLevel = level,
+            sessionId = sessionId,
             totalTargets = grid.count { it.number == target },
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
@@ -104,6 +106,7 @@ class NumberSearchViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = currentState.sessionId, // v1.3.48
                 activityType = "number_search",
                 score = (100 - (currentState.errorsCount * 5)).coerceAtLeast(0),
                 durationSeconds = duration,

@@ -20,6 +20,7 @@ enum class OrientationType {
 data class OrientationUiState(
     val currentType: String = "orientation_temporal",
     val currentQuestionType: OrientationType = OrientationType.WEEKDAY,
+    val sessionId: String = "", // v1.3.48
     val questionText: String = "",
     val options: List<String> = emptyList(),
     val correctAnswer: String = "",
@@ -40,13 +41,14 @@ class OrientationViewModel(
     val uiState: StateFlow<OrientationUiState> = _uiState.asStateFlow()
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(type: String, level: Int = 1) {
+    fun startNewGame(type: String, level: Int = 1, sessionId: String = "") {
         // Ignoramos el reloj real para evitar bloqueos (v1.3.38)
         val safeStartTime = 1724310000000L 
 
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = safeStartTime,
             isCompleted = false,
             errorsCount = 0,
@@ -199,6 +201,7 @@ class OrientationViewModel(
                 professionalId = professionalId,
                 appointmentId = appointmentId,
                 activityType = state.currentType,
+                sessionId = state.sessionId, // v1.3.48
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,
                 errorsCount = state.errorsCount,

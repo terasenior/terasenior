@@ -27,7 +27,8 @@ data class ColorIdentificationUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class ColorIdentificationViewModel(
@@ -53,7 +54,7 @@ class ColorIdentificationViewModel(
     )
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numOptions = when (level) {
             1 -> 2
             2 -> 3
@@ -71,6 +72,7 @@ class ColorIdentificationViewModel(
             targetColor = target,
             options = options,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -106,6 +108,7 @@ class ColorIdentificationViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "perception_color_identification",
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

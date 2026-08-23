@@ -30,7 +30,8 @@ data class PerceptionUiState(
     val startTimeMs: Long = 0,
     val errorsCount: Int = 0,
     val currentStep: Int = 0,
-    val totalSteps: Int = 3
+    val totalSteps: Int = 3,
+    val sessionId: String = "" // v1.3.48
 )
 
 sealed interface PerceptionStimulus {
@@ -85,10 +86,11 @@ class PerceptionViewModel(
         null
     )
 
-    fun startNewGame(type: PerceptionType, level: Int = 1) {
+    fun startNewGame(type: PerceptionType, level: Int = 1, sessionId: String = "") {
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
@@ -179,6 +181,7 @@ class PerceptionViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = activityType,
                 score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
                 durationSeconds = duration,

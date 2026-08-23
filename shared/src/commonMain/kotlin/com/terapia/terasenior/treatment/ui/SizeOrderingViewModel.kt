@@ -30,7 +30,8 @@ data class SizeOrderingUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class SizeOrderingViewModel(
@@ -48,7 +49,7 @@ class SizeOrderingViewModel(
     )
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numItems = when (level) {
             1 -> 3
             2 -> 3
@@ -69,6 +70,7 @@ class SizeOrderingViewModel(
         _uiState.value = SizeOrderingUiState(
             items = items,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -114,6 +116,7 @@ class SizeOrderingViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "perception_size_ordering",
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

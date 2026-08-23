@@ -28,7 +28,8 @@ data class NamingObjectsUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class NamingObjectsViewModel(
@@ -39,7 +40,7 @@ class NamingObjectsViewModel(
     val uiState: StateFlow<NamingObjectsUiState> = _uiState.asStateFlow()
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numOptions = when (level) {
             1 -> 2
             2 -> 3
@@ -59,6 +60,7 @@ class NamingObjectsViewModel(
             targetItem = target,
             options = allOptions,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -94,6 +96,7 @@ class NamingObjectsViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "language_naming_objects",
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

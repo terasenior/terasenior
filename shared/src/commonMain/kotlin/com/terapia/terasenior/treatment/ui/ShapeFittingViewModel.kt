@@ -33,7 +33,8 @@ data class ShapeFittingUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class ShapeFittingViewModel(
@@ -53,7 +54,7 @@ class ShapeFittingViewModel(
     )
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numPieces = when (level) {
             1 -> 1
             2 -> 2
@@ -74,6 +75,7 @@ class ShapeFittingViewModel(
         _uiState.value = ShapeFittingUiState(
             pieces = pieces,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -137,6 +139,7 @@ class ShapeFittingViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = finalState.sessionId, // v1.3.48
                 activityType = "perception_shape_fitting",
                 score = (100 - (finalState.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

@@ -32,7 +32,8 @@ data class ColorShapeSequenceUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class ColorShapeSequenceViewModel(
@@ -57,7 +58,7 @@ class ColorShapeSequenceViewModel(
     )
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(level: Int = 1) {
+    fun startNewGame(level: Int = 1, sessionId: String = "") {
         val patternSize = when (level) {
             1 -> 2 // ABAB
             2 -> 2 // ABAB but longer sequence
@@ -100,6 +101,7 @@ class ColorShapeSequenceViewModel(
             targetItem = target,
             options = options.shuffled(),
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -135,6 +137,7 @@ class ColorShapeSequenceViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "executive_color_shape_sequence",
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

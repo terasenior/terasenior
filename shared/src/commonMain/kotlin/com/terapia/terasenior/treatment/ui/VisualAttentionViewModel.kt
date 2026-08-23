@@ -42,7 +42,8 @@ data class VisualAttentionUiState(
     val isCountingPhase: Boolean = false,
     val numericOptions: List<Int> = emptyList(),
     val correctCount: Int = 0,
-    val expectedNextValue: Int = 1
+    val expectedNextValue: Int = 1,
+    val sessionId: String = "" // v1.3.48
 )
 
 class VisualAttentionViewModel(
@@ -83,7 +84,7 @@ class VisualAttentionViewModel(
     private val wordsForLongest = listOf("CASA", "ORDENADOR", "MESA", "ELECTRODOMESTICO", "SOL", "PANTALLA", "RELOJ", "CONSTITUCION")
 
     @OptIn(ExperimentalTime::class)
-    fun startNewGame(variation: String, level: Int = 1) {
+    fun startNewGame(variation: String, level: Int = 1, sessionId: String = "") {
         val gridSize = when (level) {
             1 -> 3
             2 -> 4
@@ -360,6 +361,7 @@ class VisualAttentionViewModel(
             },
             totalTargets = totalTargets,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = Clock.System.now().toEpochMilliseconds(),
             correctCount = correctCount,
             numericOptions = numericOptions,
@@ -511,6 +513,7 @@ class VisualAttentionViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = state.variation,
                 score = (100 - (state.errorsCount * 5)).coerceAtLeast(0),
                 durationSeconds = duration,

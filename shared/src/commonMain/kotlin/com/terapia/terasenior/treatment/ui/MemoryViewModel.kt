@@ -16,6 +16,7 @@ import kotlinx.datetime.Instant
 
 data class MemoryUiState(
     val currentType: String = "memory_cultural",
+    val sessionId: String = "", // v1.3.48
     val questionText: String = "",
     val options: List<String> = emptyList(),
     val correctAnswer: String = "",
@@ -36,11 +37,12 @@ class MemoryViewModel(
     val uiState: StateFlow<MemoryUiState> = _uiState.asStateFlow()
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(type: String, level: Int = 1) {
+    fun startNewGame(type: String, level: Int = 1, sessionId: String = "") {
         // v1.3.45: Carga inmediata y blindaje total
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = 1724310000000L, // Fixed time to avoid any clock issues
             isCompleted = false,
             errorsCount = 0,
@@ -123,6 +125,7 @@ class MemoryViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = state.currentType,
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,

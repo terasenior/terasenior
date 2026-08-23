@@ -21,7 +21,8 @@ data class CalculationUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 3,
     val errorsCount: Int = 0,
-    val startTimeMs: Long = 0
+    val startTimeMs: Long = 0,
+    val sessionId: String = "" // v1.3.48
 )
 
 class CalculationViewModel(
@@ -32,7 +33,7 @@ class CalculationViewModel(
     val uiState: StateFlow<CalculationUiState> = _uiState.asStateFlow()
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    fun startNewGame(level: Int = 3) {
+    fun startNewGame(level: Int = 3, sessionId: String = "") {
         val (opText, answer) = generateOperation(level)
         
         // Generar distractores cercanos a la respuesta
@@ -48,6 +49,7 @@ class CalculationViewModel(
             correctAnswer = answer,
             options = options.toList().shuffled(),
             currentLevel = level,
+            sessionId = sessionId,
             startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
         )
     }
@@ -116,6 +118,7 @@ class CalculationViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
+                sessionId = state.sessionId, // v1.3.48
                 activityType = "calculation_simple",
                 score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
                 durationSeconds = duration,
