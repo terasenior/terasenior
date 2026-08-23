@@ -24,5 +24,9 @@ data class TherapySession(
     val participationLevel: String? = null,
     val fatigueLevel: String? = null,
     val therapistNotes: String? = null,
-    val valuation: Int = 5
+    val valuation: Int = 5,
+    // Estadísticas Resumen (v1.3.46)
+    val totalHits: Int = 0,
+    val totalErrors: Int = 0,
+    val totalDurationSeconds: Int = 0
 )

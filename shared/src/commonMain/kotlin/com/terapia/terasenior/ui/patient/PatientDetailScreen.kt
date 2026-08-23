@@ -61,7 +61,7 @@ fun PatientDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "v1.3.45",
+                                text = "v1.3.46",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
@@ -168,7 +168,7 @@ fun PatientHeader(patient: Patient, onEditClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(patient.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("v1.3.45 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text("v1.3.46 • ID: ${patient.id.take(8)}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
         }
         IconButton(onClick = onEditClick) {
@@ -439,7 +439,7 @@ private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.ther
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Datos de la sesión
+            // Datos de la sesión (v1.3.46)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Participación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
@@ -448,6 +448,16 @@ private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.ther
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Fatiga", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Text(session.fatigueLevel ?: "N/A", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Rendimiento", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text("${session.totalHits} ac. / ${session.totalErrors} err.", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    val mins = session.totalDurationSeconds / 60
+                    val secs = session.totalDurationSeconds % 60
+                    Text("Tiempo", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text("${mins}m ${secs}s", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 }
             }
 

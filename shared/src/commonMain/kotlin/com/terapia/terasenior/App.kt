@@ -51,7 +51,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.45 - Memory Stability Update)
+// Terasenior App Entry Point (v1.3.46 - Performance Stats & History Update)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
@@ -269,7 +269,8 @@ fun App() {
                             )
                             Screen.SESSION_RUNNER -> {
                                 val sessionId = activeSessionId ?: ""
-                                val runnerViewModel = remember(sessionId) { SessionRunnerViewModel(sessionId, therapyRepo, SupabaseAppointmentRepository()) }
+                                val resultsRepo = remember { SupabaseResultsRepository() }
+                                val runnerViewModel = remember(sessionId) { SessionRunnerViewModel(sessionId, therapyRepo, SupabaseAppointmentRepository(), resultsRepo) }
                                 SessionRunnerScreen(viewModel = runnerViewModel, onFinished = { currentScreen = Screen.THERAPY_DASHBOARD })
                             }
                             Screen.PATIENTS -> {

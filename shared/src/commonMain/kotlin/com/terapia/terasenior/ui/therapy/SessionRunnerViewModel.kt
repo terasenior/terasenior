@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.therapy.*
+import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
+import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +29,12 @@ sealed interface SessionRunnerUiState {
         val nextIndex: Int,
         val isFirst: Boolean = false
     ) : SessionRunnerUiState
-    data class Summary(val session: TherapySession) : SessionRunnerUiState
+    data class Summary(
+        val session: TherapySession,
+        val hits: Int,
+        val errors: Int,
+        val durationSeconds: Int
+    ) : SessionRunnerUiState
     data object Finished : SessionRunnerUiState
     data class Error(val message: String) : SessionRunnerUiState
 }
@@ -38,7 +45,8 @@ sealed interface SessionRunnerUiState {
 class SessionRunnerViewModel(
     private val sessionId: String,
     private val repository: TherapySessionRepository,
-    private val agendaRepository: AppointmentRepository
+    private val agendaRepository: AppointmentRepository,
+    private val resultsRepository: ResultsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SessionRunnerUiState>(SessionRunnerUiState.Loading)
@@ -98,8 +106,19 @@ class SessionRunnerViewModel(
                 nextIndex = nextIndex
             )
         } else {
-            // En lugar de cerrar directo, vamos al Summary
-            _uiState.value = SessionRunnerUiState.Summary(state.session)
+            viewModelScope.launch {
+                val results = resultsRepository.getSessionResults(sessionId).getOrDefault(emptyList())
+                val totalHits = results.sumOf { (100 - (it.errorsCount * 10)).coerceAtLeast(0) / 10 } // Simplified hit calculation
+                val totalErrors = results.sumOf { it.errorsCount }
+                val totalDuration = results.sumOf { it.durationSeconds }
+                
+                _uiState.value = SessionRunnerUiState.Summary(
+                    session = state.session,
+                    hits = totalHits,
+                    errors = totalErrors,
+                    durationSeconds = totalDuration
+                )
+            }
         }
     }
 
@@ -151,7 +170,10 @@ class SessionRunnerViewModel(
     fun finishSession(
         participation: String,
         fatigue: String,
-        notes: String
+        notes: String,
+        hits: Int,
+        errors: Int,
+        duration: Int
     ) {
         viewModelScope.launch {
             _uiState.value = SessionRunnerUiState.Loading
@@ -164,7 +186,10 @@ class SessionRunnerViewModel(
                 status = SessionStatus.COMPLETED,
                 participationLevel = participation,
                 fatigueLevel = fatigue,
-                therapistNotes = notes
+                therapistNotes = notes,
+                totalHits = hits,
+                totalErrors = errors,
+                totalDurationSeconds = duration
             )
             
             // 2. Guardar cierre de sesión

@@ -22,6 +22,7 @@ import com.terapia.terasenior.data.repository.results.SupabaseResultsRepository
 import com.terapia.terasenior.domain.model.therapy.TherapySession
 import com.terapia.terasenior.domain.model.therapy.TherapySessionExercise
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import com.terapia.terasenior.treatment.ui.*
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 
@@ -72,7 +73,10 @@ fun SessionRunnerScreen(
             is SessionRunnerUiState.Summary -> {
                 ClinicalValuationView(
                     session = state.session,
-                    onSave = { p, f, n -> viewModel.finishSession(p, f, n) }
+                    hits = state.hits,
+                    errors = state.errors,
+                    durationSeconds = state.durationSeconds,
+                    onSave = { p, f, n -> viewModel.finishSession(p, f, n, state.hits, state.errors, state.durationSeconds) }
                 )
             }
             is SessionRunnerUiState.Finished -> {
@@ -90,11 +94,17 @@ fun SessionRunnerScreen(
 @Composable
 private fun ClinicalValuationView(
     session: TherapySession,
+    hits: Int,
+    errors: Int,
+    durationSeconds: Int,
     onSave: (participation: String, fatigue: String, notes: String) -> Unit
 ) {
     var participation by remember { mutableStateOf("MEDIUM") }
     var fatigue by remember { mutableStateOf("NONE") }
     var notes by remember { mutableStateOf("") }
+
+    val minutes = durationSeconds / 60
+    val seconds = durationSeconds % 60
 
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()),
@@ -109,6 +119,15 @@ private fun ClinicalValuationView(
         Card(modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp), shape = RoundedCornerShape(24.dp)) {
             Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 
+                // Estadísticas de Rendimiento (v1.3.46)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    StatBox(label = "Aciertos", value = hits.toString(), color = Color(0xFF2E7D32))
+                    StatBox(label = "Errores", value = errors.toString(), color = MaterialTheme.colorScheme.error)
+                    StatBox(label = "Tiempo", value = "${minutes}m ${seconds}s", color = MaterialTheme.colorScheme.primary)
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
                 Column {
                     Text("Nivel de Participación", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
@@ -336,7 +355,7 @@ private fun TransitionView(
     LaunchedEffect(Unit) { speechManager.speak("$message $subMessage") }
     Column(modifier = Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Surface(color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)) {
-            Text("v1.3.45", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+            Text("v1.3.46", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(message, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -348,6 +367,14 @@ private fun TransitionView(
             Spacer(modifier = Modifier.width(12.dp))
             Text("Empezar ahora", fontSize = 20.sp)
         }
+    }
+}
+
+@Composable
+private fun StatBox(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = value, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black), color = color)
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
     }
 }
 

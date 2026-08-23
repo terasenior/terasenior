@@ -28,6 +28,13 @@ class SupabaseResultsRepository : ResultsRepository {
         })
     }
 
+    override suspend fun getSessionResults(sessionId: String): Result<List<ActivityResult>> = runCatching {
+        supabase.postgrest["activity_results"]
+            .select { filter { eq("session_id", sessionId) } }
+            .decodeList<ActivityResultDto>()
+            .map { it.toDomain() }
+    }
+
     override suspend fun getGlobalStats(entityId: String): Result<Map<String, Any>> {
         // Implementación futura para gráficas agregadas
         return Result.success(emptyMap())
