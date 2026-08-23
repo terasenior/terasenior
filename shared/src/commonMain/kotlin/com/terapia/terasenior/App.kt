@@ -51,7 +51,7 @@ enum class Screen {
     NUMBER_SEARCH, ATTENTION_GAME, LANGUAGE_GAME, SHAPE_FITTING
 }
 
-// Terasenior App Entry Point (v1.3.46 - Performance Stats & History Update)
+// Terasenior App Entry Point (v1.3.47 - Performance Stats Forced Refresh)
 @OptIn(ExperimentalMaterial3Api::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun App() {
