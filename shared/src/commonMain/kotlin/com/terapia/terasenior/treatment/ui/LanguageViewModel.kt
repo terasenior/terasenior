@@ -130,9 +130,14 @@ class LanguageViewModel(
         }
 
         if (isCorrect) {
-            _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
-            if (patientId != null && professionalId != null) {
-                saveResult(patientId, professionalId, appointmentId)
+            _uiState.update { it.copy(isCorrect = true) }
+            viewModelScope.launch {
+                delay(1500)
+                if (patientId != null && professionalId != null) {
+                    saveResult(patientId, professionalId, appointmentId)
+                } else {
+                    _uiState.update { it.copy(isCompleted = true) }
+                }
             }
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
@@ -148,9 +153,14 @@ class LanguageViewModel(
         if (state.isCompleted) return
 
         if (option == state.targetValue) {
-            _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
-            if (patientId != null && professionalId != null) {
-                saveResult(patientId, professionalId, appointmentId)
+            _uiState.update { it.copy(isCorrect = true) }
+            viewModelScope.launch {
+                delay(1500)
+                if (patientId != null && professionalId != null) {
+                    saveResult(patientId, professionalId, appointmentId)
+                } else {
+                    _uiState.update { it.copy(isCompleted = true) }
+                }
             }
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
@@ -183,7 +193,7 @@ class LanguageViewModel(
                 createdAt = ""
             )
             saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            _uiState.update { it.copy(isSaving = false, isCompleted = true) }
         }
     }
 }

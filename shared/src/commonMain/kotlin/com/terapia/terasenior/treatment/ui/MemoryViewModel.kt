@@ -96,9 +96,10 @@ class MemoryViewModel(
             _uiState.update { it.copy(isCorrect = true) }
             viewModelScope.launch {
                 delay(1500)
-                _uiState.update { it.copy(isCompleted = true) }
                 if (patientId != null && professionalId != null) {
                     saveResult(patientId, professionalId, appointmentId)
+                } else {
+                    _uiState.update { it.copy(isCompleted = true) }
                 }
             }
         } else {
@@ -134,7 +135,7 @@ class MemoryViewModel(
                 createdAt = ""
             )
             saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            _uiState.update { it.copy(isSaving = false, isCompleted = true) }
         }
     }
 }

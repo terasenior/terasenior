@@ -75,12 +75,15 @@ class NumberSearchViewModel(
             
             _uiState.update { it.copy(
                 grid = newGrid, 
-                foundCount = newFoundCount, 
-                isCompleted = completed 
+                foundCount = newFoundCount
             ) }
 
-            if (completed && patientId != null && professionalId != null) {
-                saveResult(patientId, professionalId, appointmentId)
+            if (completed) {
+                if (patientId != null && professionalId != null) {
+                    saveResult(patientId, professionalId, appointmentId)
+                } else {
+                    _uiState.update { it.copy(isCompleted = true) }
+                }
             }
         } else {
             val newGrid = currentState.grid.toMutableList()
@@ -116,7 +119,7 @@ class NumberSearchViewModel(
             )
 
             saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            _uiState.update { it.copy(isSaving = false, isCompleted = true) }
         }
     }
 
