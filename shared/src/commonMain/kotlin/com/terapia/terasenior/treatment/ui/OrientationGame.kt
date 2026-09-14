@@ -44,7 +44,11 @@ fun OrientationGame(
     SideEffect {
         if (state.isCompleted && !completionDispatched) {
             completionDispatched = true
-            navigationStatus = if (onCompleted()) "avance aceptado" else "avance rechazado"
+            navigationStatus = try {
+                if (onCompleted()) "avance aceptado" else "avance rechazado"
+            } catch (error: Throwable) {
+                "error: ${error.message ?: "excepción sin detalle"}"
+            }
         }
     }
 

@@ -160,15 +160,25 @@ class SessionRunnerViewModel(
             pendingDuration = newAccumulatedDuration
             pendingOutcomes = newOutcomes
         } else {
-            val areaSummaries = newOutcomes.groupBy { it.area }.map { (area, results) ->
-                CognitiveAreaSummary(
-                    area = area,
-                    hits = results.sumOf { it.hits },
-                    errors = results.sumOf { it.errors },
-                    durationSeconds = results.sumOf { it.durationSeconds },
-                    activities = results.size
-                )
-            }.sortedBy { it.area }
+            val areaSummaries = try {
+                newOutcomes.groupBy { it.area }.map { (area, results) ->
+                    CognitiveAreaSummary(
+                        area = area,
+                        hits = results.sumOf { it.hits },
+                        errors = results.sumOf { it.errors },
+                        durationSeconds = results.sumOf { it.durationSeconds },
+                        activities = results.size
+                    )
+                }.sortedBy { it.area }
+            } catch (_: Throwable) {
+                listOf(CognitiveAreaSummary(
+                    area = "Resultados de la sesión",
+                    hits = newAccumulatedHits,
+                    errors = newAccumulatedErrors,
+                    durationSeconds = newAccumulatedDuration,
+                    activities = newOutcomes.size
+                ))
+            }
 
             _uiState.value = SessionRunnerUiState.Summary(
                 session = state.session,
