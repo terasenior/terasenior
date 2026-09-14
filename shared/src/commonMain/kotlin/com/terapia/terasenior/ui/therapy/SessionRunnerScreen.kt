@@ -212,20 +212,19 @@ private fun ExerciseRouter(
             val gameViewModel = remember(exercise.id) { OrientationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { 
-                if (gameState.isCompleted) {
-                    val nowMs = Clock.System.now().toEpochMilliseconds()
-                    val duration = ((nowMs - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
-                    val hits = if (gameState.errorsCount == 0) 1 else 0
-                    onExerciseCompleted(hits, gameState.errorsCount, duration)
-                }
-            }
             OrientationGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
                 professionalId = professionalId, 
                 appointmentId = appointmentId, 
-                onBack = onAbort
+                onBack = onAbort,
+                onCompleted = {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000)
+                        .toInt()
+                        .coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
             )
         }
         exercise.exerciseType == "number_search" -> {

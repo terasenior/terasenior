@@ -27,10 +27,12 @@ fun OrientationGame(
     patientId: String?,
     professionalId: String?,
     appointmentId: String?,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onCompleted: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val speechManager = remember { SpeechManager() }
+    var isAdvancing by remember(state.isCompleted) { mutableStateOf(false) }
 
     LaunchedEffect(state.questionText) {
         if (state.questionText.isNotEmpty()) {
@@ -145,11 +147,15 @@ fun OrientationGame(
 
             if (state.isCompleted) {
                 Button(
-                    onClick = onBack,
+                    onClick = {
+                        isAdvancing = true
+                        onCompleted()
+                    },
                     modifier = Modifier.fillMaxWidth().height(64.dp).widthIn(max = 400.dp),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    enabled = !isAdvancing
                 ) {
-                    Text("Volver al Plan", fontSize = 20.sp)
+                    Text("Continuar", fontSize = 20.sp)
                 }
             }
             
