@@ -11,6 +11,12 @@ import com.terapia.terasenior.repository.AuthRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+data class PasswordChangeState(
+    val isSubmitting: Boolean = false,
+    val succeeded: Boolean = false,
+    val error: String? = null
+)
+
 class AdminUsersViewModel(
     private val getUserProfilesUseCase: GetUserProfilesUseCase,
     private val getEntitiesUseCase: GetEntitiesUseCase,
@@ -24,6 +30,8 @@ class AdminUsersViewModel(
     private val _isLoading = MutableStateFlow(true)
     private val _entities = MutableStateFlow<List<Entity>>(emptyList())
     private val _errorMessage = MutableStateFlow<String?>(null)
+    private val _passwordChangeState = MutableStateFlow(PasswordChangeState())
+    val passwordChangeState = _passwordChangeState.asStateFlow()
 
     val uiState: StateFlow<AdminUsersUiState> = combine(
         _allUsers, 
@@ -190,11 +198,19 @@ class AdminUsersViewModel(
         }
     }
 
-    fun changePassword(newPassword: String) {
+    fun resetPasswordChangeState() {
+        if (!_passwordChangeState.value.isSubmitting) {
+            _passwordChangeState.value = PasswordChangeState()
+        }
+    }
+
+    fun changePassword(targetUserId: String, newPassword: String) {
+        if (_passwordChangeState.value.isSubmitting || _passwordChangeState.value.succeeded) return
+        _passwordChangeState.value = PasswordChangeState(isSubmitting = true)
         viewModelScope.launch {
-            authRepository.changePassword(newPassword)
-                .onSuccess { /* Éxito */ }
-                .onFailure { error -> _errorMessage.value = error.message }
+            authRepository.adminChangePassword(targetUserId, newPassword)
+                .onSuccess { _passwordChangeState.value = PasswordChangeState(succeeded = true) }
+                .onFailure { error -> _passwordChangeState.value = PasswordChangeState(error = error.message) }
         }
     }
 

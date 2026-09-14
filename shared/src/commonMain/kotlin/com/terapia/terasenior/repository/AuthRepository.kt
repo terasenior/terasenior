@@ -10,8 +10,20 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.datetime.*
 import kotlinx.datetime.Clock as DateClock
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import com.terapia.terasenior.data.remote.admin.*
+import com.terapia.terasenior.data.repository.admin.SupabaseUserProfileRepository
+import com.terapia.terasenior.domain.model.admin.UserProfile
 
-class AuthRepository {
+class AuthRepository(
+    private val adminRemote: AdminRemoteDataSource = EdgeAdminRemoteDataSource()
+) {
 
     suspend fun login(userEmail: String, userPassword: String): Result<Unit> {
         return runCatching {
@@ -32,60 +44,59 @@ class AuthRepository {
         isActive: Boolean,
         centerName: String? = null
     ): Result<Unit> {
-        return runCatching {
-            // 1. Crear el usuario en Supabase Auth
-            // Usamos signUpWith. Nota: Si la confirmación de email está activa, el usuario no aparecerá como "Confirmado"
-            val authResponse = supabase.auth.signUpWith(Email) {
-                this.email = email
-                this.password = password
+        return adminRemote.createUser(AdminCreateUserRequest(
+            email, password, fullName, role.name, entityId, phone, isActive, centerName
+        )).toCreatedUserResult()
+    }
+
+    suspend fun updateUserProfile(profile: Profile): Result<Unit> =
+        SupabaseUserProfileRepository(adminRemote).updateUserProfile(UserProfile(
+            id = profile.id, email = profile.email, fullName = profile.fullName.orEmpty(),
+            role = profile.role, entityId = profile.entityId, phone = profile.phone,
+            isActive = profile.isActive, centerName = profile.centerName
+        ))
+
+    suspend fun deleteUser(userId: String): Result<Unit> =
+        adminRemote.deleteUser(AdminDeleteUserRequest(userId)).toActionResult()
+
+    suspend fun adminChangePassword(targetUserId: String, newPassword: String): Result<Unit> {
+        // No fallback a auth.updateUser: modificaría la cuenta del administrador.
+        return try {
+            val session = supabase.auth.currentSessionOrNull()
+                ?: return Result.failure(IllegalStateException("Inicia sesión de nuevo."))
+            if (targetUserId.isBlank() || targetUserId == session.user?.id) {
+                return Result.failure(IllegalArgumentException("Selecciona otra cuenta de usuario."))
             }
-
-            val newUserId = authResponse?.id ?: throw Exception("Supabase Auth no devolvió un ID de usuario. Verifica si el email ya existe o si el registro está deshabilitado.")
-
-            // 2. Crear el objeto Profile
-            val newProfile = Profile(
-                id = newUserId,
-                email = email,
-                roleId = role.name,
-                fullName = fullName,
-                entityId = entityId,
-                isActive = isActive,
-                phone = phone,
-                centerName = centerName
-            )
-
-            // 3. Insertar el objeto Profile en la tabla pública
+            val client = HttpClient {
+                followRedirects = false
+                install(HttpTimeout) { requestTimeoutMillis = 30_000 }
+            }
             try {
-                supabase.postgrest["user_profiles"].insert(newProfile)
-            } catch (e: Exception) {
-                throw Exception("Usuario autenticado correctamente (ID: $newUserId) pero falló la creación de su perfil clínico: ${e.message}")
+                val response = client.post("${supabase.supabaseHttpUrl}/functions/v1/admin-change-password") {
+                    bearerAuth(session.accessToken)
+                    header("apikey", supabase.supabaseKey)
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(AdminChangePasswordRequest(targetUserId, newPassword)))
+                }
+                val message = when (response.status.value) {
+                    204 -> null
+                    400, 422 -> "Revisa la contraseña: debe cumplir la política de seguridad del servicio."
+                    401 -> "La sesión ha caducado. Inicia sesión de nuevo."
+                    403 -> "No tienes permiso para cambiar la contraseña de esta cuenta."
+                    404, 503 -> "El cambio administrativo de contraseña no está disponible."
+                    429 -> "Demasiados intentos. Inténtalo más tarde."
+                    else -> "No se pudo confirmar el cambio de contraseña."
+                }
+                if (message == null) Result.success(Unit)
+                else Result.failure(IllegalStateException(message))
+            } finally {
+                client.close()
             }
-        }
-    }
-
-    suspend fun updateUserProfile(profile: Profile): Result<Unit> {
-        return runCatching {
-            supabase.postgrest["user_profiles"].update(profile) {
-                filter { eq("id", profile.id) }
-            }
-        }
-    }
-
-    suspend fun deleteUser(userId: String): Result<Unit> {
-        return runCatching {
-            supabase.postgrest["user_profiles"].delete {
-                filter { eq("id", userId) }
-            }
-        }
-    }
-
-    suspend fun changePassword(newPassword: String): Result<Unit> {
-        return runCatching {
-            // Nota: Supabase permite que el usuario logueado cambie su propia contraseña
-            // Para cambiar la de OTROS, se requiere el Admin SDK (Service Role)
-            supabase.auth.updateUser {
-                password = newPassword
-            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // No propagar respuestas, cabeceras o excepciones que puedan contener credenciales.
+            Result.failure(IllegalStateException("No se pudo confirmar el cambio. Comprueba la conexión antes de reintentarlo."))
         }
     }
 
@@ -124,10 +135,8 @@ class AuthRepository {
                 throw Exception("Tu cuenta de usuario está desactivada. Contacta con tu administrador.")
             }
 
-            runCatching { supabase.postgrest.rpc("check_and_deactivate_expired_licenses") }
-
             if (profile.role == UserRole.SUPER_ADMIN) {
-                recordLogin(profile.id)
+                recordLogin()
                 return@runCatching
             }
 
@@ -147,13 +156,13 @@ class AuthRepository {
                 throw Exception(reason)
             }
 
-            recordLogin(profile.id)
+            recordLogin()
         }
     }
 
-    private suspend fun recordLogin(userId: String) {
+    private suspend fun recordLogin() {
         runCatching {
-            supabase.postgrest.rpc("record_user_login", mapOf("p_user_id" to userId))
+            supabase.postgrest.rpc("record_user_login")
         }
     }
 }

@@ -29,6 +29,7 @@ fun AdminUsersScreen(
     viewModel: AdminUsersViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val passwordChangeState by viewModel.passwordChangeState.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
     var userToEdit by remember { mutableStateOf<UserProfile?>(null) }
     var userToDelete by remember { mutableStateOf<UserProfile?>(null) }
@@ -140,7 +141,10 @@ fun AdminUsersScreen(
                                     entityName = state.entities.find { it.id == user.entityId }?.name,
                                     onEdit = { userToEdit = user },
                                     onDelete = { userToDelete = user },
-                                    onChangePassword = { userToChangePassword = user }
+                                    onChangePassword = {
+                                        viewModel.resetPasswordChangeState()
+                                        userToChangePassword = user
+                                    }
                                 )
                             }
                         }
@@ -197,10 +201,15 @@ fun AdminUsersScreen(
         userToChangePassword?.let { user ->
             ChangePasswordDialog(
                 userEmail = user.email,
-                onDismiss = { userToChangePassword = null },
+                state = passwordChangeState,
+                onDismiss = {
+                    if (!passwordChangeState.isSubmitting) {
+                        userToChangePassword = null
+                        viewModel.resetPasswordChangeState()
+                    }
+                },
                 onConfirm = { newPass ->
-                    viewModel.changePassword(newPass)
-                    userToChangePassword = null
+                    viewModel.changePassword(user.id, newPass)
                 }
             )
         }

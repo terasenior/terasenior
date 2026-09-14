@@ -120,7 +120,12 @@ fun EditEntityDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val finalExpiry = if (licenseExpiry.isBlank()) null else licenseExpiry
+                    // Preserve the original timestamp when the displayed date was not edited.
+                    val finalExpiry = if (licenseExpiry == (entity.licenseExpiresAt?.take(10) ?: "")) {
+                        entity.licenseExpiresAt
+                    } else {
+                        licenseExpiry.ifBlank { null }
+                    }
                     val finalLogo = if (logoUrl.isBlank()) null else logoUrl
                     onConfirm(entity.copy(
                         name = name, 

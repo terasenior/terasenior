@@ -10,7 +10,7 @@ data class EntityDto(
     @SerialName("name") val name: String,
     @SerialName("cif") val cif: String,
     @SerialName("address") val address: String? = null,
-    @SerialName("status") val status: String = "active",
+    @SerialName("status") val status: String = "ACTIVE",
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("license_expires_at") val licenseExpiresAt: String? = null,
     @SerialName("logo_url") val logoUrl: String? = null
@@ -21,7 +21,7 @@ fun EntityDto.toDomain() = Entity(
     name = name,
     cif = cif,
     address = address,
-    status = status,
+    status = status.uppercase(),
     createdAt = createdAt.orEmpty(),
     licenseExpiresAt = licenseExpiresAt,
     logoUrl = logoUrl
@@ -32,7 +32,7 @@ fun Entity.toData() = EntityDto(
     name = name,
     cif = cif,
     address = address,
-    status = status,
+    status = status.uppercase(),
     licenseExpiresAt = licenseExpiresAt,
     logoUrl = logoUrl
 )

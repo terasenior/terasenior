@@ -1,7 +1,7 @@
 package com.terapia.terasenior.data.repository.admin
 
 import com.terapia.terasenior.data.model.admin.EntityDto
-import com.terapia.terasenior.data.model.admin.toData
+import com.terapia.terasenior.data.remote.admin.*
 import com.terapia.terasenior.data.model.admin.toDomain
 import com.terapia.terasenior.domain.model.admin.Entity
 import com.terapia.terasenior.domain.repository.admin.EntityRepository
@@ -9,7 +9,9 @@ import com.terapia.terasenior.supabase
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 
-class SupabaseEntityRepository : EntityRepository {
+class SupabaseEntityRepository(
+    private val adminRemote: AdminRemoteDataSource = EdgeAdminRemoteDataSource()
+) : EntityRepository {
 
     override suspend fun getEntities(): Result<List<Entity>> = runCatching {
         supabase.postgrest["entities"]
@@ -29,31 +31,37 @@ class SupabaseEntityRepository : EntityRepository {
             ?.toDomain()
     }
 
-    override suspend fun createEntity(entity: Entity): Result<Unit> = runCatching {
-        supabase.postgrest["entities"].insert(entity.toData())
+    override suspend fun createEntity(entity: Entity): Result<Unit> {
+        if (entity.status.uppercase() != "ACTIVE") {
+            return Result.failure(AdminBackendUnavailableException("crear centro con estado personalizado"))
+        }
+        return adminRemote.createEntity(AdminCreateEntityRequest(
+            entity.name, entity.cif, entity.address, entity.licenseExpiresAt, entity.logoUrl
+        )).toCreatedEntityResult()
     }
 
     override suspend fun updateEntity(entity: Entity): Result<Unit> = runCatching {
-        // 1. Actualizar la entidad
-        supabase.postgrest["entities"].update(entity.toData()) {
-            filter {
-                eq("id", entity.id)
-            }
+        val current = getEntityById(entity.id).getOrThrow()
+            ?: error("No se pudo leer el centro para comprobar los campos editados.")
+        if (hasPrivilegedEntityChanges(current, entity)) {
+            // Do not partially save a mixed form, or split it into non-atomic writes.
+            throw AdminBackendUnavailableException("editar estado o licencia del centro")
         }
-
-        // 2. Si se desactiva, desactivar usuarios en cascada
-        if (entity.status == "INACTIVE") {
-            deactivateUsers(entity.id)
-        }
+        updateOrdinaryEntity(entity.id, EntityOrdinaryUpdate(
+            entity.name, entity.cif, entity.address, entity.logoUrl
+        )).getOrThrow()
     }
 
-    override suspend fun deleteEntity(entityId: String): Result<Unit> = runCatching {
-        supabase.postgrest["entities"].delete {
-            filter {
-                eq("id", entityId)
-            }
-        }
+    suspend fun updateOrdinaryEntity(entityId: String, payload: EntityOrdinaryUpdate): Result<Unit> = runCatching {
+        val updated = supabase.postgrest["entities"].update(payload.toPostgrestPayload()) {
+            filter { eq("id", entityId) }
+            select(Columns.list("id"))
+        }.decodeList<kotlinx.serialization.json.JsonObject>()
+        check(updated.size == 1) { "No se pudo actualizar el centro: comprueba los permisos de edición." }
     }
+
+    override suspend fun deleteEntity(entityId: String): Result<Unit> =
+        adminRemote.deleteEntity(AdminDeleteEntityRequest(entityId)).toActionResult()
 
     override suspend fun hasDependentData(entityId: String): Result<Boolean> = runCatching {
         // Comprobar usuarios
@@ -72,22 +80,7 @@ class SupabaseEntityRepository : EntityRepository {
         false
     }
 
-    override suspend fun deactivateEntityWithUsers(entityId: String): Result<Unit> = runCatching {
-        // Marcar entidad como Inactiva
-        supabase.postgrest["entities"].update(mapOf("status" to "INACTIVE")) {
-            filter {
-                eq("id", entityId)
-            }
-        }
-        // Desactivar usuarios
-        deactivateUsers(entityId)
-    }
-
-    private suspend fun deactivateUsers(entityId: String) {
-        supabase.postgrest["user_profiles"].update(mapOf("is_active" to false)) {
-            filter {
-                eq("entity_id", entityId)
-            }
-        }
-    }
+    // The server must own the state transition and any associated user deactivation.
+    override suspend fun deactivateEntityWithUsers(entityId: String): Result<Unit> =
+        adminRemote.setEntityStatus(AdminSetEntityStatusRequest(entityId, "INACTIVE")).toActionResult()
 }
