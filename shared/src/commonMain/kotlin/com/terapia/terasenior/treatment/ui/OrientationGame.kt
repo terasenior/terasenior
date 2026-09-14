@@ -41,7 +41,7 @@ fun OrientationGame(
         }
     }
 
-    LaunchedEffect(state.isCompleted) {
+    SideEffect {
         if (state.isCompleted && !completionDispatched) {
             completionDispatched = true
             navigationStatus = if (onCompleted()) "avance aceptado" else "avance rechazado"
