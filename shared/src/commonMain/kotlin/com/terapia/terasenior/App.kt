@@ -100,12 +100,12 @@ fun App() {
         } else {
             val userRole = currentUserProfile?.role
             val canAdmin = userRole == UserRole.SUPER_ADMIN || userRole == UserRole.ADMIN_CENTRO
-            // La animación de cierre del cajón es suspendida. Navegar después de
-            // cerrarlo evita dejar su capa modal sobre la pantalla de destino.
-            val navigateFromDrawer: (Screen) -> Unit = { destination ->
+            // La navegación no puede depender de la animación del cajón: en Web
+            // esa animación puede quedar pendiente y bloquear el botón Volver.
+            val navigateTo: (Screen) -> Unit = { destination ->
+                currentScreen = destination
                 scope.launch {
                     drawerState.close()
-                    currentScreen = destination
                 }
             }
 
@@ -127,7 +127,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Panel de Terapia") },
                             selected = currentScreen == Screen.THERAPY_DASHBOARD,
-                            onClick = { navigateFromDrawer(Screen.THERAPY_DASHBOARD) },
+                            onClick = { navigateTo(Screen.THERAPY_DASHBOARD) },
                             icon = { Icon(Icons.Default.Psychology, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -135,7 +135,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Agenda") },
                             selected = currentScreen == Screen.AGENDA || currentScreen == Screen.APPOINTMENT_DETAIL,
-                            onClick = { navigateFromDrawer(Screen.AGENDA) },
+                            onClick = { navigateTo(Screen.AGENDA) },
                             icon = { Icon(Icons.Default.DateRange, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -143,7 +143,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Pacientes") },
                             selected = currentScreen == Screen.PATIENTS || currentScreen == Screen.PATIENT_DETAIL,
-                            onClick = { navigateFromDrawer(Screen.PATIENTS) },
+                            onClick = { navigateTo(Screen.PATIENTS) },
                             icon = { Icon(Icons.Default.People, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -151,7 +151,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Informes") },
                             selected = currentScreen == Screen.REPORTS,
-                            onClick = { navigateFromDrawer(Screen.REPORTS) },
+                            onClick = { navigateTo(Screen.REPORTS) },
                             icon = { Icon(Icons.Default.Description, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -163,14 +163,14 @@ fun App() {
                             NavigationDrawerItem(
                                 label = { Text("Gestión Centros") },
                                 selected = currentScreen == Screen.ADMIN_ENTITIES,
-                                onClick = { navigateFromDrawer(Screen.ADMIN_ENTITIES) },
+                                onClick = { navigateTo(Screen.ADMIN_ENTITIES) },
                                 icon = { Icon(Icons.Default.Business, null) },
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                             )
                             NavigationDrawerItem(
                                 label = { Text("Gestión Usuarios") },
                                 selected = currentScreen == Screen.ADMIN_USERS,
-                                onClick = { navigateFromDrawer(Screen.ADMIN_USERS) },
+                                onClick = { navigateTo(Screen.ADMIN_USERS) },
                                 icon = { Icon(Icons.Default.People, null) },
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                             )
@@ -298,7 +298,7 @@ fun App() {
                                 }
                                 PatientDetailScreen(
                                     viewModel = viewModel,
-                                    onBack = { navigateFromDrawer(Screen.PATIENTS) }
+                                    onBack = { navigateTo(Screen.PATIENTS) }
                                 )
                             }
                             Screen.AGENDA -> {
