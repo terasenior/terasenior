@@ -129,15 +129,19 @@ class SessionRunnerViewModel(
         }
     }
 
-    fun nextExercise(hits: Int = 0, errors: Int = 0, duration: Int = 0) {
-        val state = _uiState.value as? SessionRunnerUiState.Playing ?: return
+    fun nextExercise(hits: Int = 0, errors: Int = 0, duration: Int = 0): Boolean {
+        val state = _uiState.value as? SessionRunnerUiState.Playing ?: return false
+        val currentExercise = state.exercises.getOrNull(state.currentIndex) ?: run {
+            _uiState.value = SessionRunnerUiState.Error("No se pudo identificar la actividad terminada.")
+            return false
+        }
         
         val newAccumulatedHits = state.accumulatedHits + hits
         val newAccumulatedErrors = state.accumulatedErrors + errors
         val newAccumulatedDuration = state.accumulatedDurationSeconds + duration
         val newOutcomes = state.outcomes + ExerciseOutcome(
-            activityType = state.exercises[state.currentIndex].exerciseType,
-            area = cognitiveArea(state.exercises[state.currentIndex].exerciseType),
+            activityType = currentExercise.exerciseType,
+            area = cognitiveArea(currentExercise.exerciseType),
             hits = hits.coerceAtLeast(0),
             errors = errors.coerceAtLeast(0),
             durationSeconds = duration.coerceAtLeast(1)
@@ -182,6 +186,7 @@ class SessionRunnerViewModel(
                 saveMissingPatientResults(state.session, newOutcomes, dbResults.map { it.activityType }.toSet())
             }
         }
+        return true
     }
 
     fun toggleProfessionalPanel() {

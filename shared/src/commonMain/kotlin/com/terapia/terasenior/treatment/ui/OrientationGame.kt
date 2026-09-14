@@ -28,11 +28,12 @@ fun OrientationGame(
     professionalId: String?,
     appointmentId: String?,
     onBack: () -> Unit,
-    onCompleted: () -> Unit
+    onCompleted: () -> Boolean
 ) {
     val state by viewModel.uiState.collectAsState()
     val speechManager = remember { SpeechManager() }
     var completionDispatched by remember(state.currentType, state.startTimeMs) { mutableStateOf(false) }
+    var navigationStatus by remember(state.currentType, state.startTimeMs) { mutableStateOf("pendiente") }
 
     LaunchedEffect(state.questionText) {
         if (state.questionText.isNotEmpty()) {
@@ -43,7 +44,7 @@ fun OrientationGame(
     LaunchedEffect(state.isCompleted) {
         if (state.isCompleted && !completionDispatched) {
             completionDispatched = true
-            onCompleted()
+            navigationStatus = if (onCompleted()) "avance aceptado" else "avance rechazado"
         }
     }
 
@@ -157,7 +158,7 @@ fun OrientationGame(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Text(
-                    text = "Diagnóstico: ${state.debugInfo.ifBlank { "sin fase" }} · opciones=${state.options.size} · completada=${state.isCompleted} · guardando=${state.isSaving}",
+                    text = "Diagnóstico: ${state.debugInfo.ifBlank { "sin fase" }} · opciones=${state.options.size} · completada=${state.isCompleted} · guardando=${state.isSaving} · navegación=$navigationStatus",
                     modifier = Modifier.padding(10.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

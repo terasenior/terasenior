@@ -201,7 +201,7 @@ private fun ExerciseRouter(
     patientId: String?,
     professionalId: String,
     appointmentId: String?,
-    onExerciseCompleted: (hits: Int, errors: Int, duration: Int) -> Unit,
+    onExerciseCompleted: (hits: Int, errors: Int, duration: Int) -> Boolean,
     onAbort: () -> Unit
 ) {
     val resultsRepo = remember { SupabaseResultsRepository() }
