@@ -11,7 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 enum class OrientationType {
     GENERIC, WEEKDAY, MONTH, YEAR, SEASON, WEATHER
@@ -29,6 +35,7 @@ data class OrientationUiState(
     val isSaving: Boolean = false,
     val currentLevel: Int = 1,
     val startTimeMs: Long = 0,
+    val hitsCount: Int = 0,
     val errorsCount: Int = 0,
     val debugInfo: String = "" // v1.3.38: String simple para evitar fallos de lista en Wasm
 )
@@ -42,17 +49,17 @@ class OrientationViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1, sessionId: String = "") {
-        // Ignoramos el reloj real para evitar bloqueos (v1.3.38)
-        val safeStartTime = 1724310000000L 
+        val now = try { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() } catch(t: Throwable) { 1724310000000L }
 
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = safeStartTime,
+            startTimeMs = now,
             isCompleted = false,
+            hitsCount = 0,
             errorsCount = 0,
-            questionText = "v1.3.38: Iniciando...", 
+            questionText = "Iniciando...", 
             options = emptyList(),
             isCorrect = null,
             debugInfo = "START"
@@ -150,7 +157,7 @@ class OrientationViewModel(
         if (state.isCorrect == true) return
 
         if (selected == state.correctAnswer) {
-            _uiState.update { it.copy(isCorrect = true) }
+            _uiState.update { it.copy(isCorrect = true, hitsCount = it.hitsCount + 1) }
             viewModelScope.launch {
                 delay(1500)
                 if (state.currentType == "orientation_temporal") {
@@ -191,8 +198,8 @@ class OrientationViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = state.startTimeMs + 30000 // Simulamos 30 segundos si el reloj falla
-        val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
+        val now = try { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() } catch(t: Throwable) { state.startTimeMs + 30000 }
+        val duration = ((now - state.startTimeMs) / 1000L).toInt().coerceAtLeast(1)
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
@@ -202,7 +209,7 @@ class OrientationViewModel(
                 professionalId = professionalId,
                 appointmentId = appointmentId,
                 activityType = state.currentType,
-                sessionId = state.sessionId, // v1.3.48
+                sessionId = state.sessionId,
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,
                 errorsCount = state.errorsCount,

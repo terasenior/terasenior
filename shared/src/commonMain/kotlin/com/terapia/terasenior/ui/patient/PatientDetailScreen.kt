@@ -398,6 +398,7 @@ fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDet
 private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.therapy.PatientSessionHistory) {
     val session = history.session
     val date = session.createdAt.take(10)
+    var showResultsDialog by remember(session.id) { mutableStateOf(false) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -443,11 +444,11 @@ private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.ther
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Participación", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text(session.participationLevel ?: "N/A", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(participationLabel(session.participationLevel), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Fatiga", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text(session.fatigueLevel ?: "N/A", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(fatigueLabel(session.fatigueLevel), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Rendimiento", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
@@ -476,43 +477,64 @@ private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.ther
                 }
             }
 
-            if (session.isStandardized && history.groupedByCategory.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text("Resumen por área cognitiva", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                history.groupedByCategory.entries.sortedBy { it.key }.forEach { entry ->
-                    val area = entry.key
-                    val results = entry.value
-                    val hits = results.count { it.errorsCount == 0 }
-                    val errors = results.sumOf { it.errorsCount }
-                    val seconds = results.sumOf { it.durationSeconds }
-                    Text("$area: $hits aciertos · $errors fallos · ${seconds}s", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
             if (history.results.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                Text("Resultados por Ejercicio:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                
-                Column(modifier = Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    history.results.forEach { result ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = ExerciseTranslationUtils.getDisplayName(result.activityType),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = "${result.score}%",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = if (result.score > 70) Color(0xFF2E7D32) else Color.Red
-                            )
-                        }
-                    }
+                OutlinedButton(onClick = { showResultsDialog = true }) {
+                    Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Resultados del ejercicio")
                 }
             }
         }
     }
+
+    if (showResultsDialog) {
+        ExerciseResultsDialog(history = history, onDismiss = { showResultsDialog = false })
+    }
+}
+
+@Composable
+private fun ExerciseResultsDialog(
+    history: com.terapia.terasenior.domain.model.therapy.PatientSessionHistory,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Resultados del ejercicio") },
+        text = {
+            Column(
+                modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                history.groupedByCategory.entries.sortedBy { it.key }.forEach { (area, results) ->
+                    Text(area, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    results.forEach { result ->
+                        val hits = if (result.score > 0) 1 else 0
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(ExerciseTranslationUtils.getDisplayName(result.activityType), modifier = Modifier.weight(1f))
+                            Text("$hits aciertos · ${result.errorsCount} fallos", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+    )
+}
+
+private fun participationLabel(value: String?): String = when (value) {
+    "LOW" -> "Baja"
+    "MEDIUM" -> "Media"
+    "HIGH" -> "Alta"
+    else -> "No registrada"
+}
+
+private fun fatigueLabel(value: String?): String = when (value) {
+    "NONE" -> "Ninguna"
+    "MODERATE" -> "Moderada"
+    "HIGH" -> "Alta"
+    else -> "No registrada"
 }
 
 @Composable

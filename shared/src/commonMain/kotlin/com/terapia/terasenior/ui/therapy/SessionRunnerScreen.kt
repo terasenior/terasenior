@@ -225,8 +225,7 @@ private fun ExerciseRouter(
                 onBack = onAbort,
                 onCompleted = {
                     val duration = safeDurationSeconds(gameState.startTimeMs)
-                    val hits = if (gameState.errorsCount == 0) 1 else 0
-                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                    onExerciseCompleted(gameState.hitsCount, gameState.errorsCount, duration)
                 }
             )
         }
