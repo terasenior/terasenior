@@ -152,6 +152,18 @@ fun OrientationGame(
                 }
             }
 
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Text(
+                    text = "Diagnóstico: ${state.debugInfo.ifBlank { "sin fase" }} · opciones=${state.options.size} · completada=${state.isCompleted} · guardando=${state.isSaving}",
+                    modifier = Modifier.padding(10.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
