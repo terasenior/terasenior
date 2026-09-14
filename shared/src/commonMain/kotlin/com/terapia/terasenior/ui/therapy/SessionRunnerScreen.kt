@@ -209,13 +209,14 @@ private fun ExerciseRouter(
     onExerciseCompleted: (hits: Int, errors: Int, duration: Int) -> Boolean,
     onAbort: () -> Unit
 ) {
+    val challengeLevel = GdsDifficulty.challengeLevel(exercise.level)
     val resultsRepo = remember { SupabaseResultsRepository() }
     val saveUseCase = remember { SaveActivityResultUseCase(resultsRepo) }
 
     when {
         exercise.exerciseType.startsWith("orientation") -> {
             val gameViewModel = remember(exercise.id) { OrientationViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             OrientationGame(
                 viewModel = gameViewModel, 
@@ -231,7 +232,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "number_search" -> {
             val gameViewModel = remember { NumberSearchViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -258,7 +259,7 @@ private fun ExerciseRouter(
             val gameViewModel = remember { VisualAttentionViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 val variation = if (exercise.exerciseType == "attention_spot_odd_one_out") "attention_different" else exercise.exerciseType
-                gameViewModel.startNewGame(variation, exercise.level, sessionId) 
+                gameViewModel.startNewGame(variation, challengeLevel, sessionId) 
             }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
@@ -278,7 +279,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "memory_pairs" -> {
             val gameViewModel = remember { PairsViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -297,7 +298,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType.startsWith("memory") -> {
             val gameViewModel = remember(exercise.id) { MemoryViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -316,7 +317,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "language_word_image" -> {
             val gameViewModel = remember { WordImageViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -335,7 +336,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType in listOf("language_denomination", "language_naming_objects") -> {
             val gameViewModel = remember { NamingObjectsViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -359,7 +360,7 @@ private fun ExerciseRouter(
         ) -> {
             val gameViewModel = remember { LanguageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
-                gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId, exercise.configuration) 
+                gameViewModel.startNewGame(exercise.exerciseType, challengeLevel, sessionId, exercise.configuration) 
             }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
@@ -379,7 +380,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "language_semantic_category" -> {
             val gameViewModel = remember { SemanticCategoryViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -398,7 +399,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "calculation_simple" -> {
             val gameViewModel = remember { CalculationViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -417,7 +418,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "executive_color_shape_sequence" -> {
             val gameViewModel = remember { ColorShapeSequenceViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -440,7 +441,7 @@ private fun ExerciseRouter(
             "executive_abstractions", "executive_intrusos", "executive_math_advanced"
         ) -> {
             val gameViewModel = remember { ExecutiveFunctionsViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -459,7 +460,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "perception_color_identification" -> {
             val gameViewModel = remember { ColorIdentificationViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -478,7 +479,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "perception_size_ordering" -> {
             val gameViewModel = remember { SizeOrderingViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -504,7 +505,7 @@ private fun ExerciseRouter(
                     "perception_body_parts" -> PerceptionType.BODY_PARTS
                     else -> PerceptionType.LATERAL_DOMINANCE
                 }
-                gameViewModel.startNewGame(type, exercise.level, sessionId)
+                gameViewModel.startNewGame(type, challengeLevel, sessionId)
             }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
@@ -524,7 +525,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "perception_shape_fitting" -> {
             val gameViewModel = remember { ShapeFittingViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -543,7 +544,7 @@ private fun ExerciseRouter(
         }
         exercise.exerciseType == "literacy_tracing" -> {
             val gameViewModel = remember { TracingViewModel(saveUseCase) }
-            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
+            LaunchedEffect(exercise.id) { gameViewModel.startNewGame(challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
@@ -570,7 +571,7 @@ private fun ExerciseRouter(
                     "literacy_form_shapes" -> LiteracyVariation.FORM_SHAPES
                     else -> LiteracyVariation.TRACING_BASIC
                 }
-                gameViewModel.startNewGame(variation, exercise.level, sessionId) 
+                gameViewModel.startNewGame(variation, challengeLevel, sessionId) 
             }
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
