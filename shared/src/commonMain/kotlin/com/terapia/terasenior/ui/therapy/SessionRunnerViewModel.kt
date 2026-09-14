@@ -156,26 +156,30 @@ class SessionRunnerViewModel(
             pendingDuration = newAccumulatedDuration
             pendingOutcomes = newOutcomes
         } else {
+            val areaSummaries = newOutcomes.groupBy { it.area }.map { (area, results) ->
+                CognitiveAreaSummary(
+                    area = area,
+                    hits = results.sumOf { it.hits },
+                    errors = results.sumOf { it.errors },
+                    durationSeconds = results.sumOf { it.durationSeconds },
+                    activities = results.size
+                )
+            }.sortedBy { it.area }
+
+            _uiState.value = SessionRunnerUiState.Summary(
+                session = state.session,
+                hits = newAccumulatedHits,
+                errors = newAccumulatedErrors,
+                durationSeconds = newAccumulatedDuration,
+                resultsCount = newOutcomes.size,
+                areaSummaries = areaSummaries
+            )
+
             viewModelScope.launch {
-                _uiState.value = SessionRunnerUiState.Loading
                 delay(2000)
-                
                 val resultsResult = resultsRepository.getSessionResults(sessionId)
                 val dbResults = resultsResult.getOrDefault(emptyList())
                 saveMissingPatientResults(state.session, newOutcomes, dbResults.map { it.activityType }.toSet())
-                val finalResults = resultsRepository.getSessionResults(sessionId).getOrDefault(dbResults)
-                
-                _uiState.value = SessionRunnerUiState.Summary(
-                    session = state.session,
-                    hits = newAccumulatedHits,
-                    errors = newAccumulatedErrors,
-                    durationSeconds = newAccumulatedDuration,
-                    resultsCount = finalResults.size,
-                    areaSummaries = newOutcomes.groupBy { it.area }.map { (area, results) ->
-                        CognitiveAreaSummary(area, results.sumOf { it.hits }, results.sumOf { it.errors },
-                            results.sumOf { it.durationSeconds }, results.size)
-                    }.sortedBy { it.area }
-                )
             }
         }
     }

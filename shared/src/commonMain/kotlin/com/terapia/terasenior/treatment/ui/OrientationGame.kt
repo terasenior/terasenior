@@ -32,11 +32,18 @@ fun OrientationGame(
 ) {
     val state by viewModel.uiState.collectAsState()
     val speechManager = remember { SpeechManager() }
-    var isAdvancing by remember(state.isCompleted) { mutableStateOf(false) }
+    var completionDispatched by remember(state.currentType, state.startTimeMs) { mutableStateOf(false) }
 
     LaunchedEffect(state.questionText) {
         if (state.questionText.isNotEmpty()) {
             speechManager.speak(state.questionText)
+        }
+    }
+
+    LaunchedEffect(state.isCompleted) {
+        if (state.isCompleted && !completionDispatched) {
+            completionDispatched = true
+            onCompleted()
         }
     }
 
@@ -145,20 +152,6 @@ fun OrientationGame(
                 }
             }
 
-            if (state.isCompleted) {
-                Button(
-                    onClick = {
-                        isAdvancing = true
-                        onCompleted()
-                    },
-                    modifier = Modifier.fillMaxWidth().height(64.dp).widthIn(max = 400.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    enabled = !isAdvancing
-                ) {
-                    Text("Continuar", fontSize = 20.sp)
-                }
-            }
-            
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
