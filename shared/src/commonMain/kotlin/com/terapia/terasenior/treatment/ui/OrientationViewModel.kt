@@ -94,7 +94,7 @@ class OrientationViewModel(
             val question = OrientationCatalog.getQuestion(type)
             _uiState.update { it.copy(
                 questionText = question.text,
-                options = question.options,
+                options = GdsDifficulty.choices(question.options, question.correctAnswer, it.currentLevel),
                 correctAnswer = question.correctAnswer,
                 isCorrect = null,
                 debugInfo = it.debugInfo + " -> OK"
@@ -146,7 +146,7 @@ class OrientationViewModel(
         _uiState.update { it.copy(
             currentQuestionType = type,
             questionText = question,
-            options = options,
+            options = GdsDifficulty.choices(options, correct, _uiState.value.currentLevel),
             correctAnswer = correct,
             isCorrect = null
         ) }
@@ -182,16 +182,20 @@ class OrientationViewModel(
     private fun nextLegacyQuestion(patientId: String?, professionalId: String?, appointmentId: String?) {
         val now = LocalDateTime(2026, 8, 22, 10, 0)
         when(_uiState.value.currentQuestionType) {
-            OrientationType.WEEKDAY -> setupLegacyQuestion(OrientationType.MONTH, now)
-            OrientationType.MONTH -> setupLegacyQuestion(OrientationType.YEAR, now)
-            OrientationType.YEAR -> setupLegacyQuestion(OrientationType.SEASON, now)
+            OrientationType.WEEKDAY -> if (_uiState.value.currentLevel <= 1) finishLegacyQuestions(patientId, professionalId, appointmentId) else setupLegacyQuestion(OrientationType.MONTH, now)
+            OrientationType.MONTH -> if (_uiState.value.currentLevel <= 2) finishLegacyQuestions(patientId, professionalId, appointmentId) else setupLegacyQuestion(OrientationType.YEAR, now)
+            OrientationType.YEAR -> if (_uiState.value.currentLevel <= 3) finishLegacyQuestions(patientId, professionalId, appointmentId) else setupLegacyQuestion(OrientationType.SEASON, now)
             OrientationType.SEASON -> {
-                _uiState.update { it.copy(isCompleted = true) }
-                if (patientId != null && professionalId != null) {
-                    saveResult(patientId, professionalId, appointmentId)
-                }
+                finishLegacyQuestions(patientId, professionalId, appointmentId)
             }
             else -> {}
+        }
+    }
+
+    private fun finishLegacyQuestions(patientId: String?, professionalId: String?, appointmentId: String?) {
+        _uiState.update { it.copy(isCompleted = true) }
+        if (patientId != null && professionalId != null) {
+            saveResult(patientId, professionalId, appointmentId)
         }
     }
 
@@ -213,7 +217,7 @@ class OrientationViewModel(
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,
                 errorsCount = state.errorsCount,
-                difficultyLevel = "GDS_3", 
+                difficultyLevel = "CHALLENGE_${state.currentLevel}", 
                 createdAt = ""
             )
             saveResultUseCase(result)
