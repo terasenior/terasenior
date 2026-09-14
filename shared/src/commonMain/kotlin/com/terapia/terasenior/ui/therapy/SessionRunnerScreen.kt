@@ -26,7 +26,12 @@ import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.treatment.ui.*
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Clock.System as DateClockSystem
+
+private fun safeDurationSeconds(startTimeMs: Long): Int = try {
+    ((Clock.System.now().toEpochMilliseconds() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
+} catch (_: Throwable) {
+    30
+}
 
 @Composable
 fun SessionRunnerScreen(
@@ -219,9 +224,7 @@ private fun ExerciseRouter(
                 appointmentId = appointmentId, 
                 onBack = onAbort,
                 onCompleted = {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000)
-                        .toInt()
-                        .coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -233,7 +236,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = gameState.foundCount
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -261,7 +264,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = gameState.foundCount
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -280,7 +283,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = gameState.pairsFound
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -299,7 +302,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -318,7 +321,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -337,7 +340,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -362,7 +365,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -381,7 +384,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -400,7 +403,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -419,7 +422,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -442,7 +445,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -461,7 +464,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -480,7 +483,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -507,7 +510,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -526,7 +529,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -545,7 +548,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
@@ -573,7 +576,7 @@ private fun ExerciseRouter(
             val gameState by gameViewModel.uiState.collectAsState()
             LaunchedEffect(gameState.isCompleted) { 
                 if (gameState.isCompleted) {
-                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val duration = safeDurationSeconds(gameState.startTimeMs)
                     val hits = if (gameState.errorsCount == 0) 1 else 0
                     onExerciseCompleted(hits, gameState.errorsCount, duration)
                 }
