@@ -16,6 +16,7 @@ data class TherapySession(
     val patientId: String?,
     val appointmentId: String?,
     val mode: SessionMode,
+    val isStandardized: Boolean = false,
     val status: SessionStatus,
     val startedAt: String?,
     val finishedAt: String?,

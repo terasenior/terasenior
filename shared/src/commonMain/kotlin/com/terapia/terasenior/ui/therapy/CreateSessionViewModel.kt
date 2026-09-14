@@ -465,12 +465,13 @@ class CreateSessionViewModel(
             
             val session = TherapySession(
                 id = "",
-                title = "Sesión Combinada",
+                title = if (state.isStandardized) "Sesión Estándar" else "Sesión Combinada",
                 description = "Intervención de estimulación cognitiva",
                 therapistId = therapistId,
                 patientId = state.selectedPatient?.id,
                 appointmentId = state.selectedAppointmentId,
                 mode = state.mode ?: SessionMode.WITHOUT_PATIENT,
+                isStandardized = state.isStandardized,
                 status = SessionStatus.READY,
                 startedAt = null,
                 finishedAt = null,

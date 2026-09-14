@@ -1,3 +1,4 @@
+// v1.3.51 - Absolute FQN no imports
 package com.terapia.terasenior.ui.therapy
 
 import androidx.compose.animation.*
@@ -22,9 +23,10 @@ import com.terapia.terasenior.data.repository.results.SupabaseResultsRepository
 import com.terapia.terasenior.domain.model.therapy.TherapySession
 import com.terapia.terasenior.domain.model.therapy.TherapySessionExercise
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
-import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import com.terapia.terasenior.treatment.ui.*
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Clock.System as DateClockSystem
 
 @Composable
 fun SessionRunnerScreen(
@@ -53,11 +55,13 @@ fun SessionRunnerScreen(
                 
                 ExerciseRouter(
                     exercise = currentExercise,
-                    sessionId = state.session.id, // v1.3.48
+                    sessionId = state.session.id,
                     patientId = state.session.patientId,
                     professionalId = state.session.therapistId,
                     appointmentId = state.session.appointmentId,
-                    onExerciseCompleted = { viewModel.nextExercise() },
+                    onExerciseCompleted = { hits, errors, duration -> 
+                        viewModel.nextExercise(hits = hits, errors = errors, duration = duration) 
+                    },
                     onAbort = { viewModel.abortSession() }
                 )
 
@@ -77,6 +81,8 @@ fun SessionRunnerScreen(
                     hits = state.hits,
                     errors = state.errors,
                     durationSeconds = state.durationSeconds,
+                    resultsCount = state.resultsCount,
+                    areaSummaries = state.areaSummaries,
                     onSave = { p, f, n -> viewModel.finishSession(p, f, n, state.hits, state.errors, state.durationSeconds) }
                 )
             }
@@ -98,6 +104,8 @@ private fun ClinicalValuationView(
     hits: Int,
     errors: Int,
     durationSeconds: Int,
+    resultsCount: Int = 0,
+    areaSummaries: List<CognitiveAreaSummary> = emptyList(),
     onSave: (participation: String, fatigue: String, notes: String) -> Unit
 ) {
     var participation by remember { mutableStateOf("MEDIUM") }
@@ -111,7 +119,8 @@ private fun ClinicalValuationView(
         modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Cierre de Sesión Terapéutica", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+        Text("Cierre de Sesión Terapéutica", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        
         Spacer(modifier = Modifier.height(8.dp))
         Text("Valoración profesional de la intervención.", color = Color.Gray)
         
@@ -120,7 +129,6 @@ private fun ClinicalValuationView(
         Card(modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp), shape = RoundedCornerShape(24.dp)) {
             Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 
-                // Estadísticas de Rendimiento (v1.3.46)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     StatBox(label = "Aciertos", value = hits.toString(), color = Color(0xFF2E7D32))
                     StatBox(label = "Errores", value = errors.toString(), color = MaterialTheme.colorScheme.error)
@@ -128,6 +136,19 @@ private fun ClinicalValuationView(
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                if (session.isStandardized && areaSummaries.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Resultados por área cognitiva", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        areaSummaries.forEach { area ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(area.area)
+                                Text("${area.hits} aciertos · ${area.errors} fallos · ${area.durationSeconds}s", fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                }
 
                 Column {
                     Text("Nivel de Participación", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -176,11 +197,11 @@ private fun ClinicalValuationView(
 @Composable
 private fun ExerciseRouter(
     exercise: TherapySessionExercise,
-    sessionId: String, // v1.3.48
+    sessionId: String,
     patientId: String?,
     professionalId: String,
     appointmentId: String?,
-    onExerciseCompleted: () -> Unit,
+    onExerciseCompleted: (hits: Int, errors: Int, duration: Int) -> Unit,
     onAbort: () -> Unit
 ) {
     val resultsRepo = remember { SupabaseResultsRepository() }
@@ -191,7 +212,14 @@ private fun ExerciseRouter(
             val gameViewModel = remember(exercise.id) { OrientationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val nowMs = Clock.System.now().toEpochMilliseconds()
+                    val duration = ((nowMs - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             OrientationGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -204,7 +232,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { NumberSearchViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = gameState.foundCount
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             NumberSearchGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -213,18 +247,26 @@ private fun ExerciseRouter(
                 onBack = onAbort
             )
         }
-        exercise.exerciseType in listOf("attention_spot_odd_one_out", "attention_different", "attention_equals_model", 
-        "attention_positions", "attention_letters", "attention_numbers", 
-        "attention_symbols", "attention_matrices", "attention_row_cancel", 
-        "attention_consecutive", "attention_yes_no", "attention_dual_task", 
-        "attention_count", "attention_word_search", "attention_differences", "attention_longest") -> {
+        exercise.exerciseType in listOf(
+            "attention_spot_odd_one_out", "attention_different", "attention_equals_model", 
+            "attention_positions", "attention_letters", "attention_numbers", 
+            "attention_symbols", "attention_matrices", "attention_row_cancel", 
+            "attention_consecutive", "attention_yes_no", "attention_dual_task", 
+            "attention_count", "attention_word_search", "attention_differences", "attention_longest"
+        ) -> {
             val gameViewModel = remember { VisualAttentionViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 val variation = if (exercise.exerciseType == "attention_spot_odd_one_out") "attention_different" else exercise.exerciseType
                 gameViewModel.startNewGame(variation, exercise.level, sessionId) 
             }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = gameState.foundCount
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             VisualAttentionGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -237,7 +279,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { PairsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = gameState.pairsFound
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             PairsGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -250,7 +298,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember(exercise.id) { MemoryViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             MemoryGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -263,7 +317,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { WordImageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             WordImageGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -276,7 +336,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { NamingObjectsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             NamingObjectsGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -285,15 +351,23 @@ private fun ExerciseRouter(
                 onBack = onAbort
             )
         }
-        exercise.exerciseType in listOf("language_start_letter", "language_start_syllable", 
-        "language_end_letter", "language_end_syllable", "language_complex_cluster", 
-        "language_semantic_completion", "language_semantic_naming") -> {
+        exercise.exerciseType in listOf(
+            "language_start_letter", "language_start_syllable", 
+            "language_end_letter", "language_end_syllable", "language_complex_cluster", 
+            "language_semantic_completion", "language_semantic_naming"
+        ) -> {
             val gameViewModel = remember { LanguageViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { 
                 gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId, exercise.configuration) 
             }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             LanguageGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -306,7 +380,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { SemanticCategoryViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             SemanticCategoryGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -319,7 +399,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { CalculationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             CalculationGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -332,7 +418,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { ColorShapeSequenceViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             ColorShapeSequenceGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -341,13 +433,21 @@ private fun ExerciseRouter(
                 onBack = onAbort
             )
         }
-        exercise.exerciseType in listOf("executive_planning_steps", "executive_shopping_list", "executive_money_calculation", 
-        "executive_time_logic", "executive_logical_reasoning", "executive_analogies", 
-        "executive_abstractions", "executive_intrusos", "executive_math_advanced") -> {
+        exercise.exerciseType in listOf(
+            "executive_planning_steps", "executive_shopping_list", "executive_money_calculation", 
+            "executive_time_logic", "executive_logical_reasoning", "executive_analogies", 
+            "executive_abstractions", "executive_intrusos", "executive_math_advanced"
+        ) -> {
             val gameViewModel = remember { ExecutiveFunctionsViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             ExecutiveFunctionsGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -360,7 +460,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { ColorIdentificationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             ColorIdentificationGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -373,7 +479,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { SizeOrderingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             SizeOrderingGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -394,7 +506,13 @@ private fun ExerciseRouter(
                 gameViewModel.startNewGame(type, exercise.level, sessionId)
             }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             PerceptionGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -407,7 +525,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { ShapeFittingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             ShapeFittingGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -420,7 +544,13 @@ private fun ExerciseRouter(
             val gameViewModel = remember { TracingViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.level, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             TracingGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -442,7 +572,13 @@ private fun ExerciseRouter(
                 gameViewModel.startNewGame(variation, exercise.level, sessionId) 
             }
             val gameState by gameViewModel.uiState.collectAsState()
-            LaunchedEffect(gameState.isCompleted) { if (gameState.isCompleted) onExerciseCompleted() }
+            LaunchedEffect(gameState.isCompleted) { 
+                if (gameState.isCompleted) {
+                    val duration = ((kotlinx.datetime.Clock.System.now().toEpochMilliseconds() - gameState.startTimeMs) / 1000).toInt().coerceAtLeast(1)
+                    val hits = if (gameState.errorsCount == 0) 1 else 0
+                    onExerciseCompleted(hits, gameState.errorsCount, duration)
+                }
+            }
             LiteracyGame(
                 viewModel = gameViewModel, 
                 patientId = patientId, 
@@ -465,7 +601,7 @@ private fun TransitionView(
     LaunchedEffect(Unit) { speechManager.speak("$message $subMessage") }
     Column(modifier = Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Surface(color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), shape = RoundedCornerShape(12.dp)) {
-            Text("v1.3.49", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+            Text("v1.3.51", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(message, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -483,7 +619,7 @@ private fun TransitionView(
 @Composable
 private fun StatBox(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black), color = color)
+        Text(text = value, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = color)
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
     }
 }

@@ -119,6 +119,7 @@ class PatientDetailViewModel(
                 result.activityType.startsWith("memory") -> "Memoria"
                 result.activityType.startsWith("language") -> "Lenguaje"
                 result.activityType.startsWith("executive") || result.activityType.startsWith("calculation") -> "FF.EE. / Cálculo"
+                result.activityType.startsWith("perception") -> "Percepción"
                 result.activityType.startsWith("literacy") -> "Lectoescritura"
                 else -> "Otros"
             }

@@ -476,6 +476,17 @@ private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.ther
                 }
             }
 
+            if (session.isStandardized && history.groupedByCategory.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Resumen por área cognitiva", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                history.groupedByCategory.toSortedMap().forEach { (area, results) ->
+                    val hits = results.count { it.errorsCount == 0 }
+                    val errors = results.sumOf { it.errorsCount }
+                    val seconds = results.sumOf { it.durationSeconds }
+                    Text("$area: $hits aciertos · $errors fallos · ${seconds}s", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
             if (history.results.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))

@@ -16,6 +16,22 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class ExerciseOutcome(
+    val activityType: String,
+    val area: String,
+    val hits: Int,
+    val errors: Int,
+    val durationSeconds: Int
+)
+
+data class CognitiveAreaSummary(
+    val area: String,
+    val hits: Int,
+    val errors: Int,
+    val durationSeconds: Int,
+    val activities: Int
+)
+
 sealed interface SessionRunnerUiState {
     data object Loading : SessionRunnerUiState
     data class Playing(
@@ -23,7 +39,12 @@ sealed interface SessionRunnerUiState {
         val exercises: List<TherapySessionExercise>,
         val currentIndex: Int = 0,
         val isPaused: Boolean = false,
-        val showProfessionalPanel: Boolean = false
+        val showProfessionalPanel: Boolean = false,
+        // v1.3.52: Acumuladores locales para sesiones sin paciente o fallos de red
+        val accumulatedHits: Int = 0,
+        val accumulatedErrors: Int = 0,
+        val accumulatedDurationSeconds: Int = 0,
+        val outcomes: List<ExerciseOutcome> = emptyList()
     ) : SessionRunnerUiState
     data class Transition(
         val nextExerciseName: String,
@@ -34,7 +55,9 @@ sealed interface SessionRunnerUiState {
         val session: TherapySession,
         val hits: Int,
         val errors: Int,
-        val durationSeconds: Int
+        val durationSeconds: Int,
+        val resultsCount: Int = 0,
+        val areaSummaries: List<CognitiveAreaSummary> = emptyList()
     ) : SessionRunnerUiState
     data object Finished : SessionRunnerUiState
     data class Error(val message: String) : SessionRunnerUiState
@@ -83,6 +106,11 @@ class SessionRunnerViewModel(
         }
     }
 
+    private var pendingHits = 0
+    private var pendingErrors = 0
+    private var pendingDuration = 0
+    private var pendingOutcomes: List<ExerciseOutcome> = emptyList()
+
     fun startExercise(index: Int) {
         viewModelScope.launch {
             val session = repository.getSessionDetails(sessionId).getOrNull() ?: return@launch
@@ -91,14 +119,30 @@ class SessionRunnerViewModel(
             _uiState.value = SessionRunnerUiState.Playing(
                 session = session,
                 exercises = exercises,
-                currentIndex = index
+                currentIndex = index,
+                accumulatedHits = pendingHits,
+                accumulatedErrors = pendingErrors,
+                accumulatedDurationSeconds = pendingDuration,
+                outcomes = pendingOutcomes
             )
             repository.updateSessionStatus(sessionId, SessionStatus.IN_PROGRESS.name)
         }
     }
 
-    fun nextExercise() {
+    fun nextExercise(hits: Int = 0, errors: Int = 0, duration: Int = 0) {
         val state = _uiState.value as? SessionRunnerUiState.Playing ?: return
+        
+        val newAccumulatedHits = state.accumulatedHits + hits
+        val newAccumulatedErrors = state.accumulatedErrors + errors
+        val newAccumulatedDuration = state.accumulatedDurationSeconds + duration
+        val newOutcomes = state.outcomes + ExerciseOutcome(
+            activityType = state.exercises[state.currentIndex].exerciseType,
+            area = cognitiveArea(state.exercises[state.currentIndex].exerciseType),
+            hits = hits.coerceAtLeast(0),
+            errors = errors.coerceAtLeast(0),
+            durationSeconds = duration.coerceAtLeast(1)
+        )
+        
         val nextIndex = state.currentIndex + 1
 
         if (nextIndex < state.exercises.size) {
@@ -106,28 +150,31 @@ class SessionRunnerViewModel(
                 nextExerciseName = getExerciseDisplayName(state.exercises[nextIndex].exerciseType),
                 nextIndex = nextIndex
             )
+            
+            pendingHits = newAccumulatedHits
+            pendingErrors = newAccumulatedErrors
+            pendingDuration = newAccumulatedDuration
+            pendingOutcomes = newOutcomes
         } else {
             viewModelScope.launch {
                 _uiState.value = SessionRunnerUiState.Loading
-                // v1.3.49: Esperar a que las persistencias en segundo plano terminen
-                delay(1500)
+                delay(2000)
                 
-                val results = resultsRepository.getSessionResults(sessionId).getOrDefault(emptyList())
-                
-                // Cálculo de hits: en orientación/lenguaje/percepción cada resultado es 1 hit si no hay errores
-                // En memoria/atención sumamos aciertos parciales
-                val totalHits = results.sumOf { 
-                    if (it.errorsCount == 0) 1 else 0 
-                }.coerceAtLeast(results.size / 2) // Fallback razonable
-                
-                val totalErrors = results.sumOf { it.errorsCount }
-                val totalDuration = results.sumOf { it.durationSeconds }
+                val resultsResult = resultsRepository.getSessionResults(sessionId)
+                val dbResults = resultsResult.getOrDefault(emptyList())
+                saveMissingPatientResults(state.session, newOutcomes, dbResults.map { it.activityType }.toSet())
+                val finalResults = resultsRepository.getSessionResults(sessionId).getOrDefault(dbResults)
                 
                 _uiState.value = SessionRunnerUiState.Summary(
                     session = state.session,
-                    hits = totalHits,
-                    errors = totalErrors,
-                    durationSeconds = totalDuration
+                    hits = newAccumulatedHits,
+                    errors = newAccumulatedErrors,
+                    durationSeconds = newAccumulatedDuration,
+                    resultsCount = finalResults.size,
+                    areaSummaries = newOutcomes.groupBy { it.area }.map { (area, results) ->
+                        CognitiveAreaSummary(area, results.sumOf { it.hits }, results.sumOf { it.errors },
+                            results.sumOf { it.durationSeconds }, results.size)
+                    }.sortedBy { it.area }
                 )
             }
         }
@@ -241,4 +288,34 @@ class SessionRunnerViewModel(
     }
 
     private fun getExerciseDisplayName(type: String): String = ExerciseTranslationUtils.getDisplayName(type)
+
+    private suspend fun saveMissingPatientResults(
+        session: TherapySession,
+        outcomes: List<ExerciseOutcome>,
+        existingActivityTypes: Set<String>
+    ) {
+        val patientId = session.patientId ?: return
+        outcomes.filter { it.activityType !in existingActivityTypes }.forEach { outcome ->
+            val attempts = outcome.hits + outcome.errors
+            resultsRepository.saveResult(ActivityResult(
+                id = "", patientId = patientId, professionalId = session.therapistId,
+                appointmentId = session.appointmentId, sessionId = session.id,
+                activityType = outcome.activityType,
+                score = if (attempts == 0) 0 else (outcome.hits * 100 / attempts).coerceIn(0, 100),
+                durationSeconds = outcome.durationSeconds, errorsCount = outcome.errors,
+                difficultyLevel = "SESSION", createdAt = ""
+            ))
+        }
+    }
+
+    private fun cognitiveArea(activityType: String): String = when {
+        activityType.startsWith("orientation") -> "Orientación"
+        activityType.startsWith("attention") || activityType == "number_search" -> "Atención"
+        activityType.startsWith("memory") -> "Memoria"
+        activityType.startsWith("language") -> "Lenguaje"
+        activityType.startsWith("executive") || activityType.startsWith("calculation") -> "Funciones ejecutivas"
+        activityType.startsWith("perception") -> "Percepción"
+        activityType.startsWith("literacy") -> "Lectoescritura"
+        else -> "Otros"
+    }
 }
