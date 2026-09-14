@@ -13,12 +13,12 @@ const setup = replies => {
       if (reply instanceof Error) throw reply; return Response.json(reply?.body ?? reply, { status: reply?.status ?? 200 }); } }) };
 };
 test('verified actor, one Auth call and no password in RPCs or result', async () => {
-  const { handler, calls } = setup([{ id: 'verified-actor' }, { code: 'PREPARED', ticket: 'ticket' }, {},
+  const { handler, calls } = setup([{ id: 'verified-actor' }, { code: 'PREPARED', ticket: 'ticket' }, { id: 'created-id' },
     { success: true, code: 'COMPLETED', data: { userId: 'created-id' } }]);
   const response = await handler(request());
   assert.equal(response.status, 200);
   assert.equal(calls.filter(c => c.url.endsWith('/admin/users')).length, 1);
-  for (const call of calls.filter(c => c.url.includes('/rpc/'))) {
+  for (const call of calls.filter(c => c.url.includes('admin_create_user_control'))) {
     assert.equal(JSON.parse(call.options.body).p_actor_id, 'verified-actor');
     assert.equal(call.options.body.includes(body.password), false);
   }
@@ -37,7 +37,7 @@ test('uncertain Auth result is not retried or represented as success', async () 
   assert.equal(calls.length, 3);
 });
 test('identity creation receives the longer trigger-aware timeout', async () => {
-  const { handler, calls } = setup([{ id: 'actor' }, { code: 'PREPARED', ticket: 'ticket' }, {},
+  const { handler, calls } = setup([{ id: 'actor' }, { code: 'PREPARED', ticket: 'ticket' }, { id: 'created-id' },
     { success: true, code: 'COMPLETED', data: { userId: 'id' } }]);
   await handler(request());
   const authCreate = calls.find(call => call.url.endsWith('/auth/v1/admin/users'));

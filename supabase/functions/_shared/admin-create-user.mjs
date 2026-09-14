@@ -61,13 +61,31 @@ export function createUserHandler({ url, serverKey, allowedOrigins = [], fetchIm
         if (mode !== 'execute' || !result.ticket) throw new Error('INVALID_RESULT');
         // Creating an Auth identity also runs database triggers. It may take longer than
         // a lightweight profile lookup, so do not abort it at the 9-second RPC limit.
+        // Do not put the ticket in app metadata. The legacy Auth trigger creates the
+        // base profile in the Auth transaction; finish below applies the authorized
+        // administrative fields and records the receipt.
         const created = await send('/auth/v1/admin/users', {
           method: 'POST', headers: serverHeaders,
           body: JSON.stringify({ email: safeBody.email, password, email_confirm: true,
-            app_metadata: { admin_creation_ticket: result.ticket }, user_metadata: { full_name: safeBody.fullName } }),
+            user_metadata: { full_name: safeBody.fullName } }),
         }, 25000);
-        result = await control('result');
-        if (!created.ok && result.code !== 'COMPLETED') {
+        if (created.ok) {
+          const createdUser = await created.json();
+          const userId = createdUser?.id ?? createdUser?.user?.id;
+          if (!userId) throw new Error('INVALID_RESULT');
+          const finalized = await send('/rest/v1/rpc/admin_create_user_finish', {
+            method: 'POST', headers: serverHeaders,
+            body: JSON.stringify({ p_actor_id: identity.id, p_request_id: key, p_user_id: userId }),
+          });
+          result = await finalized.json();
+          if (!finalized.ok || result.code !== 'COMPLETED') {
+            await send(`/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+              method: 'DELETE', headers: serverHeaders,
+            }).catch(() => {});
+            await control('close').catch(() => {});
+            throw new Error('FINALIZE_FAILED');
+          }
+        } else {
           const closed = await control('close');
           result = closed.code === 'CANCELLED' ? { success: false, code: 'CREATION_REJECTED' } : closed;
         }
