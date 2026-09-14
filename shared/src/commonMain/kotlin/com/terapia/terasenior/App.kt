@@ -100,6 +100,14 @@ fun App() {
         } else {
             val userRole = currentUserProfile?.role
             val canAdmin = userRole == UserRole.SUPER_ADMIN || userRole == UserRole.ADMIN_CENTRO
+            // La animación de cierre del cajón es suspendida. Navegar después de
+            // cerrarlo evita dejar su capa modal sobre la pantalla de destino.
+            val navigateFromDrawer: (Screen) -> Unit = { destination ->
+                scope.launch {
+                    drawerState.close()
+                    currentScreen = destination
+                }
+            }
 
             ModalNavigationDrawer(
                 drawerState = drawerState,
@@ -119,7 +127,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Panel de Terapia") },
                             selected = currentScreen == Screen.THERAPY_DASHBOARD,
-                            onClick = { currentScreen = Screen.THERAPY_DASHBOARD; scope.launch { drawerState.close() } },
+                            onClick = { navigateFromDrawer(Screen.THERAPY_DASHBOARD) },
                             icon = { Icon(Icons.Default.Psychology, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -127,7 +135,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Agenda") },
                             selected = currentScreen == Screen.AGENDA || currentScreen == Screen.APPOINTMENT_DETAIL,
-                            onClick = { currentScreen = Screen.AGENDA; scope.launch { drawerState.close() } },
+                            onClick = { navigateFromDrawer(Screen.AGENDA) },
                             icon = { Icon(Icons.Default.DateRange, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -135,7 +143,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Pacientes") },
                             selected = currentScreen == Screen.PATIENTS || currentScreen == Screen.PATIENT_DETAIL,
-                            onClick = { currentScreen = Screen.PATIENTS; scope.launch { drawerState.close() } },
+                            onClick = { navigateFromDrawer(Screen.PATIENTS) },
                             icon = { Icon(Icons.Default.People, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -143,7 +151,7 @@ fun App() {
                         NavigationDrawerItem(
                             label = { Text("Informes") },
                             selected = currentScreen == Screen.REPORTS,
-                            onClick = { currentScreen = Screen.REPORTS; scope.launch { drawerState.close() } },
+                            onClick = { navigateFromDrawer(Screen.REPORTS) },
                             icon = { Icon(Icons.Default.Description, null) },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
@@ -155,14 +163,14 @@ fun App() {
                             NavigationDrawerItem(
                                 label = { Text("Gestión Centros") },
                                 selected = currentScreen == Screen.ADMIN_ENTITIES,
-                                onClick = { currentScreen = Screen.ADMIN_ENTITIES; scope.launch { drawerState.close() } },
+                                onClick = { navigateFromDrawer(Screen.ADMIN_ENTITIES) },
                                 icon = { Icon(Icons.Default.Business, null) },
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                             )
                             NavigationDrawerItem(
                                 label = { Text("Gestión Usuarios") },
                                 selected = currentScreen == Screen.ADMIN_USERS,
-                                onClick = { currentScreen = Screen.ADMIN_USERS; scope.launch { drawerState.close() } },
+                                onClick = { navigateFromDrawer(Screen.ADMIN_USERS) },
                                 icon = { Icon(Icons.Default.People, null) },
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                             )
@@ -288,7 +296,10 @@ fun App() {
                                 val viewModel = remember(patientId) { 
                                     PatientDetailViewModel(patientId, patientRepo, resultsRepo, therapyRepo, userRepo, UpdatePatientUseCase(patientRepo), UpdateTherapeuticProfileUseCase(patientRepo)) 
                                 }
-                                PatientDetailScreen(viewModel = viewModel, onBack = { currentScreen = Screen.PATIENTS })
+                                PatientDetailScreen(
+                                    viewModel = viewModel,
+                                    onBack = { navigateFromDrawer(Screen.PATIENTS) }
+                                )
                             }
                             Screen.AGENDA -> {
                                 val agendaRepo = remember { SupabaseAppointmentRepository() }
