@@ -49,7 +49,7 @@ fun CreateUserDialog(
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = { Text("Nombre Completo") },
+                    label = { Text("Nombre Completo *") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -58,7 +58,7 @@ fun CreateUserDialog(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Correo Electrónico") },
+                    label = { Text("Correo Electrónico *") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -68,7 +68,7 @@ fun CreateUserDialog(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Contraseña") },
+                        label = { Text("Contraseña *") },
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -86,7 +86,7 @@ fun CreateUserDialog(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Repetir Contraseña") },
+                    label = { Text("Repetir Contraseña *") },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -106,7 +106,7 @@ fun CreateUserDialog(
                 OutlinedTextField(
                     value = centerName,
                     onValueChange = { centerName = it },
-                    label = { Text("Centro / Lugar de trabajo") },
+                    label = { Text("Centro / Lugar de trabajo (opcional)") },
                     placeholder = { Text("Ej: Centro de Salud de Miajadas") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -118,7 +118,7 @@ fun CreateUserDialog(
                     OutlinedTextField(
                         value = selectedRole.name,
                         onValueChange = {},
-                        label = { Text("Rol") },
+                        label = { Text("Rol *") },
                         readOnly = true,
                         trailingIcon = { Text("▼", modifier = Modifier.padding(end = 8.dp)) },
                         modifier = Modifier.fillMaxWidth(),
@@ -154,7 +154,7 @@ fun CreateUserDialog(
                         OutlinedTextField(
                             value = selectedEntity?.name ?: "Seleccionar Centro",
                             onValueChange = {},
-                            label = { Text("Centro / Entidad") },
+                            label = { Text("Centro / Entidad *") },
                             readOnly = true,
                             trailingIcon = { Text("▼", modifier = Modifier.padding(end = 8.dp)) },
                             modifier = Modifier.fillMaxWidth(),
@@ -198,7 +198,9 @@ fun CreateUserDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onConfirm(fullName, email, password, phone, selectedRole, selectedEntity?.id, isActive, centerName.ifBlank { null })
+                    onConfirm(fullName, email, password, phone, selectedRole,
+                        if (selectedRole == UserRole.SUPER_ADMIN) null else selectedEntity?.id,
+                        isActive, centerName.ifBlank { null })
                 },
                 enabled = fullName.isNotBlank() && email.contains("@") && 
                           password.length >= 6 && password == confirmPassword &&

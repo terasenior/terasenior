@@ -20,7 +20,7 @@ export function validateBounded(operation, body) {
   return body;
 }
 
-async function jsonBody(request, timeoutMs) {
+export async function jsonBody(request, timeoutMs) {
   const reader = request.body?.getReader();
   if (!reader) throw new Error('INVALID_INPUT');
   let size = 0;

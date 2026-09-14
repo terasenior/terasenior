@@ -19,9 +19,19 @@ import kotlin.uuid.Uuid
 
 /** The remaining administrative operations continue to fail explicitly. */
 class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemoteDataSource() {
+    override suspend fun createUser(request: AdminCreateUserRequest): Result<AdminCreateUserResponse> = runSafely {
+        val wire = json.encodeToJsonElement(request).jsonObject
+        json.decodeFromJsonElement<AdminCreateUserResponse>(call("admin-create-user",
+            JsonObject(wire.filterKeys { it != "password" }), request.password))
+    }
+
     override suspend fun createEntity(request: AdminCreateEntityRequest): Result<AdminCreateEntityResponse> = runSafely {
-        val expiry = request.licenseExpiresAt?.let {
-            if (it.length == 10) LocalDate.parse(it).toString() + "T23:59:59Z" else it
+        val expiry = request.licenseExpiresAt?.trim()?.takeIf { it.isNotEmpty() }?.let {
+            try {
+                if (it.length == 10) LocalDate.parse(it).toString() + "T23:59:59Z" else it
+            } catch (_: IllegalArgumentException) {
+                throw AdminClientException("La fecha de licencia debe ser válida y tener formato AAAA-MM-DD.")
+            }
         }
         json.decodeFromJsonElement<AdminCreateEntityResponse>(call("admin-create-entity",
             json.encodeToJsonElement(request.copy(licenseExpiresAt = expiry)).jsonObject))
@@ -38,13 +48,21 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
     catch (_: Exception) { Result.failure(AdminClientException("No se pudo confirmar la operación. Repite la misma solicitud para consultar su resultado.")) }
 
     @OptIn(ExperimentalUuidApi::class)
-    private suspend fun call(operation: String, body: JsonObject): JsonObject = mutex.withLock {
+    private suspend fun call(operation: String, body: JsonObject, password: String? = null): JsonObject = mutex.withLock {
         val session = supabase.auth.currentSessionOrNull() ?: throw AdminClientException("Inicia sesión de nuevo.")
         val actor = session.user?.id ?: throw AdminClientException("Inicia sesión de nuevo.")
         val slot = "admin-pending-$actor-$operation"
-        val saved = AdminPendingStore.read(slot)?.let { json.decodeFromString<PendingAdminRequest>(it) }
+        val saved = try {
+            AdminPendingStore.read(slot)?.let { json.decodeFromString<PendingAdminRequest>(it) }
+        } catch (_: Exception) {
+            throw AdminClientException("El navegador no permite recuperar la solicitud. Habilita el almacenamiento del sitio.")
+        }
         val pending = saved ?: PendingAdminRequest(Uuid.random().toString(), body)
-        if (saved == null) AdminPendingStore.write(slot, json.encodeToString(pending))
+        if (saved == null) try {
+            AdminPendingStore.write(slot, json.encodeToString(pending))
+        } catch (_: Exception) {
+            throw AdminClientException("No se envió la solicitud: habilita el almacenamiento del sitio en el navegador.")
+        }
         val mode = if (saved == null) "execute" else "result"
         val client = HttpClient { followRedirects = false; install(HttpTimeout) { requestTimeoutMillis = 20_000 } }
         try {
@@ -55,7 +73,9 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
                     header("Idempotency-Key", pending.id)
                     header("X-Admin-Mode", requestMode)
                     contentType(ContentType.Application.Json)
-                    setBody(json.encodeToString(pending.body))
+                    val wire = if (requestMode == "execute" && password != null)
+                        JsonObject(pending.body + ("password" to JsonPrimitive(password))) else pending.body
+                    setBody(json.encodeToString(wire))
                 }
                 return response.status.value to json.parseToJsonElement(response.bodyAsText()).jsonObject
             }
@@ -75,7 +95,7 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
                 if (saved != null && saved.body != body) throw AdminClientException("La operación anterior quedó confirmada. Revisa la lista y vuelve a guardar este cambio si procede.")
                 return@withLock result
             }
-            val terminal = code in setOf("CANCELLED", "EMAIL_CHANGE_UNAVAILABLE", "PROTECTED_ROLE", "INVALID_ASSOCIATION",
+            val terminal = code in setOf("CANCELLED", "CREATION_REJECTED", "EMAIL_CHANGE_UNAVAILABLE", "PROTECTED_ROLE", "INVALID_ASSOCIATION",
                 "ENTITY_TRANSFER_UNAVAILABLE", "DATABASE_FAILURE", "CONSTRAINT_REJECTED") ||
                 (mode == "execute" && status in setOf(400, 403, 409) && code in setOf("FORBIDDEN", "INVALID_INPUT", "IDEMPOTENCY_CONFLICT"))
             if (terminal) AdminPendingStore.remove(slot)
@@ -84,6 +104,7 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
                 code == "FORBIDDEN" -> "No tienes permiso para modificar esta cuenta o centro."
                 code == "EMAIL_CHANGE_UNAVAILABLE" -> "El cambio de correo no está disponible. No se guardó el cambio."
                 code == "PROTECTED_ROLE" -> "Las cuentas SUPER_ADMIN están protegidas."
+                code == "CREATION_REJECTED" -> "No se creó la cuenta. Comprueba que el correo no esté registrado y que la contraseña cumpla los requisitos."
                 code == "ENTITY_TRANSFER_UNAVAILABLE" || code == "INVALID_ASSOCIATION" -> "No se permite trasladar esta cuenta a otro centro."
                 code == "CANCELLED" -> "La solicitud anterior quedó cancelada sin aplicarse. Puedes volver a guardar."
                 terminal -> "No se guardó el cambio. Revisa los campos y los permisos."

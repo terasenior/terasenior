@@ -1,8 +1,8 @@
-import { createHandler } from "../_shared/admin-phase2.mjs";
+import { createUserHandler } from "../_shared/admin-create-user.mjs";
 
-Deno.serve(createHandler("admin-create-user", {
+Deno.serve(createUserHandler({
   url: Deno.env.get("SUPABASE_URL"),
   serverKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-  allowedOrigins: (Deno.env.get("ADMIN_ALLOWED_ORIGINS") ?? "")
+  allowedOrigins: (Deno.env.get("ADMIN_ALLOWED_ORIGINS") ?? "https://terasenior.es,https://www.terasenior.es,https://terasenior.github.io")
     .split(",").map(value => value.trim()).filter(Boolean),
 }));
