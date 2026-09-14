@@ -2,6 +2,13 @@
 
 ## Actualización web — 2026-09-14
 
+Corrección posterior: ambas funciones están en versión 3 e incluyen también
+https://www.terasenior.es. Este origen servía la aplicación pero era rechazado
+por CORS (HTTP 403); tras la corrección, ambos preflight responden HTTP 204 y
+Access-Control-Allow-Origin exacto. No se enviaron formularios ni se modificaron
+datos. El alta de usuarios continúa no implementada. Los recibos del intento
+reportado no pudieron consultarse por rechazo de la revisión automática.
+
 Las dos funciones están en versión 2 con CORS para https://terasenior.es y
 https://terasenior.github.io (configurable mediante ADMIN_ALLOWED_ORIGINS).
 EdgeAdminRemoteDataSource conecta creación de centros y edición administrativa
