@@ -36,6 +36,13 @@ test('uncertain Auth result is not retried or represented as success', async () 
   assert.equal((await response.json()).success, false);
   assert.equal(calls.length, 3);
 });
+test('identity creation receives the longer trigger-aware timeout', async () => {
+  const { handler, calls } = setup([{ id: 'actor' }, { code: 'PREPARED', ticket: 'ticket' }, {},
+    { success: true, code: 'COMPLETED', data: { userId: 'id' } }]);
+  await handler(request());
+  const authCreate = calls.find(call => call.url.endsWith('/auth/v1/admin/users'));
+  assert.equal(authCreate.options.signal.aborted, false);
+});
 test('recovery requires no password and never invokes Auth creation', async () => {
   const { password, ...safe } = body;
   const { handler, calls } = setup([{ id: 'actor' }, { success: true, code: 'COMPLETED', data: { userId: 'id' } }]);

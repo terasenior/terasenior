@@ -64,7 +64,8 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
             throw AdminClientException("No se envió la solicitud: habilita el almacenamiento del sitio en el navegador.")
         }
         val mode = if (saved == null) "execute" else "result"
-        val client = HttpClient { followRedirects = false; install(HttpTimeout) { requestTimeoutMillis = 20_000 } }
+        val timeoutMillis = if (operation == "admin-create-user") 45_000L else 20_000L
+        val client = HttpClient { followRedirects = false; install(HttpTimeout) { requestTimeoutMillis = timeoutMillis } }
         try {
             suspend fun send(requestMode: String): Pair<Int, JsonObject> {
                 val response = client.post("${supabase.supabaseHttpUrl}/functions/v1/$operation") {

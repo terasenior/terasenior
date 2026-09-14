@@ -29,8 +29,8 @@ export function createUserHandler({ url, serverKey, allowedOrigins = [], fetchIm
       if (mode !== 'execute' && 'password' in body) return fail(400, 'INVALID_INPUT');
     } catch { return fail(400, 'INVALID_INPUT'); }
     if (!url?.startsWith('https://') || !serverKey) return fail(503, 'UNAVAILABLE');
-    const send = (path, options) => fetchImpl(`${url.replace(/\/$/, '')}${path}`, {
-      ...options, redirect: 'error', signal: AbortSignal.timeout(9000),
+    const send = (path, options, timeoutMs = 9000) => fetchImpl(`${url.replace(/\/$/, '')}${path}`, {
+      ...options, redirect: 'error', signal: AbortSignal.timeout(timeoutMs),
     });
     const serverHeaders = { apikey: serverKey, Authorization: `Bearer ${serverKey}`, 'Content-Type': 'application/json' };
     let identity;
@@ -59,11 +59,13 @@ export function createUserHandler({ url, serverKey, allowedOrigins = [], fetchIm
       let result = await control(mode === 'execute' ? 'prepare' : mode);
       if (result.code === 'PREPARED') {
         if (mode !== 'execute' || !result.ticket) throw new Error('INVALID_RESULT');
+        // Creating an Auth identity also runs database triggers. It may take longer than
+        // a lightweight profile lookup, so do not abort it at the 9-second RPC limit.
         const created = await send('/auth/v1/admin/users', {
           method: 'POST', headers: serverHeaders,
           body: JSON.stringify({ email: safeBody.email, password, email_confirm: true,
             app_metadata: { admin_creation_ticket: result.ticket }, user_metadata: { full_name: safeBody.fullName } }),
-        });
+        }, 25000);
         result = await control('result');
         if (!created.ok && result.code !== 'COMPLETED') {
           const closed = await control('close');
