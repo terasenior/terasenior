@@ -57,13 +57,13 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
         } catch (_: Exception) {
             throw AdminClientException("El navegador no permite recuperar la solicitud. Habilita el almacenamiento del sitio.")
         }
-        val pending = saved ?: PendingAdminRequest(Uuid.random().toString(), body)
+        var pending = saved ?: PendingAdminRequest(Uuid.random().toString(), body)
         if (saved == null) try {
             AdminPendingStore.write(slot, json.encodeToString(pending))
         } catch (_: Exception) {
             throw AdminClientException("No se envió la solicitud: habilita el almacenamiento del sitio en el navegador.")
         }
-        val mode = if (saved == null) "execute" else "result"
+        var mode = if (saved == null) "execute" else "result"
         val timeoutMillis = if (operation == "admin-create-user") 45_000L else 20_000L
         val client = HttpClient { followRedirects = false; install(HttpTimeout) { requestTimeoutMillis = timeoutMillis } }
         try {
@@ -86,6 +86,17 @@ class EdgeAdminRemoteDataSource : AdminRemoteDataSource by UnavailableAdminRemot
                 val closed = send("close")
                 status = closed.first; result = closed.second
                 code = result["code"]?.jsonPrimitive?.contentOrNull
+                // The server has explicitly closed an unseen request. It is now safe
+                // to replace it immediately; no unknown request is retried.
+                if (code == "CANCELLED" && saved != null && saved.body == body) {
+                    AdminPendingStore.remove(slot)
+                    pending = PendingAdminRequest(Uuid.random().toString(), body)
+                    AdminPendingStore.write(slot, json.encodeToString(pending))
+                    mode = "execute"
+                    val retried = send(mode)
+                    status = retried.first; result = retried.second
+                    code = result["code"]?.jsonPrimitive?.contentOrNull
+                }
             }
             val success = status == 200 && code == "COMPLETED" && result["success"]?.jsonPrimitive?.booleanOrNull == true
             if (success) {
