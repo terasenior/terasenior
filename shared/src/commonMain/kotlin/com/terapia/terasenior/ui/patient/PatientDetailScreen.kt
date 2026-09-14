@@ -479,7 +479,9 @@ private fun SessionHistoryCard(history: com.terapia.terasenior.domain.model.ther
             if (session.isStandardized && history.groupedByCategory.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text("Resumen por área cognitiva", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                history.groupedByCategory.toSortedMap().forEach { (area, results) ->
+                history.groupedByCategory.entries.sortedBy { it.key }.forEach { entry ->
+                    val area = entry.key
+                    val results = entry.value
                     val hits = results.count { it.errorsCount == 0 }
                     val errors = results.sumOf { it.errorsCount }
                     val seconds = results.sumOf { it.durationSeconds }
