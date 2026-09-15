@@ -86,10 +86,10 @@ fun ExecutiveFunctionsGame(
             // Game Content
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 when (state.mode) {
-                    "executive_planning_steps" -> PlanningStepsUI(state, viewModel)
-                    "executive_shopping_list", "executive_logical_reasoning", "executive_analogies", "executive_intrusos" -> MultipleChoiceUI(state, viewModel)
-                    "executive_money_calculation", "executive_time_logic", "executive_math_advanced" -> NumericInputUI(state, viewModel)
-                    "executive_abstractions" -> AbstractionsUI(state, viewModel)
+                    "executive_planning_steps" -> PlanningStepsUI(state, viewModel, patientId, professionalId, appointmentId)
+                    "executive_shopping_list", "executive_logical_reasoning", "executive_analogies", "executive_intrusos" -> MultipleChoiceUI(state, viewModel, patientId, professionalId, appointmentId)
+                    "executive_money_calculation", "executive_time_logic", "executive_math_advanced" -> NumericInputUI(state, viewModel, patientId, professionalId, appointmentId)
+                    "executive_abstractions" -> AbstractionsUI(state, viewModel, patientId, professionalId, appointmentId)
                 }
             }
 
@@ -116,7 +116,7 @@ fun ExecutiveFunctionsGame(
 }
 
 @Composable
-private fun PlanningStepsUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel) {
+private fun PlanningStepsUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel, patientId: String?, professionalId: String?, appointmentId: String?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         LazyColumn(
             modifier = Modifier.widthIn(max = 500.dp).weight(1f),
@@ -180,7 +180,7 @@ private fun PlanningStepsUI(state: ExecutiveFunctionsUiState, viewModel: Executi
         }
         
         Button(
-            onClick = { viewModel.onCheckPlanning() },
+            onClick = { viewModel.onCheckPlanning(patientId, professionalId, appointmentId) },
             modifier = Modifier.padding(16.dp).height(56.dp).width(200.dp)
         ) {
             Text("Comprobar")
@@ -189,7 +189,7 @@ private fun PlanningStepsUI(state: ExecutiveFunctionsUiState, viewModel: Executi
 }
 
 @Composable
-private fun MultipleChoiceUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel) {
+private fun MultipleChoiceUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel, patientId: String?, professionalId: String?, appointmentId: String?) {
     Column(
         modifier = Modifier.widthIn(max = 600.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -208,7 +208,7 @@ private fun MultipleChoiceUI(state: ExecutiveFunctionsUiState, viewModel: Execut
 
         state.options.forEach { option ->
             Button(
-                onClick = { viewModel.onOptionSelected(option) },
+                onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
                 modifier = Modifier.fillMaxWidth().height(72.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -223,7 +223,7 @@ private fun MultipleChoiceUI(state: ExecutiveFunctionsUiState, viewModel: Execut
 }
 
 @Composable
-private fun NumericInputUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel) {
+private fun NumericInputUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel, patientId: String?, professionalId: String?, appointmentId: String?) {
     var text by remember { mutableStateOf("") }
     
     Column(
@@ -249,7 +249,7 @@ private fun NumericInputUI(state: ExecutiveFunctionsUiState, viewModel: Executiv
         )
 
         Button(
-            onClick = { viewModel.onAnswerInput(text) },
+            onClick = { viewModel.onAnswerInput(text, patientId, professionalId, appointmentId) },
             modifier = Modifier.height(56.dp).width(200.dp)
         ) {
             Text("Comprobar")
@@ -258,7 +258,7 @@ private fun NumericInputUI(state: ExecutiveFunctionsUiState, viewModel: Executiv
 }
 
 @Composable
-private fun AbstractionsUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel) {
+private fun AbstractionsUI(state: ExecutiveFunctionsUiState, viewModel: ExecutiveFunctionsViewModel, patientId: String?, professionalId: String?, appointmentId: String?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         // Key
         Card(
@@ -301,7 +301,7 @@ private fun AbstractionsUI(state: ExecutiveFunctionsUiState, viewModel: Executiv
                             if (it.length <= 1) {
                                 input = it
                                 it.toIntOrNull()?.let { valInt ->
-                                    viewModel.onAbstractionInput(index, valInt)
+                                    viewModel.onAbstractionInput(index, valInt, patientId, professionalId, appointmentId)
                                 }
                             }
                         },
