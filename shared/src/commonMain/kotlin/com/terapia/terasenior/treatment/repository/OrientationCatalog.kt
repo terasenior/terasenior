@@ -14,18 +14,21 @@ object OrientationCatalog {
     )
 
     fun getQuestion(type: String): OrientationQuestion {
-        val now = LocalDateTime(2026, 8, 22, 10, 0) // Fecha de respaldo
+        val now = currentDateTime()
+        val currentWeekday = spanishWeekday(now.dayOfWeek)
+        val yesterday = spanishWeekday(DayOfWeek.entries[(now.dayOfWeek.ordinal + 6) % DayOfWeek.entries.size])
+        val tomorrow = spanishWeekday(DayOfWeek.entries[(now.dayOfWeek.ordinal + 1) % DayOfWeek.entries.size])
         
         return when (type) {
             // --- TEMPORAL ---
-            "orientation_temporal_day" -> OrientationQuestion(type, "¿Qué día del mes es hoy?", listOf("22", "1", "15", "30").shuffled(), "22")
-            "orientation_temporal_month" -> OrientationQuestion(type, "¿En qué mes estamos?", listOf("Agosto", "Enero", "Mayo", "Diciembre").shuffled(), "Agosto")
-            "orientation_temporal_year" -> OrientationQuestion(type, "¿En qué año estamos?", listOf("2026", "2024", "2025", "2027").shuffled(), "2026")
-            "orientation_temporal_season" -> OrientationQuestion(type, "¿En qué estación estamos?", listOf("Verano", "Primavera", "Otoño", "Invierno").shuffled(), "Verano")
-            "orientation_temporal_dayweek" -> OrientationQuestion(type, "¿Qué día de la semana es hoy?", listOf("Sábado", "Lunes", "Jueves", "Domingo").shuffled(), "Sábado")
+            "orientation_temporal_day" -> temporalQuestion(type, "¿Qué día del mes es hoy?", now.dayOfMonth.toString(), (1..31).map { it.toString() })
+            "orientation_temporal_month" -> temporalQuestion(type, "¿En qué mes estamos?", getMonthName(now.monthNumber), spanishMonths)
+            "orientation_temporal_year" -> temporalQuestion(type, "¿En qué año estamos?", now.year.toString(), listOf((now.year - 1).toString(), (now.year + 1).toString(), (now.year - 2).toString(), (now.year + 2).toString()))
+            "orientation_temporal_season" -> temporalQuestion(type, "¿En qué estación estamos?", getSeason(now.monthNumber), listOf("Primavera", "Verano", "Otoño", "Invierno"))
+            "orientation_temporal_dayweek" -> temporalQuestion(type, "¿Qué día de la semana es hoy?", currentWeekday, spanishWeekdays)
             "orientation_temporal_hour" -> OrientationQuestion(type, "¿Qué hora es aproximadamente?", listOf("Las 10", "Las 8", "Las 14", "Las 20").shuffled(), "Las 10")
-            "orientation_temporal_yesterday" -> OrientationQuestion(type, "¿Qué día fue ayer?", listOf("Viernes", "Jueves", "Sábado", "Lunes").shuffled(), "Viernes")
-            "orientation_temporal_tomorrow" -> OrientationQuestion(type, "¿Qué día será mañana?", listOf("Domingo", "Lunes", "Sábado", "Martes").shuffled(), "Domingo")
+            "orientation_temporal_yesterday" -> temporalQuestion(type, "¿Qué día fue ayer?", yesterday, spanishWeekdays)
+            "orientation_temporal_tomorrow" -> temporalQuestion(type, "¿Qué día será mañana?", tomorrow, spanishWeekdays)
             "orientation_temporal_century" -> OrientationQuestion(type, "¿En qué siglo estamos?", listOf("Siglo XXI", "Siglo XX", "Siglo XIX", "Siglo XXII").shuffled(), "Siglo XXI")
             "orientation_temporal_decade" -> OrientationQuestion(type, "¿En qué década estamos?", listOf("Años 2020", "Los 90", "Años 2000", "Años 2030").shuffled(), "Años 2020")
             "orientation_temporal_partday" -> OrientationQuestion(type, "¿En qué parte del día estamos?", listOf("Mañana", "Tarde", "Noche", "Madrugada").shuffled(), "Mañana")
@@ -159,8 +162,24 @@ object OrientationCatalog {
         }
     }
 
-    private fun getMonthName(m: Int): String = listOf("", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")[m.coerceIn(0, 12)]
+    private fun currentDateTime(): LocalDateTime = try {
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    } catch (_: Throwable) {
+        Clock.System.now().toLocalDateTime(TimeZone.UTC)
+    }
+
+    private fun temporalQuestion(type: String, text: String, correct: String, candidates: List<String>): OrientationQuestion {
+        val options = (candidates.filter { it != correct }.shuffled().take(3) + correct).shuffled()
+        return OrientationQuestion(type, text, options, correct)
+    }
+
+    private fun spanishWeekday(day: DayOfWeek): String = spanishWeekdays[day.ordinal]
+
+    private fun getMonthName(m: Int): String = spanishMonths[m.coerceIn(1, 12) - 1]
     private fun getDayName(d: Int): String = listOf("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")[d.coerceIn(0, 7)]
     private fun getSeason(m: Int): String = when(m) { in 3..5 -> "Primavera"; in 6..8 -> "Verano"; in 9..11 -> "Otoño"; else -> "Invierno" }
     private fun getPartDay(h: Int): String = when(h) { in 6..12 -> "Mañana"; in 13..20 -> "Tarde"; in 21..23 -> "Noche"; else -> "Madrugada" }
+
+    private val spanishWeekdays = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
+    private val spanishMonths = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
 }
