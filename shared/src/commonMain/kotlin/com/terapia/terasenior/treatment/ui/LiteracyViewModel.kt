@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 import kotlin.math.sqrt
 
 enum class LiteracyVariation {
@@ -39,7 +40,6 @@ data class LiteracyUiState(
     val sessionId: String = "" // v1.3.48
 )
 
-@OptIn(kotlin.time.ExperimentalTime::class)
 class LiteracyViewModel(
     private val saveResultUseCase: SaveActivityResultUseCase
 ) : ViewModel() {
@@ -79,7 +79,7 @@ class LiteracyViewModel(
             options = options,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            startTimeMs = DateClock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -95,10 +95,8 @@ class LiteracyViewModel(
         val isCorrect = state.userInput.trim().equals(state.targetValue, ignoreCase = true)
         
         if (isCorrect) {
-            _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
-            if (patientId != null && professionalId != null) {
-                saveResult(patientId, professionalId, appointmentId)
-            }
+            _uiState.update { it.copy(isCorrect = true) }
+            saveResult(patientId, professionalId, appointmentId)
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
             viewModelScope.launch {
@@ -112,17 +110,15 @@ class LiteracyViewModel(
         if (_uiState.value.isCompleted) return
         
         val isCorrect = option == _uiState.value.targetValue
-        _uiState.update { 
-            it.copy(
-                userInput = option,
-                isCorrect = isCorrect,
-                isCompleted = isCorrect,
-                errorsCount = if (isCorrect) it.errorsCount else it.errorsCount + 1
-            ) 
-        }
-        
-        if (isCorrect && patientId != null && professionalId != null) {
+        if (isCorrect) {
+            _uiState.update { it.copy(userInput = option, isCorrect = true) }
             saveResult(patientId, professionalId, appointmentId)
+        } else {
+            _uiState.update { it.copy(userInput = option, isCorrect = false, errorsCount = it.errorsCount + 1) }
+            viewModelScope.launch {
+                delay(1500)
+                _uiState.update { it.copy(isCorrect = null) }
+            }
         }
     }
 
@@ -143,16 +139,13 @@ class LiteracyViewModel(
         
         _uiState.update { 
             it.copy(
-                isCompleted = true,
                 isCorrect = isSuccess,
                 tracingAccuracy = accuracy,
                 errorsCount = if (isSuccess) it.errorsCount else it.errorsCount + 1
             ) 
         }
         
-        if (patientId != null && professionalId != null) {
-            saveResult(patientId, professionalId, appointmentId)
-        }
+        saveResult(patientId, professionalId, appointmentId)
     }
 
     fun clearDrawing() {
@@ -193,28 +186,32 @@ class LiteracyViewModel(
         return (precision + coverage) / 2f
     }
 
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
-                activityType = "literacy_${state.variation.name.lowercase()}",
-                score = (state.tracingAccuracy * 100).toInt().coerceIn(0, 100).let { if (it == 0 && state.isCorrect == true) 100 else it },
-                durationSeconds = duration,
-                errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
+                    activityType = "literacy_${state.variation.name.lowercase()}",
+                    score = (state.tracingAccuracy * 100).toInt().coerceIn(0, 100).let { if (it == 0 && state.isCorrect == true) 100 else it },
+                    durationSeconds = duration,
+                    errorsCount = state.errorsCount,
+                    difficultyLevel = "NIVEL_${state.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 

@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
 
 data class MemoryUiState(
     val currentType: String = "memory_cultural",
@@ -38,18 +40,19 @@ class MemoryViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1, sessionId: String = "") {
-        // v1.3.45: Carga inmediata y blindaje total
+        val now = try { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() } catch(t: Throwable) { 1724310000000L }
+        
         _uiState.update { it.copy(
             currentType = type,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = 1724310000000L, // Fixed time to avoid any clock issues
+            startTimeMs = now,
             isCompleted = false,
             errorsCount = 0,
-            questionText = "v1.3.45: Iniciando...",
+            questionText = "Iniciando...",
             options = emptyList(),
             isCorrect = null,
-            debugInfo = "START_v45"
+            debugInfo = "START"
         ) }
         
         viewModelScope.launch {
@@ -58,7 +61,7 @@ class MemoryViewModel(
                 val question = MemoryCatalog.getQuestion(type)
                 _uiState.update { it.copy(
                     questionText = question.text,
-                    options = question.options.shuffled(),
+                    options = GdsDifficulty.choices(question.options, question.correctAnswer, level),
                     correctAnswer = question.correctAnswer,
                     isCorrect = null,
                     debugInfo = it.debugInfo + " -> OK"
@@ -114,10 +117,8 @@ class MemoryViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val now = try { Clock.System.now() } catch(t: Throwable) { Instant.fromEpochMilliseconds(1724310000000L) }
-        val endTime = now.toEpochMilliseconds()
-        val diff = endTime - state.startTimeMs
-        val duration = (diff / 1000L).toInt()
+        val now = try { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() } catch(t: Throwable) { state.startTimeMs + 30000 }
+        val duration = ((now - state.startTimeMs) / 1000L).toInt().coerceAtLeast(1)
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
@@ -126,12 +127,12 @@ class MemoryViewModel(
                 patientId = patientId,
                 professionalId = professionalId,
                 appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
+                sessionId = state.sessionId,
                 activityType = state.currentType,
                 score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
                 durationSeconds = duration,
                 errorsCount = state.errorsCount,
-                difficultyLevel = "GDS_${state.currentLevel + 2}",
+                difficultyLevel = "CHALLENGE_${state.currentLevel}",
                 createdAt = ""
             )
             saveResultUseCase(result)

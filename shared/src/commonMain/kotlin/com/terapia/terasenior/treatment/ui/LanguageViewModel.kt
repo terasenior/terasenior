@@ -14,8 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
+import kotlinx.datetime.Clock as DateClock
 
 data class LanguageUiState(
     val type: String = "",
@@ -62,9 +61,8 @@ class LanguageViewModel(
         GameItem("Mesa", Icons.Default.TableBar, "Hogar", "https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?w=400")
     )
 
-    @OptIn(ExperimentalTime::class)
     fun startNewGame(type: String, level: Int, sessionId: String = "", config: Map<String, String> = emptyMap()) {
-        val startTime = Clock.System.now().toEpochMilliseconds()
+        val startTime = DateClock.System.now().toEpochMilliseconds()
         
         when (type) {
             "language_start_letter" -> {
@@ -89,8 +87,11 @@ class LanguageViewModel(
             }
             "language_denomination" -> {
                 val target = objects.random()
-                val otherOptions = objects.filter { it.name != target.name }.shuffled().take(3).map { it.name }
-                val options = (otherOptions + target.name).shuffled()
+                val options = GdsDifficulty.choices(
+                    objects.map { it.name },
+                    target.name,
+                    level
+                )
                 _uiState.value = LanguageUiState(type = type, prompt = target.name, icon = if (target.imageUrl == null) target.icon else null, imageUrl = target.imageUrl, options = options, targetValue = target.name, instruction = "Nombra el objeto que ves en la imagen", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
             "language_semantic_completion" -> {
@@ -99,10 +100,10 @@ class LanguageViewModel(
             }
             "language_semantic_naming" -> {
                 val category = categories.keys.random()
-                val items = categories[category]!!.shuffled().take(3)
+                val itemCount = level.coerceIn(1, 5)
+                val items = categories[category]!!.shuffled().take(itemCount)
                 val itemIcons = items.map { Icons.AutoMirrored.Filled.Label } 
-                val otherCategories = categories.keys.filter { it != category }.shuffled().take(3)
-                val options = (otherCategories + category).shuffled()
+                val options = GdsDifficulty.choices(categories.keys.toList(), category, level)
                 _uiState.value = LanguageUiState(type = type, prompt = category, options = options, targetValue = category, images = itemIcons, instruction = "¿A qué categoría pertenecen estos elementos?", currentLevel = level, startTimeMs = startTime, sessionId = sessionId)
             }
         }
@@ -133,11 +134,7 @@ class LanguageViewModel(
             _uiState.update { it.copy(isCorrect = true) }
             viewModelScope.launch {
                 delay(1500)
-                if (patientId != null && professionalId != null) {
-                    saveResult(patientId, professionalId, appointmentId)
-                } else {
-                    _uiState.update { it.copy(isCompleted = true) }
-                }
+                saveResult(patientId, professionalId, appointmentId)
             }
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
@@ -156,11 +153,7 @@ class LanguageViewModel(
             _uiState.update { it.copy(isCorrect = true) }
             viewModelScope.launch {
                 delay(1500)
-                if (patientId != null && professionalId != null) {
-                    saveResult(patientId, professionalId, appointmentId)
-                } else {
-                    _uiState.update { it.copy(isCompleted = true) }
-                }
+                saveResult(patientId, professionalId, appointmentId)
             }
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
@@ -171,29 +164,32 @@ class LanguageViewModel(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
-                activityType = state.type,
-                score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
+                    activityType = state.type,
+                    score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = state.errorsCount,
+                    difficultyLevel = "NIVEL_${state.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 }

@@ -15,8 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
+import kotlinx.datetime.Clock as DateClock
 
 data class NamingGameItem(val name: String, val icon: ImageVector, val imageUrl: String? = null)
 
@@ -39,7 +38,6 @@ class NamingObjectsViewModel(
     private val _uiState = MutableStateFlow(NamingObjectsUiState())
     val uiState: StateFlow<NamingObjectsUiState> = _uiState.asStateFlow()
 
-    @OptIn(ExperimentalTime::class)
     fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numOptions = when (level) {
             1 -> 2
@@ -61,7 +59,7 @@ class NamingObjectsViewModel(
             options = allOptions,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = Clock.System.now().toEpochMilliseconds()
+            startTimeMs = DateClock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -70,10 +68,8 @@ class NamingObjectsViewModel(
         if (state.isCompleted || state.isCorrect == true) return
 
         if (name == state.targetItem?.name) {
-            _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
-            if (patientId != null && professionalId != null) {
-                saveResult(patientId, professionalId, appointmentId)
-            }
+            _uiState.update { it.copy(isCorrect = true) }
+            saveResult(patientId, professionalId, appointmentId)
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
             viewModelScope.launch {
@@ -83,29 +79,32 @@ class NamingObjectsViewModel(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
-                activityType = "language_naming_objects",
-                score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
+                    activityType = "language_naming_objects",
+                    score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = state.errorsCount,
+                    difficultyLevel = "NIVEL_${state.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 }

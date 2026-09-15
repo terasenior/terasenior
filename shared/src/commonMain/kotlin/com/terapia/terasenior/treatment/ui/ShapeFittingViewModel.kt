@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 import kotlin.random.Random
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 data class PuzzlePiece(
     val id: Int,
@@ -53,7 +52,6 @@ class ShapeFittingViewModel(
         Icons.Default.Favorite to "Corazón"
     )
 
-    @OptIn(ExperimentalTime::class)
     fun startNewGame(level: Int = 1, sessionId: String = "") {
         val numPieces = when (level) {
             1 -> 1
@@ -76,7 +74,7 @@ class ShapeFittingViewModel(
             pieces = pieces,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = Clock.System.now().toEpochMilliseconds()
+            startTimeMs = DateClock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -115,11 +113,10 @@ class ShapeFittingViewModel(
             val completed = newPieces.all { it.isSnapped }
             val newState = state.copy(
                 pieces = newPieces,
-                isCompleted = completed,
                 errorsCount = if (!isSnap) state.errorsCount + 1 else state.errorsCount
             )
             
-            if (completed && patientId != null && professionalId != null) {
+            if (completed) {
                 saveResult(patientId, professionalId, appointmentId, newState)
             }
             
@@ -127,28 +124,31 @@ class ShapeFittingViewModel(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?, finalState: ShapeFittingUiState) {
-        val endTime = Clock.System.now().toEpochMilliseconds()
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?, finalState: ShapeFittingUiState) {
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - finalState.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = finalState.sessionId, // v1.3.48
-                activityType = "perception_shape_fitting",
-                score = (100 - (finalState.errorsCount * 10)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = finalState.errorsCount,
-                difficultyLevel = "NIVEL_${finalState.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = finalState.sessionId, // v1.3.48
+                    activityType = "perception_shape_fitting",
+                    score = (100 - (finalState.errorsCount * 10)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = finalState.errorsCount,
+                    difficultyLevel = "NIVEL_${finalState.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 }

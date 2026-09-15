@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 
 data class ExecutiveFunctionsUiState(
     val mode: String = "",
@@ -61,7 +62,7 @@ class ExecutiveFunctionsViewModel(
             mode = mode,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            startTimeMs = DateClock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -212,34 +213,34 @@ class ExecutiveFunctionsViewModel(
         _uiState.update { it.copy(items = newItems) }
     }
 
-    fun onCheckPlanning() {
+    fun onCheckPlanning(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
         if (state.items == state.targetOrder) {
-            handleCorrect()
+            handleCorrect(patientId, professionalId, appointmentId)
         } else {
             handleError()
         }
     }
 
-    fun onOptionSelected(selected: String) {
+    fun onOptionSelected(selected: String, patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
         if (selected == state.correctAnswer) {
-            handleCorrect()
+            handleCorrect(patientId, professionalId, appointmentId)
         } else {
             handleError()
         }
     }
 
-    fun onAnswerInput(answer: String) {
+    fun onAnswerInput(answer: String, patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
         if (answer.trim().lowercase() == state.correctAnswer.lowercase()) {
-            handleCorrect()
+            handleCorrect(patientId, professionalId, appointmentId)
         } else {
             handleError()
         }
     }
     
-    fun onAbstractionInput(index: Int, value: Int) {
+    fun onAbstractionInput(index: Int, value: Int, patientId: String?, professionalId: String?, appointmentId: String?) {
         val currentTranslation = _uiState.value.userTranslation.toMutableList()
         currentTranslation[index] = value
         _uiState.update { it.copy(userTranslation = currentTranslation) }
@@ -250,12 +251,13 @@ class ExecutiveFunctionsViewModel(
                 val symbol = _uiState.value.symbolSequence[i]
                 currentTranslation[i] == _uiState.value.symbolKey[symbol]
             }
-            if (isAllCorrect) handleCorrect() else handleError()
+            if (isAllCorrect) handleCorrect(patientId, professionalId, appointmentId) else handleError()
         }
     }
 
-    private fun handleCorrect() {
-        _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
+    private fun handleCorrect(patientId: String?, professionalId: String?, appointmentId: String?) {
+        _uiState.update { it.copy(isCorrect = true) }
+        saveAndFinish(patientId, professionalId, appointmentId)
     }
 
     private fun handleError() {
@@ -268,11 +270,11 @@ class ExecutiveFunctionsViewModel(
 
     fun saveAndFinish(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
-        if (patientId != null && professionalId != null) {
-            viewModelScope.launch {
+        viewModelScope.launch {
+            if (patientId != null && professionalId != null) {
                 _uiState.update { it.copy(isSaving = true) }
                 val result = ActivityResult(
                     id = "",
@@ -288,7 +290,9 @@ class ExecutiveFunctionsViewModel(
                     createdAt = ""
                 )
                 saveResultUseCase(result)
-                _uiState.update { it.copy(isSaving = false) }
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
             }
         }
     }

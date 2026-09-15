@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlin.random.Random
 
 data class CalculationUiState(
@@ -32,7 +33,6 @@ class CalculationViewModel(
     private val _uiState = MutableStateFlow(CalculationUiState())
     val uiState: StateFlow<CalculationUiState> = _uiState.asStateFlow()
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(level: Int = 3, sessionId: String = "") {
         val (opText, answer) = generateOperation(level)
         
@@ -50,7 +50,7 @@ class CalculationViewModel(
             options = options.toList().shuffled(),
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            startTimeMs = Clock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -92,10 +92,8 @@ class CalculationViewModel(
         if (state.isCompleted || state.isCorrect == true) return
 
         if (selected == state.correctAnswer) {
-            _uiState.update { it.copy(isCorrect = true, isCompleted = true) }
-            if (patientId != null && professionalId != null) {
-                saveResult(patientId, professionalId, appointmentId)
-            }
+            _uiState.update { it.copy(isCorrect = true) }
+            saveResult(patientId, professionalId, appointmentId)
         } else {
             _uiState.update { it.copy(isCorrect = false, errorsCount = state.errorsCount + 1) }
             viewModelScope.launch {
@@ -105,29 +103,32 @@ class CalculationViewModel(
         }
     }
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = Clock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
-                activityType = "calculation_simple",
-                score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
+                    activityType = "calculation_simple",
+                    score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = state.errorsCount,
+                    difficultyLevel = "NIVEL_${state.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 }

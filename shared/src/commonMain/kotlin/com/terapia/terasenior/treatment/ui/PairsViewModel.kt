@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 import kotlin.random.Random
 
 data class MemoryCard(
@@ -65,7 +66,6 @@ class PairsViewModel(
         "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200"  // Coche
     )
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(level: Int = 3, sessionId: String = "") {
         val numPairs = when(level) {
             1 -> 2
@@ -97,7 +97,7 @@ class PairsViewModel(
             totalPairs = numPairs,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+            startTimeMs = DateClock.System.now().toEpochMilliseconds(),
             useRealImages = useReal
         )
     }
@@ -130,9 +130,9 @@ class PairsViewModel(
                     val newPairsFound = state.pairsFound + 1
                     val completed = newPairsFound >= state.totalPairs
                     
-                    _uiState.update { it.copy(cards = newCards, firstSelectedCardIndex = null, isProcessing = false, pairsFound = newPairsFound, isCompleted = completed) }
+                    _uiState.update { it.copy(cards = newCards, firstSelectedCardIndex = null, isProcessing = false, pairsFound = newPairsFound) }
 
-                    if (completed && patientId != null && professionalId != null) {
+                    if (completed) {
                         saveResult(patientId, professionalId, appointmentId)
                     }
                 } else {
@@ -144,29 +144,32 @@ class PairsViewModel(
         }
     }
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val currentState = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - currentState.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = currentState.sessionId, // v1.3.48
-                activityType = "memory_pairs",
-                score = (100 - (currentState.errorsCount * 5)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = currentState.errorsCount,
-                difficultyLevel = "NIVEL_${currentState.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = currentState.sessionId, // v1.3.48
+                    activityType = "memory_pairs",
+                    score = (100 - (currentState.errorsCount * 5)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = currentState.errorsCount,
+                    difficultyLevel = "NIVEL_${currentState.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 }

@@ -143,10 +143,17 @@ class CreateSessionViewModel(
     private fun generateStandardizedExercises(level: Int): List<ExerciseConfig> {
         val result = mutableListOf<ExerciseConfig>()
         val categories = listOf("Orientación", "Atención", "Memoria", "Lenguaje", "Funciones Ejecutivas", "Percepción", "Lectoescritura")
+        val exercisesPerArea = when (level.coerceIn(1, 5)) {
+            1 -> 5
+            2 -> 4
+            3 -> 3
+            4 -> 2
+            else -> 1
+        }
         
         categories.forEach { cat ->
             val pool = getExercisesForCategory(cat)
-            val selected = pool.shuffled().take(10)
+            val selected = pool.shuffled().take(exercisesPerArea)
             selected.forEach { (type, name, desc) ->
                 result.add(ExerciseConfig(type, name, cat, level, desc))
             }

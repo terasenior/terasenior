@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 
 enum class PerceptionType {
     LATERAL_DOMINANCE, MIRROR, BODY_PARTS
@@ -42,7 +43,6 @@ sealed interface PerceptionStimulus {
 }
 
 
-@OptIn(kotlin.time.ExperimentalTime::class)
 class PerceptionViewModel(
     private val saveResultUseCase: SaveActivityResultUseCase
 ) : ViewModel() {
@@ -91,7 +91,7 @@ class PerceptionViewModel(
             currentType = type,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds(),
+            startTimeMs = DateClock.System.now().toEpochMilliseconds(),
             isCompleted = false,
             errorsCount = 0,
             currentStep = 0
@@ -112,7 +112,8 @@ class PerceptionViewModel(
             PerceptionType.BODY_PARTS -> bodyPartsStimuli
         }
 
-        if (state.currentStep >= questions.size) {
+        val questionLimit = minOf(questions.size, state.currentLevel.coerceIn(1, 5))
+        if (state.currentStep >= questionLimit) {
             _uiState.update { it.copy(isCompleted = true) }
             return
         }
@@ -126,7 +127,7 @@ class PerceptionViewModel(
             options = question.second.shuffled(),
             correctAnswer = question.third,
             isCorrect = null,
-            totalSteps = questions.size
+            totalSteps = questionLimit
         ) }
     }
 
@@ -140,11 +141,8 @@ class PerceptionViewModel(
                 delay(1500)
                 val nextStep = state.currentStep + 1
                 _uiState.update { it.copy(currentStep = nextStep) }
-                if (nextStep >= totalQuestionsForType(state.currentType)) {
-                    _uiState.update { it.copy(isCompleted = true) }
-                    if (patientId != null && professionalId != null) {
-                        saveResult(patientId, professionalId, appointmentId)
-                    }
+                if (nextStep >= totalQuestionsForType(state.currentType, state.currentLevel)) {
+                    saveResult(patientId, professionalId, appointmentId)
                 } else {
                     setupQuestion()
                 }
@@ -158,39 +156,46 @@ class PerceptionViewModel(
         }
     }
 
-    private fun totalQuestionsForType(type: PerceptionType): Int = when(type) {
-        PerceptionType.LATERAL_DOMINANCE -> lateralQuestions.size
-        PerceptionType.MIRROR -> mirrorQuestions.size
-        PerceptionType.BODY_PARTS -> bodyPartsQuestions.size
+    private fun totalQuestionsForType(type: PerceptionType, level: Int): Int {
+        val available = when(type) {
+            PerceptionType.LATERAL_DOMINANCE -> lateralQuestions.size
+            PerceptionType.MIRROR -> mirrorQuestions.size
+            PerceptionType.BODY_PARTS -> bodyPartsQuestions.size
+        }
+        return minOf(available, level.coerceIn(1, 5))
     }
 
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val activityType = when(state.currentType) {
-                PerceptionType.LATERAL_DOMINANCE -> "perception_lateral_dominance"
-                PerceptionType.MIRROR -> "perception_mirror"
-                PerceptionType.BODY_PARTS -> "perception_body_parts"
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val activityType = when(state.currentType) {
+                    PerceptionType.LATERAL_DOMINANCE -> "perception_lateral_dominance"
+                    PerceptionType.MIRROR -> "perception_mirror"
+                    PerceptionType.BODY_PARTS -> "perception_body_parts"
+                }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
+                    activityType = activityType,
+                    score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = state.errorsCount,
+                    difficultyLevel = "NIVEL_${state.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
             }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
-                activityType = activityType,
-                score = (100 - (state.errorsCount * 15)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
         }
     }
 }

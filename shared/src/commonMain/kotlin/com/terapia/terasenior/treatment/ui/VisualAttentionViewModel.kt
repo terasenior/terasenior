@@ -522,7 +522,7 @@ class VisualAttentionViewModel(
                 createdAt = ""
             )
             saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            _uiState.update { it.copy(isSaving = false, isCompleted = true) }
         }
     }
 }

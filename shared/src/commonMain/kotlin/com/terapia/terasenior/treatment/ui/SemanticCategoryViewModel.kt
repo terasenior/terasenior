@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock as DateClock
 
 data class SemanticItem(
     val name: String,
@@ -59,7 +60,6 @@ class SemanticCategoryViewModel(
         SemanticItem("Avión", Icons.Default.Flight, "Vehículos")
     )
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(level: Int = 3, sessionId: String = "") {
         val shuffled = allItems.shuffled()
         val numCategories = when(level) {
@@ -79,7 +79,7 @@ class SemanticCategoryViewModel(
             totalItemsToFind = totalToFind,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
+            startTimeMs = DateClock.System.now().toEpochMilliseconds()
         )
     }
 
@@ -97,11 +97,10 @@ class SemanticCategoryViewModel(
             
             _uiState.update { it.copy(
                 items = newItems,
-                foundCount = newFoundCount,
-                isCompleted = completed
+                foundCount = newFoundCount
             ) }
 
-            if (completed && patientId != null && professionalId != null) {
+            if (completed) {
                 saveResult(patientId, professionalId, appointmentId)
             }
         } else {
@@ -113,29 +112,32 @@ class SemanticCategoryViewModel(
         }
     }
 
-    @OptIn(kotlin.time.ExperimentalTime::class)
-    private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
+    private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endTime = DateClock.System.now().toEpochMilliseconds()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val result = ActivityResult(
-                id = "",
-                patientId = patientId,
-                professionalId = professionalId,
-                appointmentId = appointmentId,
-                sessionId = state.sessionId, // v1.3.48
-                activityType = "language_semantic_category",
-                score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
-                durationSeconds = duration,
-                errorsCount = state.errorsCount,
-                difficultyLevel = "NIVEL_${state.currentLevel}",
-                createdAt = ""
-            )
-            saveResultUseCase(result)
-            _uiState.update { it.copy(isSaving = false) }
+            if (patientId != null && professionalId != null) {
+                _uiState.update { it.copy(isSaving = true) }
+                val result = ActivityResult(
+                    id = "",
+                    patientId = patientId,
+                    professionalId = professionalId,
+                    appointmentId = appointmentId,
+                    sessionId = state.sessionId, // v1.3.48
+                    activityType = "language_semantic_category",
+                    score = (100 - (state.errorsCount * 10)).coerceAtLeast(0),
+                    durationSeconds = duration,
+                    errorsCount = state.errorsCount,
+                    difficultyLevel = "NIVEL_${state.currentLevel}",
+                    createdAt = ""
+                )
+                saveResultUseCase(result)
+                _uiState.update { it.copy(isSaving = false, isCompleted = true) }
+            } else {
+                _uiState.update { it.copy(isCompleted = true) }
+            }
         }
     }
 }
