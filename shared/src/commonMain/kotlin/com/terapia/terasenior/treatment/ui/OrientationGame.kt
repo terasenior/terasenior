@@ -32,6 +32,7 @@ fun OrientationGame(
 ) {
     val state by viewModel.uiState.collectAsState()
     val speechManager = remember { SpeechManager() }
+    val isExecutiveExercise = state.currentType.startsWith("guided_executive_")
     var completionDispatched by remember(state.currentType, state.startTimeMs) { mutableStateOf(false) }
     var navigationStatus by remember(state.currentType, state.startTimeMs) { mutableStateOf("pendiente") }
 
@@ -73,7 +74,7 @@ fun OrientationGame(
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = MaterialTheme.colorScheme.error)
                 }
-                Text("Orientación de Realidad", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text(if (isExecutiveExercise) "Funciones Ejecutivas" else "Orientación de Realidad", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                 IconButton(onClick = { speechManager.speak(state.questionText) }) {
                     Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Repetir")
                 }
@@ -148,7 +149,7 @@ fun OrientationGame(
                     shape = RoundedCornerShape(24.dp)
                 ) {
                     Text(
-                        text = "¡Excelente! Has completado la orientación de hoy.",
+                        text = if (isExecutiveExercise) "¡Excelente! Has completado la actividad." else "¡Excelente! Has completado la orientación de hoy.",
                         modifier = Modifier.padding(20.dp).fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = Color(0xFF1B5E20),

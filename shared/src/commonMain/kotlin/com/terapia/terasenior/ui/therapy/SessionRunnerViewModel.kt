@@ -8,6 +8,7 @@ import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
+import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -306,7 +307,8 @@ class SessionRunnerViewModel(
         }
     }
 
-    private fun getExerciseDisplayName(type: String): String = ExerciseTranslationUtils.getDisplayName(type)
+    private fun getExerciseDisplayName(type: String): String =
+        TherapeuticExerciseCatalog.find(type)?.name ?: ExerciseTranslationUtils.getDisplayName(type)
 
     private suspend fun saveMissingPatientResults(
         session: TherapySession,
@@ -333,6 +335,7 @@ class SessionRunnerViewModel(
         activityType.startsWith("memory") -> "Memoria"
         activityType.startsWith("language") -> "Lenguaje"
         activityType.startsWith("executive") || activityType.startsWith("calculation") -> "Funciones ejecutivas"
+        activityType.startsWith("guided_executive_") -> "Funciones ejecutivas"
         activityType.startsWith("perception") -> "Percepción"
         activityType.startsWith("literacy") -> "Lectoescritura"
         else -> "Otros"

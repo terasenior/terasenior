@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.treatment.repository.OrientationCatalog
+import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -91,7 +92,17 @@ class OrientationViewModel(
     private fun setupCatalogQuestion(type: String) {
         try {
             _uiState.update { it.copy(debugInfo = it.debugInfo + " -> CATALOG_REQ") }
-            val question = OrientationCatalog.getQuestion(type)
+            val guided = TherapeuticExerciseCatalog.find(type)
+            val question = if (guided != null) {
+                OrientationCatalog.OrientationQuestion(
+                    type = guided.id,
+                    text = guided.question,
+                    options = guided.options,
+                    correctAnswer = guided.correctAnswer
+                )
+            } else {
+                OrientationCatalog.getQuestion(type)
+            }
             _uiState.update { it.copy(
                 questionText = question.text,
                 options = GdsDifficulty.choices(question.options, question.correctAnswer, it.currentLevel),

@@ -11,6 +11,7 @@ import com.terapia.terasenior.domain.model.therapy.TherapySession
 import com.terapia.terasenior.domain.model.therapy.TherapySessionExercise
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
+import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -162,6 +163,11 @@ class CreateSessionViewModel(
     }
 
     private fun getExercisesForCategory(category: String): List<Triple<String, String, String>> {
+        if (category == "Funciones Ejecutivas") {
+            return TherapeuticExerciseCatalog.forCategory(category).map {
+                Triple(it.id, it.name, it.description)
+            }
+        }
         return when (category) {
             "Orientación" -> listOf(
                 Triple("orientation_temporal_day", "Día del mes", "Identificar el número del día actual."),
@@ -422,10 +428,8 @@ class CreateSessionViewModel(
                 Triple("language_denomination", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
                 Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
             )
-            "Funciones Ejecutivas" -> listOf(
-                Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas."),
-                Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
-            )
+            // Las propuestas nuevas se devuelven al principio de esta función.
+            "Funciones Ejecutivas" -> emptyList()
             "Percepción" -> listOf(
                 Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
                 Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
