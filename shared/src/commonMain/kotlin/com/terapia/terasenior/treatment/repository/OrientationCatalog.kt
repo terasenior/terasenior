@@ -163,9 +163,9 @@ object OrientationCatalog {
     }
 
     private fun currentDateTime(): LocalDateTime = try {
-        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        currentOrientationLocalDateTime()
     } catch (_: Throwable) {
-        Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        LocalDateTime(2026, 9, 16, 12, 0)
     }
 
     private fun temporalQuestion(type: String, text: String, correct: String, candidates: List<String>): OrientationQuestion {
