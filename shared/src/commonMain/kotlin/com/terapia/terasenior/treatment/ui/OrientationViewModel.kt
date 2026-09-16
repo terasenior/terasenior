@@ -92,11 +92,11 @@ class OrientationViewModel(
     private fun setupCatalogQuestion(type: String) {
         try {
             _uiState.update { it.copy(debugInfo = it.debugInfo + " -> CATALOG_REQ") }
-            val guided = TherapeuticExerciseCatalog.find(type)
+            val guided = TherapeuticExerciseCatalog.question(type, _uiState.value.currentLevel)
             val question = if (guided != null) {
                 OrientationCatalog.OrientationQuestion(
-                    type = guided.id,
-                    text = guided.question,
+                    type = type,
+                    text = guided.text,
                     options = guided.options,
                     correctAnswer = guided.correctAnswer
                 )
@@ -105,7 +105,7 @@ class OrientationViewModel(
             }
             _uiState.update { it.copy(
                 questionText = question.text,
-                options = GdsDifficulty.choices(question.options, question.correctAnswer, it.currentLevel),
+                options = if (guided != null) question.options else GdsDifficulty.choices(question.options, question.correctAnswer, it.currentLevel),
                 correctAnswer = question.correctAnswer,
                 isCorrect = null,
                 debugInfo = it.debugInfo + " -> OK"

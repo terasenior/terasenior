@@ -1,81 +1,59 @@
 package com.terapia.terasenior.treatment.repository
 
 /**
- * 500 ejercicios de funciones ejecutivas para personas mayores.
+ * Banco de 500 ejercicios de funciones ejecutivas.
  *
- * Combina 20 situaciones cotidianas, cinco procesos ejecutivos y cinco
- * adaptaciones GDS. El terapeuta mantiene el control de la selección.
+ * Las actividades se presentan sin una etiqueta GDS. Cada actividad adapta
+ * automáticamente su longitud, vocabulario y número de alternativas al nivel
+ * elegido para la sesión: GDS 3 supone mayor carga y GDS 5 una consigna más
+ * breve con menos alternativas.
  */
 object TherapeuticExerciseCatalog {
     data class GuidedExercise(
         val id: String,
         val name: String,
         val category: String,
-        val description: String,
-        val gdsLevel: Int,
-        val question: String,
-        val correctAnswer: String,
-        val options: List<String>
+        val description: String
     )
 
-    private data class Situation(
-        val id: String,
-        val name: String,
-        val context: String,
-        val plan: String,
-        val firstStep: String,
-        val safeChoice: String,
-        val solution: String,
-        val check: String
+    data class GuidedQuestion(
+        val text: String,
+        val options: List<String>,
+        val correctAnswer: String
     )
 
-    private val situations = listOf(
-        Situation("shopping", "Compra semanal", "preparar una compra sencilla", "Hacer una lista de lo necesario", "Revisar qué falta en casa", "Llevar una lista y el dinero preparado", "Consultar la lista y comprar solo lo necesario", "Comprobar que lleva todos los productos"),
-        Situation("appointment", "Cita médica", "acudir a una cita programada", "Anotar la fecha y la hora", "Mirar la cita en el calendario", "Salir con tiempo suficiente", "Consultar el centro si tiene una duda", "Comprobar la hora y la documentación"),
-        Situation("medication", "Rutina de medicación", "organizar una toma pautada", "Seguir el pastillero o la pauta indicada", "Leer la pauta preparada", "Consultar a un profesional ante cualquier duda", "Pedir aclaración al profesional sanitario", "Comprobar el día y la toma antes de usarla"),
-        Situation("meal", "Preparar una comida", "preparar una comida sencilla", "Reunir los ingredientes y utensilios", "Leer o recordar los pasos", "Mantener la cocina ordenada y vigilada", "Detenerse y pedir ayuda si surge un riesgo", "Comprobar que la cocina queda apagada"),
-        Situation("laundry", "Colada", "organizar una colada", "Separar la ropa por tipo o color", "Revisar las prendas", "Seguir las indicaciones de lavado", "Consultar una etiqueta si no la entiende", "Comprobar que no queda ropa dentro"),
-        Situation("walk", "Paseo seguro", "preparar un paseo", "Elegir una ruta y un horario adecuados", "Comprobar el tiempo exterior", "Llevar calzado estable y teléfono", "Acortar el paseo si no se encuentra bien", "Comprobar que lleva las llaves"),
-        Situation("phone", "Llamada importante", "realizar una llamada", "Preparar el número y el motivo", "Buscar el número correcto", "Sentarse en un lugar tranquilo", "Dejar un mensaje claro si no responden", "Comprobar que ha llamado al número correcto"),
-        Situation("home_safety", "Seguridad en casa", "salir de casa de forma segura", "Seguir una rutina de salida", "Revisar puertas y electrodomésticos", "Cerrar la puerta y guardar las llaves", "Volver a revisar si tiene una duda", "Comprobar que la cocina está apagada"),
-        Situation("bus", "Uso del autobús", "hacer un desplazamiento en autobús", "Preparar ruta, parada y horario", "Consultar la parada correcta", "Esperar en una zona segura", "Preguntar al conductor si no está seguro", "Comprobar que lleva el billete o tarjeta"),
-        Situation("bill", "Revisar un recibo", "revisar un recibo sencillo", "Leer el importe y la fecha", "Localizar el importe", "Guardar el recibo en un lugar fijo", "Pedir ayuda si observa un dato inesperado", "Comprobar la fecha de vencimiento"),
-        Situation("visitors", "Preparar una visita", "organizar la llegada de una visita", "Decidir lo necesario con antelación", "Confirmar la hora de llegada", "Preparar un espacio cómodo", "Avisar si necesita cambiar el plan", "Comprobar que tiene lo necesario preparado"),
-        Situation("garden", "Cuidado de plantas", "regar una planta", "Preparar agua y lugar de trabajo", "Comprobar si la tierra está seca", "Evitar dejar agua en el suelo", "Pedir ayuda con macetas pesadas", "Comprobar que no queda agua derramada"),
-        Situation("documents", "Documentación", "guardar documentos importantes", "Usar una carpeta identificada", "Reunir los documentos", "Guardar las copias en un lugar conocido", "Pedir apoyo si falta un documento", "Comprobar que la carpeta queda cerrada"),
-        Situation("birthday", "Recordar un cumpleaños", "preparar un cumpleaños", "Anotar la fecha y un pequeño detalle", "Mirar el calendario", "Preparar el detalle con antelación", "Llamar si no puede acudir", "Comprobar la fecha antes de felicitar"),
-        Situation("weather", "Cambio de tiempo", "adaptar una salida al tiempo", "Revisar la previsión antes de salir", "Mirar el tiempo exterior", "Llevar la prenda adecuada", "Posponer la salida si hay riesgo", "Comprobar que lleva protección adecuada"),
-        Situation("market", "Compra en mercado", "comprar alimentos frescos", "Decidir qué necesita y cuánto", "Revisar la lista", "Conservar el dinero y la cartera de forma segura", "Preguntar el precio antes de decidir", "Comprobar que la cartera sigue guardada"),
-        Situation("library", "Préstamo de libro", "pedir prestado un libro", "Elegir el libro y anotar la devolución", "Buscar el título", "Guardar el resguardo", "Pedir ayuda al personal para localizarlo", "Comprobar la fecha de devolución"),
-        Situation("exercise", "Rutina de ejercicio", "preparar ejercicio suave pautado", "Elegir el momento y el material indicado", "Comprobar que el espacio está libre", "Usar calzado y apoyo adecuados", "Detenerse si nota malestar y pedir ayuda", "Comprobar que el espacio queda despejado"),
-        Situation("emergency", "Situación imprevista", "actuar ante una situación preocupante", "Mantener la calma y valorar el entorno", "Alejarse de la situación de riesgo", "Pedir ayuda mediante el 112 si hay emergencia", "Contactar con ayuda adecuada", "Comprobar que está en un lugar seguro"),
-        Situation("schedule", "Organizar el día", "planificar tareas del día", "Ordenar las tareas por prioridad", "Anotar las tareas pendientes", "Dejar tiempo para descanso y desplazamientos", "Cambiar el orden si surge algo importante", "Comprobar qué tarea queda pendiente")
+    private enum class Family(val title: String, val description: String) {
+        COUNTDOWN("Cuenta atrás", "Cuenta hacia atrás siguiendo una pauta."),
+        DECISIONS("Decisiones cotidianas", "Elige una solución sencilla para una situación diaria."),
+        EMOTIONS("Adivina la emoción", "Reconoce la emoción más probable en una situación."),
+        RHYTHMS("Ritmos y secuencias", "Completa una secuencia de palabras sencillas."),
+        CALCULATION("Cálculo con atención", "Resuelve un cálculo breve sin perder la consigna."),
+        REVERSE("Series al revés", "Recuerda una serie y reconoce el orden inverso."),
+        FLEXIBILITY("Frases alternativas", "Elige una continuación útil y con sentido."),
+        STORIES("Historias encadenadas", "Escoge el siguiente paso lógico de una historia."),
+        LOGIC("Problemas sencillos", "Resuelve una relación o regla clara."),
+        PLANNING("Planifica la tarea", "Selecciona el primer paso de una tarea cotidiana.")
+    }
+
+    private val dailyThemes = listOf(
+        "la compra", "el paseo", "el desayuno", "una visita", "la colada",
+        "una llamada", "el calendario", "las plantas", "una receta", "el autobús"
     )
 
-    private data class Task(
-        val id: String,
-        val name: String,
-        val question: (Situation) -> String,
-        val answer: (Situation) -> String
-    )
-
-    private val tasks = listOf(
-        Task("plan", "Planificación", { "Para ${it.context}, ¿qué estrategia ayuda a organizarse?" }, { it.plan }),
-        Task("first", "Primer paso", { "Para ${it.context}, ¿qué conviene hacer primero?" }, { it.firstStep }),
-        Task("safe", "Decisión segura", { "Al ${it.context}, ¿cuál es la opción más segura?" }, { it.safeChoice }),
-        Task("solve", "Resolver un imprevisto", { "Si surge una dificultad al ${it.context}, ¿qué respuesta es adecuada?" }, { it.solution }),
-        Task("check", "Revisión final", { "Después de ${it.context}, ¿qué conviene comprobar?" }, { it.check })
-    )
-
-    val items: List<GuidedExercise> = situations.flatMap { situation ->
-        tasks.flatMap { task -> (1..5).map { level -> buildExercise(situation, task, level) } }
+    val items: List<GuidedExercise> = Family.entries.flatMap { family ->
+        (1..50).map { number ->
+            GuidedExercise(
+                id = "guided_executive_${family.name.lowercase()}_$number",
+                name = "${family.title} ${number.toString().padStart(2, '0')}",
+                category = "Funciones Ejecutivas",
+                description = family.description
+            )
+        }
     }
 
     init {
-        check(situations.size == 20) { "El catálogo requiere 20 situaciones funcionales." }
-        check(tasks.size == 5) { "El catálogo requiere cinco procesos ejecutivos." }
-        check(items.size == 500) { "El catálogo debe contener exactamente 500 ejercicios." }
-        check(items.map { it.id }.distinct().size == items.size) { "Los ejercicios deben tener identificadores únicos." }
+        check(items.size == 500) { "El catálogo debe contener exactamente 500 actividades." }
+        check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
     }
 
     fun find(id: String): GuidedExercise? = items.firstOrNull { it.id == id }
@@ -84,44 +62,193 @@ object TherapeuticExerciseCatalog {
 
     fun forCategory(category: String): List<GuidedExercise> = items.filter { it.category == category }
 
-    private fun buildExercise(situation: Situation, task: Task, level: Int): GuidedExercise {
-        val correct = task.answer(situation)
-        return GuidedExercise(
-            id = "guided_executive_${situation.id}_${task.id}_$level",
-            name = "${situation.name}: ${task.name} · ${gdsLabel(level)}",
-            category = "Funciones Ejecutivas",
-            description = "${task.name} aplicada a una actividad cotidiana; adaptación ${gdsLabel(level)}.",
-            gdsLevel = level,
-            question = questionForLevel(task.question(situation), level),
-            correctAnswer = correct,
-            options = optionsFor(correct, task.id)
+    /**
+     * [challengeLevel] va de 1 (GDS 5, menor carga) a 5 (GDS 3, mayor carga).
+     */
+    fun question(id: String, challengeLevel: Int): GuidedQuestion? {
+        val activity = find(id) ?: return null
+        val parts = activity.id.removePrefix("guided_executive_").split("_")
+        val family = Family.entries.firstOrNull { it.name.lowercase() == parts.firstOrNull() } ?: return null
+        val number = parts.lastOrNull()?.toIntOrNull() ?: return null
+        val level = challengeLevel.coerceIn(1, 5)
+        return when (family) {
+            Family.COUNTDOWN -> countdown(number, level)
+            Family.DECISIONS -> decision(number, level)
+            Family.EMOTIONS -> emotion(number, level)
+            Family.RHYTHMS -> rhythm(number, level)
+            Family.CALCULATION -> calculation(number, level)
+            Family.REVERSE -> reverseSeries(number, level)
+            Family.FLEXIBILITY -> flexibility(number, level)
+            Family.STORIES -> story(number, level)
+            Family.LOGIC -> logic(number, level)
+            Family.PLANNING -> planning(number, level)
+        }
+    }
+
+    private fun countdown(number: Int, level: Int): GuidedQuestion {
+        val step = if (level >= 4) 3 else 2
+        val start = 12 + (number % 12) * step
+        val first = start - step
+        val correct = (first - step).toString()
+        return question(
+            text = "Completa la cuenta atrás: $start, $first, __.",
+            correct = correct,
+            wrong = listOf((first + step).toString(), (correct.toInt() + 1).toString(), (correct.toInt() - 1).toString()),
+            level = level
         )
     }
 
-    private fun optionsFor(correct: String, taskId: String): List<String> {
-        val distractors = when (taskId) {
-            "plan" -> listOf("Hacerlo sin pensarlo", "Dejarlo para otro día sin decidir", "Cambiar de tarea continuamente")
-            "first" -> listOf("Empezar por el último paso", "Hacer varias cosas a la vez", "No revisar la situación")
-            "safe" -> listOf("Actuar deprisa sin revisar", "Ignorar una duda", "Continuar aunque exista riesgo")
-            "solve" -> listOf("Insistir sin pedir apoyo", "Tomar una decisión impulsiva", "Abandonar sin avisar")
-            else -> listOf("Dar la tarea por terminada sin mirar", "Dejarlo para más tarde", "Empezar otra tarea sin cerrar esta")
+    private fun decision(number: Int, level: Int): GuidedQuestion {
+        val cases = listOf(
+            Triple("Hace frío al salir", "Ponerse un abrigo", "Salir sin abrigo"),
+            Triple("No recuerda una cita", "Mirar el calendario", "Esperar sin comprobar"),
+            Triple("Quiere comprar pan", "Hacer una lista corta", "Ir sin saber qué necesita"),
+            Triple("Tiene una duda con el autobús", "Preguntar al conductor", "Subir sin comprobar"),
+            Triple("Hay agua en el suelo", "Secarla o pedir ayuda", "Caminar deprisa encima"),
+            Triple("No encuentra las llaves", "Buscar en el lugar habitual", "Salir sin cerrar"),
+            Triple("Suena el teléfono", "Contestar con calma", "Tirarlo a un lado"),
+            Triple("Empieza a llover", "Usar paraguas", "Seguir sin protección"),
+            Triple("La cocina está encendida", "Apagarla antes de salir", "Dejarla encendida"),
+            Triple("Está cansado durante el paseo", "Descansar o volver acompañado", "Seguir aunque se encuentre mal")
+        )
+        val item = cases[number % cases.size]
+        return question("${item.first}. ¿Qué puede hacer?", item.second, listOf(item.third, "Hacer otra cosa sin relación", "No pensar en ello"), level)
+    }
+
+    private fun emotion(number: Int, level: Int): GuidedQuestion {
+        val cases = listOf(
+            Triple("María recibe la visita de su nieta.", "Alegría", "Enfado"),
+            Triple("Luis pierde su cartera.", "Preocupación", "Diversión"),
+            Triple("Carmen escucha una buena noticia.", "Alegría", "Miedo"),
+            Triple("Pedro espera una llamada importante.", "Nerviosismo", "Aburrimiento"),
+            Triple("Ana no encuentra su camino.", "Preocupación", "Orgullo"),
+            Triple("Rosa termina una tarea que le costaba.", "Satisfacción", "Tristeza"),
+            Triple("Manuel recibe un regalo sorpresa.", "Sorpresa", "Enfado"),
+            Triple("Elena se despide de una amiga.", "Tristeza", "Risa"),
+            Triple("Javier oye un ruido fuerte inesperado.", "Susto", "Calma"),
+            Triple("Pilar ayuda a un vecino.", "Satisfacción", "Vergüenza")
+        )
+        val item = cases[number % cases.size]
+        return question("${item.first} ¿Cómo puede sentirse?", item.second, listOf(item.third, "Hambre", "Sueño"), level)
+    }
+
+    private fun rhythm(number: Int, level: Int): GuidedQuestion {
+        val words = listOf("palma", "mesa", "sol", "flor", "pan", "casa", "tren", "mar")
+        val first = words[number % words.size]
+        val second = words[(number + 1) % words.size]
+        val third = words[(number + 2) % words.size]
+        val sequence = if (level <= 2) listOf(first, second, first) else listOf(first, second, third, first)
+        val correct = if (level <= 2) second else second
+        return question(
+            text = "Completa la serie: ${sequence.joinToString(", ")}, __.",
+            correct = correct,
+            wrong = words.filter { it != correct && it !in sequence }.take(3),
+            level = level
+        )
+    }
+
+    private fun calculation(number: Int, level: Int): GuidedQuestion {
+        val first = 2 + number % 7
+        val second = if (level >= 4) 3 + number % 5 else 1 + number % 4
+        val correct = first + second
+        return question(
+            text = "Recuerda: hoy es un buen día. Ahora calcula: $first + $second = __.",
+            correct = correct.toString(),
+            wrong = listOf((correct - 1).toString(), (correct + 1).toString(), (correct + 2).toString()),
+            level = level
+        )
+    }
+
+    private fun reverseSeries(number: Int, level: Int): GuidedQuestion {
+        val digits = (0 until (level + 1)).map { ((number + it * 2) % 9 + 1).toString() }
+        val correct = digits.reversed().joinToString(" - ")
+        return question(
+            text = "Mira los números: ${digits.joinToString(" - ")}. ¿Cuál es el orden al revés?",
+            correct = correct,
+            wrong = listOf(
+                digits.joinToString(" - "),
+                digits.drop(1).plus(digits.first()).joinToString(" - "),
+                digits.reversed().drop(1).plus(digits.last()).joinToString(" - ")
+            ).distinct(),
+            level = level
+        )
+    }
+
+    private fun flexibility(number: Int, level: Int): GuidedQuestion {
+        val cases = listOf(
+            Triple("Hace calor, pero…", "puedo beber agua.", "me pongo un abrigo."),
+            Triple("Llueve, así que…", "puedo usar paraguas.", "puedo salir sin protección."),
+            Triple("Tengo hambre, entonces…", "puedo preparar algo sencillo.", "dejo la comida sin guardar."),
+            Triple("No encuentro una dirección, por eso…", "puedo pedir ayuda.", "me enfado y no pregunto."),
+            Triple("Estoy cansado, así que…", "puedo descansar.", "debo seguir deprisa."),
+            Triple("Tengo una cita, entonces…", "puedo mirar el calendario.", "no necesito comprobar la hora."),
+            Triple("Hace frío, por eso…", "puedo ponerme una chaqueta.", "puedo quitarme toda la ropa."),
+            Triple("No oigo bien, entonces…", "puedo pedir que repitan.", "debo adivinar sin escuchar."),
+            Triple("No recuerdo una palabra, así que…", "puedo tomarme un momento.", "debo dejar de hablar."),
+            Triple("La tarea es larga, entonces…", "puedo hacerla paso a paso.", "debo hacerlo todo a la vez.")
+        )
+        val item = cases[number % cases.size]
+        return question(item.first, item.second, listOf(item.third, "no hago nada", "cambio de tema"), level)
+    }
+
+    private fun story(number: Int, level: Int): GuidedQuestion {
+        val cases = listOf(
+            Triple("Marta va a la panadería. Primero entra en la tienda.", "Pide el pan", "Se pone a dormir"),
+            Triple("Carlos tiene una cita a las diez. Mira el reloj.", "Se prepara para salir", "Apaga el reloj y espera"),
+            Triple("Rosa quiere regar una planta. Coge una regadera.", "Echa agua con cuidado", "Guarda la planta en el armario"),
+            Triple("Paco recibe una carta. Ve su nombre escrito.", "Abre la carta con cuidado", "La tira sin mirar"),
+            Triple("Elena llega a la parada. Ve venir el autobús.", "Comprueba si es su línea", "Cruza la calle sin mirar"),
+            Triple("Luis prepara café. Tiene una taza limpia.", "Sirve el café en la taza", "Guarda la taza bajo la cama"),
+            Triple("Ana está en el mercado. Lleva una lista.", "Busca el primer producto", "Compra objetos al azar"),
+            Triple("Pedro termina de cocinar. La cocina sigue encendida.", "Apaga la cocina", "Sale sin revisar"),
+            Triple("Carmen llama a su amiga. Su amiga no responde.", "Deja un mensaje claro", "Grita al teléfono"),
+            Triple("Manuel se prepara para pasear. Mira por la ventana.", "Elige ropa adecuada", "Se pone ropa sin mirar el tiempo")
+        )
+        val item = cases[number % cases.size]
+        return question("${item.first} ¿Qué puede pasar después?", item.second, listOf(item.third, "No hace falta decidir", "Empieza una tarea distinta"), level)
+    }
+
+    private fun logic(number: Int, level: Int): GuidedQuestion {
+        val cases = listOf(
+            Triple("Si todos los lunes hay taller y hoy es lunes, ¿hay taller?", "Sí", "No"),
+            Triple("Si una tienda abre a las nueve y son las ocho, ¿está abierta?", "No", "Sí"),
+            Triple("Si el paraguas sirve para la lluvia, ¿lo usamos cuando llueve?", "Sí", "No"),
+            Triple("Si una semana tiene siete días, ¿dos semanas tienen catorce días?", "Sí", "No"),
+            Triple("Si un autobús llega después de las diez y son las nueve, ¿ya ha llegado?", "No", "Sí"),
+            Triple("Si una receta dice 'primero lavar', ¿lavamos antes de cocinar?", "Sí", "No"),
+            Triple("Si una puerta está cerrada, ¿podemos entrar sin abrirla?", "No", "Sí"),
+            Triple("Si una lista tiene tres productos y ya compramos dos, ¿falta uno?", "Sí", "No"),
+            Triple("Si es de noche, ¿solemos encender una luz para ver mejor?", "Sí", "No"),
+            Triple("Si una taza está vacía, ¿tiene café dentro?", "No", "Sí")
+        )
+        val item = cases[number % cases.size]
+        return question(item.first, item.second, listOf(item.third, "Depende del color", "No lo sé"), level)
+    }
+
+    private fun planning(number: Int, level: Int): GuidedQuestion {
+        val cases = listOf(
+            Triple("Para hacer una lista de la compra", "Pensar qué falta en casa", "Ir a la tienda sin decidir"),
+            Triple("Para preparar una tostada", "Reunir pan y plato", "Guardar el plato antes de usarlo"),
+            Triple("Para llamar a una persona", "Buscar su número", "Hablar sin marcar"),
+            Triple("Para ir a una cita", "Mirar la fecha y la hora", "Salir sin saber dónde ir"),
+            Triple("Para regar una planta", "Preparar agua", "Dejar agua en el suelo"),
+            Triple("Para lavar ropa", "Separar las prendas", "Mezclar todo sin mirar"),
+            Triple("Para salir a pasear", "Ponerse calzado cómodo", "Salir sin llaves"),
+            Triple("Para preparar una visita", "Confirmar la hora", "Esperar sin organizar nada"),
+            Triple("Para guardar un documento", "Usar una carpeta", "Dejarlo en cualquier sitio"),
+            Triple("Para ordenar el día", "Anotar las tareas", "Empezar muchas tareas a la vez")
+        )
+        val item = cases[number % cases.size]
+        return question("${item.first}, ¿qué va primero?", item.second, listOf(item.third, "Hacer algo sin relación", "No comprobar nada"), level)
+    }
+
+    private fun question(text: String, correct: String, wrong: List<String>, level: Int): GuidedQuestion {
+        val wanted = when (level) {
+            1, 2 -> 2
+            3 -> 3
+            else -> 4
         }
-        return listOf(correct) + distractors
-    }
-
-    private fun questionForLevel(question: String, level: Int): String = when (level) {
-        1 -> "Piensa en la situación y selecciona la estrategia más adecuada. $question"
-        2 -> "Lee la situación y elige la mejor respuesta. $question"
-        3 -> question
-        4 -> "Elige la respuesta correcta. $question"
-        else -> question
-    }
-
-    private fun gdsLabel(level: Int): String = when (level) {
-        1 -> "GDS 3"
-        2 -> "GDS 3-4"
-        3 -> "GDS 4"
-        4 -> "GDS 4-5"
-        else -> "GDS 5"
+        val options = (listOf(correct) + wrong.filter { it != correct }).take(wanted).shuffled()
+        return GuidedQuestion(text = text, options = options, correctAnswer = correct)
     }
 }
