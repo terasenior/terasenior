@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
+import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -207,10 +208,10 @@ private fun ExerciseSelectionStep(
                 Triple("language_denomination", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
                 Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
             ).sortedBy { it.second }
-            "Funciones Ejecutivas" -> listOf(
-                Triple("executive_color_shape_sequence", "Secuencias Lógicas", "Completar series de colores y formas."),
-                Triple("calculation_simple", "Cálculos Sencillos", "Resuelve operaciones aritméticas básicas.")
-            ).sortedBy { it.second }
+            "Funciones Ejecutivas" -> TherapeuticExerciseCatalog
+                .forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             "Percepción" -> listOf(
                 Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
                 Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
