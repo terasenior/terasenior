@@ -163,7 +163,7 @@ object OrientationCatalog {
     }
 
     private fun currentDateTime(): LocalDateTime = try {
-        currentOrientationLocalDateTime()
+        LocalDateTime.parse(currentOrientationLocalDateTimeIso())
     } catch (_: Throwable) {
         LocalDateTime(2026, 9, 16, 12, 0)
     }
