@@ -74,7 +74,7 @@ class ShapeFittingViewModel(
             pieces = pieces,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = DateClock.System.now().toEpochMilliseconds()
+            startTimeMs = activityTimeMillis()
         )
     }
 
@@ -125,7 +125,7 @@ class ShapeFittingViewModel(
     }
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?, finalState: ShapeFittingUiState) {
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - finalState.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

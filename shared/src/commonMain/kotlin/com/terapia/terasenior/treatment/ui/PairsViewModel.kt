@@ -97,7 +97,7 @@ class PairsViewModel(
             totalPairs = numPairs,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = DateClock.System.now().toEpochMilliseconds(),
+            startTimeMs = activityTimeMillis(),
             useRealImages = useReal
         )
     }
@@ -146,7 +146,7 @@ class PairsViewModel(
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val currentState = _uiState.value
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - currentState.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

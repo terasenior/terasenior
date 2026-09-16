@@ -62,7 +62,7 @@ class ExecutiveFunctionsViewModel(
             mode = mode,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = DateClock.System.now().toEpochMilliseconds()
+            startTimeMs = activityTimeMillis()
         )
     }
 
@@ -270,7 +270,7 @@ class ExecutiveFunctionsViewModel(
 
     fun saveAndFinish(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

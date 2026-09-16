@@ -50,7 +50,7 @@ class CalculationViewModel(
             options = options.toList().shuffled(),
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = Clock.System.now().toEpochMilliseconds()
+            startTimeMs = activityTimeMillis()
         )
     }
 
@@ -105,7 +105,7 @@ class CalculationViewModel(
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = Clock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

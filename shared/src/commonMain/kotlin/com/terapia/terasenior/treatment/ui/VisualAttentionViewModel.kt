@@ -362,7 +362,7 @@ class VisualAttentionViewModel(
             totalTargets = totalTargets,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = Clock.System.now().toEpochMilliseconds(),
+            startTimeMs = activityTimeMillis(),
             correctCount = correctCount,
             numericOptions = numericOptions,
             isCountingPhase = variation == "attention_count",
@@ -502,7 +502,7 @@ class VisualAttentionViewModel(
     @OptIn(ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = Clock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val diff = endTime - state.startTimeMs
         val duration = (diff / 1000L).toInt()
 

@@ -25,13 +25,8 @@ import com.terapia.terasenior.domain.model.therapy.TherapySessionExercise
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.treatment.ui.*
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
-import kotlinx.datetime.Clock
-
-private fun safeDurationSeconds(startTimeMs: Long): Int = try {
-    ((Clock.System.now().toEpochMilliseconds() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
-} catch (_: Throwable) {
-    30
-}
+private fun safeDurationSeconds(startTimeMs: Long): Int =
+    ((activityTimeMillis() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
 
 @Composable
 fun SessionRunnerScreen(

@@ -40,7 +40,7 @@ class MemoryViewModel(
 
     @OptIn(kotlin.time.ExperimentalTime::class)
     fun startNewGame(type: String, level: Int = 1, sessionId: String = "") {
-        val now = try { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() } catch(t: Throwable) { 1724310000000L }
+        val now = activityTimeMillis()
         
         _uiState.update { it.copy(
             currentType = type,
@@ -117,7 +117,7 @@ class MemoryViewModel(
     @OptIn(kotlin.time.ExperimentalTime::class)
     private fun saveResult(patientId: String, professionalId: String, appointmentId: String?) {
         val state = _uiState.value
-        val now = try { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() } catch(t: Throwable) { state.startTimeMs + 30000 }
+        val now = activityTimeMillis()
         val duration = ((now - state.startTimeMs) / 1000L).toInt().coerceAtLeast(1)
 
         viewModelScope.launch {

@@ -59,7 +59,7 @@ class NamingObjectsViewModel(
             options = allOptions,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = DateClock.System.now().toEpochMilliseconds()
+            startTimeMs = activityTimeMillis()
         )
     }
 
@@ -81,7 +81,7 @@ class NamingObjectsViewModel(
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

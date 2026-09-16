@@ -57,7 +57,7 @@ class NumberSearchViewModel(
             currentLevel = level,
             sessionId = sessionId,
             totalTargets = grid.count { it.number == target },
-            startTimeMs = DateClock.System.now().toEpochMilliseconds()
+            startTimeMs = activityTimeMillis()
         )
     }
 
@@ -93,7 +93,7 @@ class NumberSearchViewModel(
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val currentState = _uiState.value
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - currentState.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

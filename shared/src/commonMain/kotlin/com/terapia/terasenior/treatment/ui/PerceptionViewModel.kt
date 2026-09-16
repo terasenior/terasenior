@@ -91,7 +91,7 @@ class PerceptionViewModel(
             currentType = type,
             currentLevel = level,
             sessionId = sessionId,
-            startTimeMs = DateClock.System.now().toEpochMilliseconds(),
+            startTimeMs = activityTimeMillis(),
             isCompleted = false,
             errorsCount = 0,
             currentStep = 0
@@ -167,7 +167,7 @@ class PerceptionViewModel(
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {

@@ -62,7 +62,7 @@ class LanguageViewModel(
     )
 
     fun startNewGame(type: String, level: Int, sessionId: String = "", config: Map<String, String> = emptyMap()) {
-        val startTime = DateClock.System.now().toEpochMilliseconds()
+        val startTime = activityTimeMillis()
         
         when (type) {
             "language_start_letter" -> {
@@ -166,7 +166,7 @@ class LanguageViewModel(
 
     private fun saveResult(patientId: String?, professionalId: String?, appointmentId: String?) {
         val state = _uiState.value
-        val endTime = DateClock.System.now().toEpochMilliseconds()
+        val endTime = activityTimeMillis()
         val duration = ((endTime - state.startTimeMs) / 1000L).toInt()
 
         viewModelScope.launch {
