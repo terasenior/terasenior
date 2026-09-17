@@ -51,7 +51,13 @@ class CreatePatientViewModel(
                     _uiState.value = CreatePatientUiState.Success
                 }
                 .onFailure { error ->
-                    _uiState.value = CreatePatientUiState.Error(error.message ?: "Error al crear paciente")
+                    _uiState.value = CreatePatientUiState.Error(
+                        when {
+                            error.message?.contains("invalid input syntax for type date") == true ->
+                                "Una de las fechas no es válida. Usa el formato DD-MM-AAAA."
+                            else -> "No se pudo crear el paciente. Comprueba los datos e inténtalo de nuevo."
+                        }
+                    )
                 }
         }
     }

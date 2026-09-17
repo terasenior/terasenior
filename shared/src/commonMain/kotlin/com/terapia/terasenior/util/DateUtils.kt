@@ -25,10 +25,11 @@ object DateUtils {
      */
     fun toDbFormat(userDate: String?): String? {
         if (userDate.isNullOrBlank()) return null
-        val parts = userDate.split("-")
-        if (parts.size != 3) return userDate
+        val normalizedDate = userDate.trim()
+        val parts = normalizedDate.split("-").map { it.trim() }
+        if (parts.size != 3) return normalizedDate
         // Si el primer segmento tiene 4 dígitos, ya está en formato DB
-        if (parts[0].length == 4) return userDate
+        if (parts[0].length == 4) return parts.joinToString("-")
         return "${parts[2]}-${parts[1]}-${parts[0]}"
     }
 }
