@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -319,18 +320,14 @@ fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: Patient
         if (state.assessments.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Todavía no hay valoraciones registradas.") }
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(state.assessments, key = { it.id }) { assessment ->
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = if (assessment.status == "ACTIVE") MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column { Text(if (assessment.status == "ACTIVE") "Valoración activa" else "Valoración dada de baja", fontWeight = FontWeight.Bold); Text("Creada por ${assessment.authorName} · ${assessment.authorRole}", style = MaterialTheme.typography.bodySmall) }
-                                Row { if (assessment.status == "ACTIVE") { IconButton(onClick = { editing = assessment }) { Icon(Icons.Default.Edit, "Modificar valoración") }; IconButton(onClick = { viewModel.discontinueAssessment(assessment) }) { Icon(Icons.Default.Block, "Dar de baja valoración", tint = MaterialTheme.colorScheme.error) } } }
-                            }
-                            Text("Creada: ${assessment.createdAt.take(16).replace('T', ' ')}", style = MaterialTheme.typography.labelSmall)
-                            if (assessment.updatedAt.isNotBlank() && assessment.updatedAt != assessment.createdAt) Text("Última modificación: ${assessment.updatedAt.take(16).replace('T', ' ')}${assessment.updatedByName?.let { " · $it" }.orEmpty()}", style = MaterialTheme.typography.labelSmall)
-                            if (assessment.discontinuedAt != null) Text("Baja: ${assessment.discontinuedAt.take(16).replace('T', ' ')}${assessment.discontinuedByName?.let { " · $it" }.orEmpty()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-                            AssessmentSummary("Movilidad", assessment.mobility); AssessmentSummary("Actividades básicas", assessment.basicActivities); AssessmentSummary("Actividades instrumentales", assessment.instrumentalActivities); AssessmentSummary("Estado cognitivo", assessment.cognitiveStatus); AssessmentSummary("Estado emocional", assessment.emotionalStatus); AssessmentSummary("Riesgos", assessment.risks); AssessmentSummary("Capacidad de decisión", assessment.decisionCapacity)
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                itemsIndexed(state.assessments, key = { _, assessment -> assessment.id }) { index, assessment ->
+                    Card(onClick = { editing = assessment }, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = if (assessment.status == "ACTIVE") MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) { Text("${index + 1}", modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), fontWeight = FontWeight.Bold) }
+                            Spacer(Modifier.width(14.dp))
+                            Column(Modifier.weight(1f)) { Text("Valoración ${index + 1}", fontWeight = FontWeight.Bold); Text(if (assessment.status == "ACTIVE") "Activa · ${assessment.createdAt.take(10)}" else "Dada de baja · ${assessment.discontinuedAt?.take(10).orEmpty()}", style = MaterialTheme.typography.bodySmall, color = if (assessment.status == "ACTIVE") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error) }
+                            if (assessment.status == "ACTIVE") { IconButton(onClick = { editing = assessment }) { Icon(Icons.Default.Edit, "Modificar valoración") }; IconButton(onClick = { viewModel.discontinueAssessment(assessment) }) { Icon(Icons.Default.Block, "Dar de baja valoración", tint = MaterialTheme.colorScheme.error) } }
                         }
                     }
                 }
@@ -353,14 +350,20 @@ private fun AssessmentEditorDialog(existing: PatientAssessment?, patientId: Stri
                 Text(if (existing == null) "Nueva valoración" else "Modificar valoración", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(16.dp))
                 TabRow(selectedTabIndex = section) {
-                    listOf("Funcional", "Cognitivo", "Riesgos").forEachIndexed { index, title -> Tab(selected = section == index, onClick = { section = index }, text = { Text(title) }) }
+                    listOf("Funcional", "Cognitivo", "Riesgos", "Historial").forEachIndexed { index, title -> Tab(selected = section == index, onClick = { section = index }, text = { Text(title) }) }
                 }
                 Spacer(Modifier.height(16.dp))
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     when (section) {
                         0 -> { AssessmentEditorField("Movilidad", mobility) { mobility = it }; AssessmentEditorField("Actividades básicas", basic) { basic = it }; AssessmentEditorField("Actividades instrumentales", instrumental) { instrumental = it } }
                         1 -> { AssessmentEditorField("Estado cognitivo", cognitive) { cognitive = it }; AssessmentEditorField("Estado emocional", emotional) { emotional = it } }
-                        else -> { AssessmentEditorField("Riesgos detectados", risks) { risks = it }; AssessmentEditorField("Capacidad de decisión", decision) { decision = it } }
+                        2 -> { AssessmentEditorField("Riesgos detectados", risks) { risks = it }; AssessmentEditorField("Capacidad de decisión", decision) { decision = it } }
+                        else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text("Trazabilidad de la valoración", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Creada por: ${existing?.authorName ?: "Se asignará al guardar"}")
+                            Text("Puesto: ${existing?.authorRole ?: "Profesional"}")
+                            if (existing != null) { Text("Fecha de creación: ${existing.createdAt.take(16).replace('T', ' ')}"); Text("Última modificación: ${existing.updatedAt.take(16).replace('T', ' ')}"); existing.updatedByName?.let { Text("Modificada por: $it${existing.updatedByRole?.let { role -> " · $role" }.orEmpty()}") }; existing.discontinuedAt?.let { Text("Baja: ${it.take(16).replace('T', ' ')} · ${existing.discontinuedByName.orEmpty()}", color = MaterialTheme.colorScheme.error) } } else Text("El historial se registrará al guardar esta valoración.")
+                        }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -375,7 +378,7 @@ private fun AssessmentEditorDialog(existing: PatientAssessment?, patientId: Stri
 }
 
 @Composable
-private fun AssessmentEditorField(label: String, value: String, onChange: (String) -> Unit) { OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = 7) }
+private fun AssessmentEditorField(label: String, value: String, onChange: (String) -> Unit) { OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = 7, colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f), unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) }
 
 @Composable
 fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
