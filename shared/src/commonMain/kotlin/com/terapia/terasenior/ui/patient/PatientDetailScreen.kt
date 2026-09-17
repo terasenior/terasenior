@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.terapia.terasenior.domain.model.admin.UserProfile
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
@@ -344,11 +346,36 @@ private fun AssessmentSummary(label: String, value: String?) { if (!value.isNull
 @Composable
 private fun AssessmentEditorDialog(existing: PatientAssessment?, patientId: String, onDismiss: () -> Unit, onSave: (PatientAssessment) -> Unit) {
     var mobility by remember(existing) { mutableStateOf(existing?.mobility.orEmpty()) }; var basic by remember(existing) { mutableStateOf(existing?.basicActivities.orEmpty()) }; var instrumental by remember(existing) { mutableStateOf(existing?.instrumentalActivities.orEmpty()) }; var cognitive by remember(existing) { mutableStateOf(existing?.cognitiveStatus.orEmpty()) }; var emotional by remember(existing) { mutableStateOf(existing?.emotionalStatus.orEmpty()) }; var risks by remember(existing) { mutableStateOf(existing?.risks.orEmpty()) }; var decision by remember(existing) { mutableStateOf(existing?.decisionCapacity.orEmpty()) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (existing == null) "Nueva valoración" else "Modificar valoración") }, text = { Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) { AssessmentEditorField("Movilidad", mobility) { mobility = it }; AssessmentEditorField("Actividades básicas", basic) { basic = it }; AssessmentEditorField("Actividades instrumentales", instrumental) { instrumental = it }; AssessmentEditorField("Estado cognitivo", cognitive) { cognitive = it }; AssessmentEditorField("Estado emocional", emotional) { emotional = it }; AssessmentEditorField("Riesgos detectados", risks) { risks = it }; AssessmentEditorField("Capacidad de decisión", decision) { decision = it } } }, confirmButton = { Button(onClick = { onSave((existing ?: PatientAssessment("", patientId, "", "", "")).copy(mobility = mobility.ifBlank { null }, basicActivities = basic.ifBlank { null }, instrumentalActivities = instrumental.ifBlank { null }, cognitiveStatus = cognitive.ifBlank { null }, emotionalStatus = emotional.ifBlank { null }, risks = risks.ifBlank { null }, decisionCapacity = decision.ifBlank { null })) }) { Text("Guardar") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } })
+    var section by remember { mutableStateOf(0) }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth(0.88f).heightIn(min = 620.dp, max = 820.dp)) {
+            Column(Modifier.padding(24.dp)) {
+                Text(if (existing == null) "Nueva valoración" else "Modificar valoración", style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.height(16.dp))
+                TabRow(selectedTabIndex = section) {
+                    listOf("Funcional", "Cognitivo", "Riesgos").forEachIndexed { index, title -> Tab(selected = section == index, onClick = { section = index }, text = { Text(title) }) }
+                }
+                Spacer(Modifier.height(16.dp))
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    when (section) {
+                        0 -> { AssessmentEditorField("Movilidad", mobility) { mobility = it }; AssessmentEditorField("Actividades básicas", basic) { basic = it }; AssessmentEditorField("Actividades instrumentales", instrumental) { instrumental = it } }
+                        1 -> { AssessmentEditorField("Estado cognitivo", cognitive) { cognitive = it }; AssessmentEditorField("Estado emocional", emotional) { emotional = it } }
+                        else -> { AssessmentEditorField("Riesgos detectados", risks) { risks = it }; AssessmentEditorField("Capacidad de decisión", decision) { decision = it } }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = { onSave((existing ?: PatientAssessment("", patientId, "", "", "")).copy(mobility = mobility.ifBlank { null }, basicActivities = basic.ifBlank { null }, instrumentalActivities = instrumental.ifBlank { null }, cognitiveStatus = cognitive.ifBlank { null }, emotionalStatus = emotional.ifBlank { null }, risks = risks.ifBlank { null }, decisionCapacity = decision.ifBlank { null })) }) { Icon(Icons.Default.Save, null); Spacer(Modifier.width(6.dp)); Text("Guardar valoración") }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-private fun AssessmentEditorField(label: String, value: String, onChange: (String) -> Unit) { OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = 2) }
+private fun AssessmentEditorField(label: String, value: String, onChange: (String) -> Unit) { OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = 7) }
 
 @Composable
 fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
