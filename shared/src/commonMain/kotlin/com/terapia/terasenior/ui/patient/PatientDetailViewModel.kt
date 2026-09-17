@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
+import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
@@ -25,6 +26,7 @@ sealed interface PatientDetailUiState {
     data class Success(
         val patient: Patient,
         val therapeuticProfile: TherapeuticProfile?,
+        val assessments: List<PatientAssessment> = emptyList(),
         val consents: List<Consent> = emptyList(),
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
         val treatedBy: List<UserProfile> = emptyList(), // Terapeutas que lo han atendido
@@ -44,7 +46,10 @@ class PatientDetailViewModel(
     private val therapyRepository: TherapySessionRepository,
     private val userRepository: UserProfileRepository,
     private val updatePatientUseCase: UpdatePatientUseCase,
-    private val updateTherapeuticProfileUseCase: UpdateTherapeuticProfileUseCase
+    private val updateTherapeuticProfileUseCase: UpdateTherapeuticProfileUseCase,
+    private val currentProfessionalId: String,
+    private val currentProfessionalName: String,
+    private val currentProfessionalRole: String
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PatientDetailUiState>(PatientDetailUiState.Loading)
@@ -62,6 +67,7 @@ class PatientDetailViewModel(
 
             val patientResult = repository.getPatientById(patientId)
             val profileResult = repository.getTherapeuticProfile(patientId)
+            val assessmentsResult = repository.getPatientAssessments(patientId)
             val consentsResult = repository.getConsents(patientId)
             val resultsResult = resultsRepository.getPatientResults(patientId).first()
             val sessionsResult = therapyRepository.getPatientSessions(patientId).first()
@@ -96,6 +102,7 @@ class PatientDetailViewModel(
                     _uiState.value = PatientDetailUiState.Success(
                         patient = patient,
                         therapeuticProfile = profileResult.getOrNull(),
+                        assessments = assessmentsResult.getOrDefault(emptyList()).sortedByDescending { it.createdAt },
                         consents = consentsResult.getOrDefault(emptyList()),
                         sessionsHistory = history,
                         treatedBy = treatedBy,
@@ -142,6 +149,29 @@ class PatientDetailViewModel(
                 .onSuccess { loadPatientData() }
                 .onFailure { setUpdating(false) }
         }
+    }
+
+    fun saveAssessment(assessment: PatientAssessment) {
+        viewModelScope.launch {
+            setUpdating(true)
+            val now = assessment.copy(
+                patientId = patientId,
+                authorId = if (assessment.id.isBlank()) currentProfessionalId else assessment.authorId,
+                authorName = if (assessment.id.isBlank()) currentProfessionalName else assessment.authorName,
+                authorRole = if (assessment.id.isBlank()) currentProfessionalRole else assessment.authorRole,
+                updatedByName = currentProfessionalName,
+                updatedByRole = currentProfessionalRole
+            )
+            val result = if (assessment.id.isBlank()) repository.createPatientAssessment(now) else repository.updatePatientAssessment(now)
+            result.onSuccess { loadPatientData() }.onFailure { setUpdating(false) }
+        }
+    }
+
+    fun discontinueAssessment(assessment: PatientAssessment) {
+        saveAssessment(assessment.copy(
+            status = "DISCONTINUED",
+            discontinuedByName = currentProfessionalName
+        ))
     }
 
     fun setHistoryPage(page: Int) {

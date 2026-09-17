@@ -31,6 +31,7 @@ import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.domain.model.patient.SupportLevel
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
+import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
@@ -305,72 +306,49 @@ fun PatientEvolutionTab(state: PatientDetailUiState.Success) {
 
 @Composable
 fun PatientAssessmentTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
-    val profile = state.therapeuticProfile ?: TherapeuticProfile(state.patient.id, SupportLevel.NONE, null, null, null, null, null)
-    
-    var mobility by remember(profile) { mutableStateOf(profile.mobility ?: "") }
-    var basicActivities by remember(profile) { mutableStateOf(profile.basicActivities ?: "") }
-    var instrumentalActivities by remember(profile) { mutableStateOf(profile.instrumentalActivities ?: "") }
-    var cognitiveStatus by remember(profile) { mutableStateOf(profile.cognitiveStatus ?: "") }
-    var emotionalStatus by remember(profile) { mutableStateOf(profile.emotionalStatus ?: "") }
-    var risks by remember(profile) { mutableStateOf(profile.risks ?: "") }
-    var decisionCapacity by remember(profile) { mutableStateOf(profile.decisionCapacity ?: "") }
-
-    var subTab by remember { mutableStateOf(0) }
-    var hasChanges by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("FUNCIONAL", "COGNITIVO", "RIESGOS").forEachIndexed { index, title ->
-                    FilterChip(selected = subTab == index, onClick = { subTab = index }, label = { Text(title, fontSize = 11.sp, fontWeight = FontWeight.Bold) }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp))
-                }
-            }
+    var editing by remember { mutableStateOf<PatientAssessment?>(null) }
+    var creating by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column { Text("Valoraciones", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold); Text("Historial clínico con autoría y trazabilidad", style = MaterialTheme.typography.bodySmall) }
+            Button(onClick = { creating = true }, enabled = !state.isUpdating) { Icon(Icons.Default.Add, null); Spacer(Modifier.width(6.dp)); Text("Nueva valoración") }
         }
-
-        Box(modifier = Modifier.weight(1f)) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                when (subTab) {
-                    0 -> {
-                        AssessmentField(label = "Movilidad", placeholder = "Marcha, equilibrio...", value = mobility, onValueChange = { mobility = it; hasChanges = true })
-                        AssessmentField(label = "Actividades Básicas", placeholder = "Higiene, alimentación...", value = basicActivities, onValueChange = { basicActivities = it; hasChanges = true })
-                        AssessmentField(label = "Actividades Instrumentales", placeholder = "Medicación, dinero...", value = instrumentalActivities, onValueChange = { instrumentalActivities = it; hasChanges = true })
+        Spacer(Modifier.height(12.dp))
+        if (state.assessments.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Todavía no hay valoraciones registradas.") }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(state.assessments, key = { it.id }) { assessment ->
+                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = if (assessment.status == "ACTIVE") MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column { Text(if (assessment.status == "ACTIVE") "Valoración activa" else "Valoración dada de baja", fontWeight = FontWeight.Bold); Text("Creada por ${assessment.authorName} · ${assessment.authorRole}", style = MaterialTheme.typography.bodySmall) }
+                                Row { if (assessment.status == "ACTIVE") { IconButton(onClick = { editing = assessment }) { Icon(Icons.Default.Edit, "Modificar valoración") }; IconButton(onClick = { viewModel.discontinueAssessment(assessment) }) { Icon(Icons.Default.Block, "Dar de baja valoración", tint = MaterialTheme.colorScheme.error) } } }
+                            }
+                            Text("Creada: ${assessment.createdAt.take(16).replace('T', ' ')}", style = MaterialTheme.typography.labelSmall)
+                            if (assessment.updatedAt.isNotBlank() && assessment.updatedAt != assessment.createdAt) Text("Última modificación: ${assessment.updatedAt.take(16).replace('T', ' ')}${assessment.updatedByName?.let { " · $it" }.orEmpty()}", style = MaterialTheme.typography.labelSmall)
+                            if (assessment.discontinuedAt != null) Text("Baja: ${assessment.discontinuedAt.take(16).replace('T', ' ')}${assessment.discontinuedByName?.let { " · $it" }.orEmpty()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                            AssessmentSummary("Movilidad", assessment.mobility); AssessmentSummary("Actividades básicas", assessment.basicActivities); AssessmentSummary("Actividades instrumentales", assessment.instrumentalActivities); AssessmentSummary("Estado cognitivo", assessment.cognitiveStatus); AssessmentSummary("Estado emocional", assessment.emotionalStatus); AssessmentSummary("Riesgos", assessment.risks); AssessmentSummary("Capacidad de decisión", assessment.decisionCapacity)
+                        }
                     }
-                    1 -> {
-                        AssessmentField(label = "Estado Cognitivo", placeholder = "Memoria, orientación...", value = cognitiveStatus, onValueChange = { cognitiveStatus = it; hasChanges = true })
-                        AssessmentField(label = "Estado Emocional", placeholder = "Ánimo, duelo...", value = emotionalStatus, onValueChange = { emotionalStatus = it; hasChanges = true })
-                    }
-                    2 -> {
-                        AssessmentField(label = "Riesgos Detectados", placeholder = "Caídas, desnutrición...", value = risks, onValueChange = { risks = it; hasChanges = true })
-                        AssessmentField(label = "Capacidad de Decisión", placeholder = "Comprensión tratamiento...", value = decisionCapacity, onValueChange = { decisionCapacity = it; hasChanges = true })
-                    }
-                }
-                Spacer(modifier = Modifier.height(140.dp)) // Aún más espacio para evitar cortes
-            }
-
-            Surface(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(), tonalElevation = 4.dp, shadowElevation = 8.dp) {
-                Button(
-                    onClick = {
-                        viewModel.updateClinicalProfile(profile.copy(
-                            mobility = mobility, basicActivities = basicActivities, instrumentalActivities = instrumentalActivities,
-                            cognitiveStatus = cognitiveStatus, emotionalStatus = emotionalStatus, risks = risks, decisionCapacity = decisionCapacity
-                        ))
-                        hasChanges = false
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(16.dp).height(50.dp),
-                    enabled = hasChanges && !state.isUpdating,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    if (state.isUpdating) CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                    else { Icon(Icons.Default.Save, null); Spacer(Modifier.width(8.dp)); Text("Guardar Valoración") }
                 }
             }
         }
     }
+    if (creating || editing != null) AssessmentEditorDialog(editing, state.patient.id, onDismiss = { creating = false; editing = null }, onSave = { viewModel.saveAssessment(it); creating = false; editing = null })
 }
+
+@Composable
+private fun AssessmentSummary(label: String, value: String?) { if (!value.isNullOrBlank()) Text("$label: $value", style = MaterialTheme.typography.bodySmall) }
+
+@Composable
+private fun AssessmentEditorDialog(existing: PatientAssessment?, patientId: String, onDismiss: () -> Unit, onSave: (PatientAssessment) -> Unit) {
+    var mobility by remember(existing) { mutableStateOf(existing?.mobility.orEmpty()) }; var basic by remember(existing) { mutableStateOf(existing?.basicActivities.orEmpty()) }; var instrumental by remember(existing) { mutableStateOf(existing?.instrumentalActivities.orEmpty()) }; var cognitive by remember(existing) { mutableStateOf(existing?.cognitiveStatus.orEmpty()) }; var emotional by remember(existing) { mutableStateOf(existing?.emotionalStatus.orEmpty()) }; var risks by remember(existing) { mutableStateOf(existing?.risks.orEmpty()) }; var decision by remember(existing) { mutableStateOf(existing?.decisionCapacity.orEmpty()) }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (existing == null) "Nueva valoración" else "Modificar valoración") }, text = { Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) { AssessmentEditorField("Movilidad", mobility) { mobility = it }; AssessmentEditorField("Actividades básicas", basic) { basic = it }; AssessmentEditorField("Actividades instrumentales", instrumental) { instrumental = it }; AssessmentEditorField("Estado cognitivo", cognitive) { cognitive = it }; AssessmentEditorField("Estado emocional", emotional) { emotional = it }; AssessmentEditorField("Riesgos detectados", risks) { risks = it }; AssessmentEditorField("Capacidad de decisión", decision) { decision = it } } }, confirmButton = { Button(onClick = { onSave((existing ?: PatientAssessment("", patientId, "", "", "")).copy(mobility = mobility.ifBlank { null }, basicActivities = basic.ifBlank { null }, instrumentalActivities = instrumental.ifBlank { null }, cognitiveStatus = cognitive.ifBlank { null }, emotionalStatus = emotional.ifBlank { null }, risks = risks.ifBlank { null }, decisionCapacity = decision.ifBlank { null })) }) { Text("Guardar") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } })
+}
+
+@Composable
+private fun AssessmentEditorField(label: String, value: String, onChange: (String) -> Unit) { OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = 2) }
 
 @Composable
 fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {

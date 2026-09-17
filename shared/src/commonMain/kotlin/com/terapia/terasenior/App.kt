@@ -295,7 +295,7 @@ fun App() {
                                 val resultsRepo = remember { SupabaseResultsRepository() }
                                 val userRepo = remember { SupabaseUserProfileRepository() }
                                 val viewModel = remember(patientId) { 
-                                    PatientDetailViewModel(patientId, patientRepo, resultsRepo, therapyRepo, userRepo, UpdatePatientUseCase(patientRepo), UpdateTherapeuticProfileUseCase(patientRepo)) 
+                                    PatientDetailViewModel(patientId, patientRepo, resultsRepo, therapyRepo, userRepo, UpdatePatientUseCase(patientRepo), UpdateTherapeuticProfileUseCase(patientRepo), currentUserProfile?.id.orEmpty(), currentUserProfile?.fullName.orEmpty(), currentUserProfile?.role?.name.orEmpty()) 
                                 }
                                 PatientDetailScreen(
                                     viewModel = viewModel,
