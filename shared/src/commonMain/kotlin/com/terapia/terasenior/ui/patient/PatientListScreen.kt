@@ -28,10 +28,21 @@ import com.terapia.terasenior.ui.components.PaginationControls
 @Composable
 fun PatientListScreen(
     viewModel: PatientListViewModel,
+    createPatientViewModel: CreatePatientViewModel,
+    entityId: String,
     onPatientClick: (String) -> Unit,
-    onAddPatientClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val createUiState by createPatientViewModel.uiState.collectAsState()
+    var showCreatePatientDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(createUiState) {
+        if (createUiState is CreatePatientUiState.Success) {
+            showCreatePatientDialog = false
+            createPatientViewModel.resetState()
+            viewModel.loadPatients()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -46,7 +57,10 @@ fun PatientListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddPatientClick,
+                onClick = {
+                    createPatientViewModel.resetState()
+                    showCreatePatientDialog = true
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -132,6 +146,43 @@ fun PatientListScreen(
                 }
             }
         }
+    }
+
+    if (showCreatePatientDialog) {
+        CreatePatientDialog(
+            onDismiss = {
+                if (createUiState !is CreatePatientUiState.Loading) {
+                    showCreatePatientDialog = false
+                    createPatientViewModel.resetState()
+                }
+            },
+            onConfirm = { firstName, lastName, preferredName, birthDate, externalId, nif, admissionDate, address, city, postalCode, province, phone, contactName, contactPhone, notes, status ->
+                createPatientViewModel.createPatient(
+                    entityId = entityId,
+                    firstName = firstName,
+                    lastName = lastName,
+                    preferredName = preferredName.ifBlank { null },
+                    birthDate = birthDate,
+                    externalId = externalId.ifBlank { null },
+                    nif = nif.ifBlank { null },
+                    admissionDate = admissionDate,
+                    address = address.ifBlank { null },
+                    city = city.ifBlank { null },
+                    postalCode = postalCode.ifBlank { null },
+                    province = province.ifBlank { null },
+                    phone = phone.ifBlank { null },
+                    contactName = contactName.ifBlank { null },
+                    contactPhone = contactPhone.ifBlank { null },
+                    notes = notes.ifBlank { null },
+                    status = status
+                )
+            },
+            isLoading = createUiState is CreatePatientUiState.Loading,
+            errorMessage = when (val state = createUiState) {
+                is CreatePatientUiState.Error -> state.message
+                else -> null
+            }
+        )
     }
 }
 

@@ -285,8 +285,9 @@ fun App() {
                                 val repository = remember { SupabasePatientRepository() }
                                 PatientListScreen(
                                     viewModel = remember { PatientListViewModel(GetPatientsUseCase(repository)) },
-                                    onPatientClick = { selectedPatientId = it; currentScreen = Screen.PATIENT_DETAIL },
-                                    onAddPatientClick = { /* Handled in screen */ }
+                                    createPatientViewModel = remember { CreatePatientViewModel(CreatePatientUseCase(repository)) },
+                                    entityId = currentUserProfile?.entityId.orEmpty(),
+                                    onPatientClick = { selectedPatientId = it; currentScreen = Screen.PATIENT_DETAIL }
                                 )
                             }
                             Screen.PATIENT_DETAIL -> {
