@@ -6,6 +6,7 @@ import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.*
 import com.terapia.terasenior.treatment.repository.currentOrientationLocalDateTimeIso
 
@@ -73,11 +74,13 @@ class AgendaViewModel(
     fun loadAppointments() {
         viewModelScope.launch {
             _isLoading.value = true
-            repository.getAppointments().collect { result ->
+            _error.value = null
+            try {
+                val result = withTimeout(15_000L) {
+                    repository.getAppointments().first()
+                }
                 result.onSuccess { list ->
                     _allAppointments.value = list
-                    _error.value = null
-                    _isLoading.value = false
 
                     // La agenda debe estar disponible aunque la consulta de asistentes sea lenta o falle.
                     viewModelScope.launch {
@@ -85,8 +88,13 @@ class AgendaViewModel(
                     }
                 }.onFailure { e ->
                     _error.value = e.message ?: "Error al cargar agenda"
-                    _isLoading.value = false
                 }
+            } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+                _error.value = "La agenda tarda demasiado en responder. Pulsa Reintentar."
+            } catch (e: Throwable) {
+                _error.value = e.message ?: "Error al cargar agenda"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
