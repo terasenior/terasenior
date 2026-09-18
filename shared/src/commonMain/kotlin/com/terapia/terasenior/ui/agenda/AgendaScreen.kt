@@ -25,8 +25,8 @@ import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock as DateClock
 import kotlinx.datetime.*
+import com.terapia.terasenior.treatment.repository.currentOrientationLocalDateTimeIso
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +128,7 @@ private fun DateSelector(
     onDateSelected: (LocalDate) -> Unit
 ) {
     val today = remember {
-        DateClock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        agendaTodayForSelector()
     }
     
     val listState = rememberLazyListState()
@@ -233,6 +233,12 @@ private fun DateSelector(
             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Siguiente")
         }
     }
+}
+
+private fun agendaTodayForSelector(): LocalDate = try {
+    LocalDateTime.parse(currentOrientationLocalDateTimeIso()).date
+} catch (_: Throwable) {
+    LocalDate(2026, 9, 18)
 }
 
 @Composable

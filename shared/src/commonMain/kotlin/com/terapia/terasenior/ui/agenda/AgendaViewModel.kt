@@ -6,8 +6,8 @@ import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock as DateClock
 import kotlinx.datetime.*
+import com.terapia.terasenior.treatment.repository.currentOrientationLocalDateTimeIso
 
 sealed interface AgendaUiState {
     data object Loading : AgendaUiState
@@ -26,7 +26,7 @@ class AgendaViewModel(
 ) : ViewModel() {
 
     private val _selectedDate: MutableStateFlow<LocalDate> = MutableStateFlow(
-        DateClock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        agendaToday()
     )
     private val _allAppointments = MutableStateFlow<List<Appointment>>(emptyList())
     private val _attendeesMap = MutableStateFlow<Map<String, List<String>>>(emptyMap()) // ID Cita -> Nombres
@@ -105,4 +105,10 @@ class AgendaViewModel(
     fun onDateSelected(date: LocalDate) {
         _selectedDate.value = date
     }
+}
+
+private fun agendaToday(): LocalDate = try {
+    LocalDateTime.parse(currentOrientationLocalDateTimeIso()).date
+} catch (_: Throwable) {
+    LocalDate(2026, 9, 18)
 }
