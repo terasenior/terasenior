@@ -314,8 +314,8 @@ private fun AppointmentCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.width(50.dp)
             ) {
-                val startDateTime = kotlinx.datetime.Instant.parse(appointment.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
-                val endDateTime = kotlinx.datetime.Instant.parse(appointment.endAt).toLocalDateTime(TimeZone.currentSystemDefault())
+                val startDateTime = kotlinx.datetime.Instant.parse(appointment.startAt).toLocalDateTime(TimeZone.UTC)
+                val endDateTime = kotlinx.datetime.Instant.parse(appointment.endAt).toLocalDateTime(TimeZone.UTC)
                 
                 Text(
                     text = "${startDateTime.hour.toString().padStart(2, '0')}:${startDateTime.minute.toString().padStart(2, '0')}",

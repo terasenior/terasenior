@@ -99,7 +99,7 @@ fun AppointmentDetailScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    val startDateTime = kotlinx.datetime.Instant.parse(state.appointment.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
+                                    val startDateTime = kotlinx.datetime.Instant.parse(state.appointment.startAt).toLocalDateTime(TimeZone.UTC)
                                     val dateStr = DateUtils.toUserFormat(startDateTime.date.toString())
                                     val statusLabel = when(state.appointment.status) {
                                         AppointmentStatus.SCHEDULED -> "Programada"

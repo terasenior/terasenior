@@ -79,8 +79,8 @@ class CreateAppointmentViewModel(
         viewModelScope.launch {
             _uiState.value = CreateAppointmentUiState.Loading
             
-            val startInstant = startDate.atTime(startTime).toInstant(TimeZone.currentSystemDefault())
-            val endInstant = startDate.atTime(endTime).toInstant(TimeZone.currentSystemDefault())
+            val startInstant = startDate.atTime(startTime).toInstant(TimeZone.UTC)
+            val endInstant = startDate.atTime(endTime).toInstant(TimeZone.UTC)
 
             // 1. Validar solapamiento (Mismo centro, mismo día, mismas horas)
             val existingResult = agendaRepository.getAppointments().first()

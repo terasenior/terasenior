@@ -41,7 +41,7 @@ fun EditAppointmentDialog(
     var title by remember { mutableStateOf(appointment.title) }
     var description by remember { mutableStateOf(appointment.description ?: "") }
     
-    val tz = TimeZone.currentSystemDefault()
+    val tz = TimeZone.UTC
     val startInstant = Instant.parse(appointment.startAt)
     val endInstant = Instant.parse(appointment.endAt)
     val startTime = startInstant.toLocalDateTime(tz).time

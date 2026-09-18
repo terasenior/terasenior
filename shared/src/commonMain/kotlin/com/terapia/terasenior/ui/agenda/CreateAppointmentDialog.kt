@@ -71,8 +71,8 @@ fun CreateAppointmentDialog(
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f))) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(conflictAppt!!.title, fontWeight = FontWeight.Bold)
-                            val start = Instant.parse(conflictAppt!!.startAt).toLocalDateTime(TimeZone.currentSystemDefault())
-                            val end = Instant.parse(conflictAppt!!.endAt).toLocalDateTime(TimeZone.currentSystemDefault())
+                            val start = Instant.parse(conflictAppt!!.startAt).toLocalDateTime(TimeZone.UTC)
+                            val end = Instant.parse(conflictAppt!!.endAt).toLocalDateTime(TimeZone.UTC)
                             Text("Horario: ${start.hour}:${start.minute.toString().padStart(2,'0')} - ${end.hour}:${end.minute.toString().padStart(2,'0')}", style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -152,7 +152,7 @@ fun CreateAppointmentDialog(
                         val eTime = LocalTime(endHour.toIntOrNull() ?: 11, endMin.toIntOrNull() ?: 0)
                         
                         // Lógica de detección de conflicto
-                        val tz = TimeZone.currentSystemDefault()
+                        val tz = TimeZone.UTC
                         val newStart = selectedDate.atTime(sTime).toInstant(tz)
                         val newEnd = selectedDate.atTime(eTime).toInstant(tz)
                         

@@ -53,9 +53,11 @@ class AgendaViewModel(
             val filtered = appointments.filter { 
                 try {
                     val startInstant = kotlinx.datetime.Instant.parse(it.startAt)
-                    val appointmentDate = startInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                    // La zona horaria del sistema no está disponible de forma fiable en WebAssembly.
+                    // Las citas se almacenan en UTC, por lo que usamos la misma referencia al filtrarlas.
+                    val appointmentDate = startInstant.toLocalDateTime(TimeZone.UTC).date
                     appointmentDate == date
-                } catch (e: Exception) {
+                } catch (_: Throwable) {
                     false
                 }
             }.sortedBy { it.startAt }.map { it to (attendees[it.id] ?: emptyList()) }
