@@ -32,7 +32,7 @@ import com.terapia.terasenior.treatment.repository.currentOrientationLocalDateTi
 @Composable
 fun AgendaScreen(
     viewModel: AgendaViewModel,
-    onAddAppointmentClick: () -> Unit,
+    onAddAppointmentClick: (LocalDate) -> Unit,
     onAppointmentClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -71,7 +71,11 @@ fun AgendaScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddAppointmentClick,
+                onClick = {
+                    (uiState as? AgendaUiState.Success)?.let { state ->
+                        onAddAppointmentClick(state.selectedDate)
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {

@@ -44,6 +44,7 @@ import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toLocalDateTime
 
 enum class Screen {
@@ -64,6 +65,7 @@ fun App() {
         var selectedPatientId by remember { mutableStateOf<String?>(null) }
         var activeTherapyPatientId by remember { mutableStateOf<String?>(null) }
         var selectedAppointmentId by remember { mutableStateOf<String?>(null) }
+        var agendaAppointmentDate by remember { mutableStateOf<LocalDate?>(null) }
         var currentEntityName by remember { mutableStateOf<String?>(null) }
         var currentCenterName by remember { mutableStateOf<String?>(null) }
         var currentEntityLogoUrl by remember { mutableStateOf<String?>(null) }
@@ -305,11 +307,73 @@ fun App() {
                             Screen.AGENDA -> {
                                 val agendaRepo = remember { SupabaseAppointmentRepository() }
                                 val viewModel = remember { AgendaViewModel(agendaRepo) }
+                                val createAppointmentViewModel = remember {
+                                    CreateAppointmentViewModel(
+                                        agendaRepository = agendaRepo,
+                                        patientRepository = patientRepo,
+                                        userRepository = SupabaseUserProfileRepository(),
+                                        entityRepository = entityRepository
+                                    )
+                                }
+                                val createAppointmentState by createAppointmentViewModel.uiState.collectAsState()
+                                val appointments by viewModel.appointments.collectAsState()
+
+                                LaunchedEffect(createAppointmentState) {
+                                    if (createAppointmentState is CreateAppointmentUiState.Created) {
+                                        agendaAppointmentDate = null
+                                        createAppointmentViewModel.resetState()
+                                        viewModel.loadAppointments()
+                                    }
+                                }
+
                                 AgendaScreen(
                                     viewModel = viewModel,
-                                    onAddAppointmentClick = { /* Handled in screen */ },
+                                    onAddAppointmentClick = { date ->
+                                        agendaAppointmentDate = date
+                                        createAppointmentViewModel.loadInitialData()
+                                    },
                                     onAppointmentClick = { selectedAppointmentId = it; currentScreen = Screen.APPOINTMENT_DETAIL }
                                 )
+
+                                agendaAppointmentDate?.let { date ->
+                                    when (val state = createAppointmentState) {
+                                        is CreateAppointmentUiState.Loading -> AlertDialog(
+                                            onDismissRequest = { },
+                                            title = { Text("Preparando nueva cita") },
+                                            text = { Row(verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(modifier = Modifier.size(24.dp)); Spacer(Modifier.width(16.dp)); Text("Cargando pacientes y profesionales…") } },
+                                            confirmButton = { TextButton(onClick = { agendaAppointmentDate = null; createAppointmentViewModel.resetState() }) { Text("Cancelar") } }
+                                        )
+                                        is CreateAppointmentUiState.Success -> CreateAppointmentDialog(
+                                            selectedDate = date,
+                                            patients = state.patients,
+                                            professionals = state.professionals,
+                                            existingAppointments = appointments,
+                                            onDismiss = { agendaAppointmentDate = null; createAppointmentViewModel.resetState() },
+                                            onConfirm = { title, description, start, end, type, staff, attendees, exercises ->
+                                                createAppointmentViewModel.createAppointment(
+                                                    entityId = currentUserProfile?.entityId.orEmpty(),
+                                                    title = title,
+                                                    description = description,
+                                                    startDate = date,
+                                                    startTime = start,
+                                                    endTime = end,
+                                                    type = type,
+                                                    selectedStaffIds = staff,
+                                                    selectedPatientIds = attendees,
+                                                    plannedExercises = exercises
+                                                )
+                                            },
+                                            isLoading = false
+                                        )
+                                        is CreateAppointmentUiState.Error -> AlertDialog(
+                                            onDismissRequest = { agendaAppointmentDate = null; createAppointmentViewModel.resetState() },
+                                            title = { Text("No se puede preparar la cita") },
+                                            text = { Text(state.message) },
+                                            confirmButton = { TextButton(onClick = { agendaAppointmentDate = null; createAppointmentViewModel.resetState() }) { Text("Cerrar") } }
+                                        )
+                                        else -> Unit
+                                    }
+                                }
                             }
                             Screen.APPOINTMENT_DETAIL -> {
                                 val appointmentId = selectedAppointmentId ?: ""

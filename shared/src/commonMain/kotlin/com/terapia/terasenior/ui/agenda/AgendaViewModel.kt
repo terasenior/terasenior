@@ -30,6 +30,7 @@ class AgendaViewModel(
         agendaToday()
     )
     private val _allAppointments = MutableStateFlow<List<Appointment>>(emptyList())
+    val appointments: StateFlow<List<Appointment>> = _allAppointments.asStateFlow()
     private val _attendeesMap = MutableStateFlow<Map<String, List<String>>>(emptyMap()) // ID Cita -> Nombres
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
