@@ -77,11 +77,12 @@ class AgendaViewModel(
                 result.onSuccess { list ->
                     _allAppointments.value = list
                     _error.value = null
-                    
-                    // Cargar asistentes para las citas de los próximos 30 días para tener datos listos
-                    loadAttendeesForList(list)
-                    
                     _isLoading.value = false
+
+                    // La agenda debe estar disponible aunque la consulta de asistentes sea lenta o falle.
+                    viewModelScope.launch {
+                        loadAttendeesForList(list)
+                    }
                 }.onFailure { e ->
                     _error.value = e.message ?: "Error al cargar agenda"
                     _isLoading.value = false
