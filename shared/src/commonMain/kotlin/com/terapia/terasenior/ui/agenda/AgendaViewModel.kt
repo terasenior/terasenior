@@ -33,6 +33,8 @@ class AgendaViewModel(
     private val _attendeesMap = MutableStateFlow<Map<String, List<String>>>(emptyMap()) // ID Cita -> Nombres
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
+    private val _diagnosticEvents = MutableStateFlow<List<String>>(emptyList())
+    val diagnosticEvents: StateFlow<List<String>> = _diagnosticEvents.asStateFlow()
 
     val uiState: StateFlow<AgendaUiState> = combine(
         _allAppointments, _selectedDate, _attendeesMap, _isLoading, _error
@@ -73,28 +75,37 @@ class AgendaViewModel(
 
     fun loadAppointments() {
         viewModelScope.launch {
+            addDiagnostic("Inicio de carga de Agenda")
             _isLoading.value = true
             _error.value = null
             try {
+                addDiagnostic("Solicitando citas a Supabase")
                 val result = withTimeout(15_000L) {
                     repository.getAppointments().first()
                 }
                 result.onSuccess { list ->
                     _allAppointments.value = list
+                    addDiagnostic("Citas recibidas: ${list.size}")
 
                     // La agenda debe estar disponible aunque la consulta de asistentes sea lenta o falle.
                     viewModelScope.launch {
+                        addDiagnostic("Carga de asistentes iniciada")
                         loadAttendeesForList(list)
+                        addDiagnostic("Carga de asistentes finalizada")
                     }
                 }.onFailure { e ->
                     _error.value = e.message ?: "Error al cargar agenda"
+                    addDiagnostic("Error de Supabase: ${e.message ?: "sin detalle"}")
                 }
             } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
                 _error.value = "La agenda tarda demasiado en responder. Pulsa Reintentar."
+                addDiagnostic("Tiempo de espera agotado tras 15 segundos")
             } catch (e: Throwable) {
                 _error.value = e.message ?: "Error al cargar agenda"
+                addDiagnostic("Error inesperado: ${e.message ?: "sin detalle"}")
             } finally {
                 _isLoading.value = false
+                addDiagnostic("Carga de Agenda finalizada")
             }
         }
     }
@@ -109,6 +120,15 @@ class AgendaViewModel(
             }
         }
         _attendeesMap.value = newMap
+    }
+
+    private fun addDiagnostic(message: String) {
+        val timestamp = try {
+            currentOrientationLocalDateTimeIso().replace('T', ' ')
+        } catch (_: Throwable) {
+            "Sin hora"
+        }
+        _diagnosticEvents.value = (_diagnosticEvents.value + "$timestamp · $message").takeLast(20)
     }
 
     fun onDateSelected(date: LocalDate) {

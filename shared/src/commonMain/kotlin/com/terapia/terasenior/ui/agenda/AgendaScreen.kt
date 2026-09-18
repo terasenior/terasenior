@@ -36,6 +36,8 @@ fun AgendaScreen(
     onAppointmentClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val diagnosticEvents by viewModel.diagnosticEvents.collectAsState()
+    var showDiagnostics by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -58,6 +60,9 @@ fun AgendaScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showDiagnostics = true }) {
+                        Icon(Icons.Default.BugReport, contentDescription = "Ver diagnóstico")
+                    }
                     IconButton(onClick = { viewModel.loadAppointments() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
                     }
@@ -78,7 +83,13 @@ fun AgendaScreen(
             when (val state = uiState) {
                 is AgendaUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(16.dp))
+                            TextButton(onClick = { showDiagnostics = true }) {
+                                Text("Ver diagnóstico")
+                            }
+                        }
                     }
                 }
                 is AgendaUiState.Error -> {
@@ -126,6 +137,30 @@ fun AgendaScreen(
                 }
             }
         }
+    }
+
+    if (showDiagnostics) {
+        AlertDialog(
+            onDismissRequest = { showDiagnostics = false },
+            title = { Text("Diagnóstico de Agenda") },
+            text = {
+                if (diagnosticEvents.isEmpty()) {
+                    Text("Aún no hay eventos registrados.")
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 320.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(diagnosticEvents) { event ->
+                            Text(event, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDiagnostics = false }) { Text("Cerrar") }
+            }
+        )
     }
 }
 
