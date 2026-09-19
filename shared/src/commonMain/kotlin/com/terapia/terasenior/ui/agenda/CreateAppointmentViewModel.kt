@@ -3,6 +3,7 @@ package com.terapia.terasenior.ui.agenda
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.agenda.Appointment
+import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.admin.Entity
