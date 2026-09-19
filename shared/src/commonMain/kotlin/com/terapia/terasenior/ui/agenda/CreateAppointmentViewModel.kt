@@ -3,7 +3,6 @@ package com.terapia.terasenior.ui.agenda
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.agenda.Appointment
-import com.terapia.terasenior.domain.model.agenda.AppointmentStatus
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.admin.Entity
@@ -15,6 +14,7 @@ import com.terapia.terasenior.domain.repository.admin.UserProfileRepository
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.*
 
 sealed interface CreateAppointmentUiState {
@@ -82,17 +82,6 @@ class CreateAppointmentViewModel(
             val startInstant = startDate.atTime(startTime).toInstant(TimeZone.UTC)
             val endInstant = startDate.atTime(endTime).toInstant(TimeZone.UTC)
 
-            // 1. Validar solapamiento (Mismo centro, mismo día, mismas horas)
-            val existingResult = agendaRepository.getAppointments().first()
-            val hasOverlap = existingResult.getOrNull()?.any { 
-                it.startAt == startInstant.toString() && it.status != AppointmentStatus.CANCELLED
-            } ?: false
-
-            if (hasOverlap) {
-                _uiState.value = CreateAppointmentUiState.Error("Ya existe una sesión programada para esta hora.")
-                return@launch
-            }
-
             val appointment = Appointment(
                 id = "",
                 entityId = entityId,
@@ -105,13 +94,25 @@ class CreateAppointmentViewModel(
                 plannedExercises = plannedExercises
             )
 
-            agendaRepository.createFullAppointment(appointment, selectedStaffIds, selectedPatientIds)
-                .onSuccess {
+            try {
+                withTimeout(20_000L) {
+                    agendaRepository.createFullAppointment(appointment, selectedStaffIds, selectedPatientIds)
+                }.onSuccess {
                     _uiState.value = CreateAppointmentUiState.Created
+                }.onFailure { error ->
+                    _uiState.value = CreateAppointmentUiState.Error(
+                        error.message ?: "No se pudo guardar la sesión."
+                    )
                 }
-                .onFailure { error ->
-                    _uiState.value = CreateAppointmentUiState.Error(error.message ?: "Error al programar la sesión")
-                }
+            } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+                _uiState.value = CreateAppointmentUiState.Error(
+                    "El guardado tarda demasiado en responder. Inténtalo de nuevo."
+                )
+            } catch (error: Throwable) {
+                _uiState.value = CreateAppointmentUiState.Error(
+                    error.message ?: "No se pudo guardar la sesión."
+                )
+            }
         }
     }
 
