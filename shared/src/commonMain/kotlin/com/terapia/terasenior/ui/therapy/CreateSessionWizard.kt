@@ -150,13 +150,13 @@ private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         val categories = listOf(
-            Triple("Orientación", "Tiempo, espacio y persona.", Icons.Default.Event),
-            Triple("Atención", "Focalización y mantenimiento visual.", Icons.Default.Visibility),
-            Triple("Memoria", "Codificación y recuperación.", Icons.Default.Psychology),
-            Triple("Lenguaje", "Fluidez y comprensión.", Icons.Default.RecordVoiceOver),
-            Triple("Funciones Ejecutivas", "Planificación, secuencias y cálculo.", Icons.Default.Settings),
-            Triple("Percepción", "Gnosias y capacidades visoespaciales.", Icons.Default.Extension),
-            Triple("Lectoescritura", "Grafomotricidad y trazos.", Icons.Default.Edit)
+            Quadruple("Orientación", "Tiempo, espacio y persona.", Icons.Default.Event, getOrientationPool().size),
+            Quadruple("Atención", "Focalización y mantenimiento visual.", Icons.Default.Visibility, AttentionExerciseCatalog.items.size),
+            Quadruple("Memoria", "Codificación y recuperación.", Icons.Default.Psychology, MemoryExerciseCatalog.items.size),
+            Quadruple("Lenguaje", "Fluidez y comprensión.", Icons.Default.RecordVoiceOver, LanguageExerciseCatalog.items.size),
+            Quadruple("Funciones Ejecutivas", "Planificación, secuencias y cálculo.", Icons.Default.Settings, TherapeuticExerciseCatalog.items.size),
+            Quadruple("Percepción", "Gnosias y capacidades visoespaciales.", Icons.Default.Extension, PerceptionExerciseCatalog.items.size),
+            Quadruple("Lectoescritura", "Grafomotricidad y trazos.", Icons.Default.Edit, LiteracyExerciseCatalog.items.size)
         )
 
         LazyVerticalGrid(
@@ -165,11 +165,12 @@ private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(categories) { (title, desc, icon) ->
+            items(categories) { (title, desc, icon, activityCount) ->
                 SelectionCard(
                     title = title,
                     description = desc,
                     icon = icon,
+                    activityCount = activityCount,
                     onClick = { onCategorySelected(title) }
                 )
             }
@@ -574,7 +575,10 @@ private fun getOrientationPool(): List<Triple<String, String, String>> {
 }
 
 @Composable
-private fun SelectionCard(title: String, description: String, icon: ImageVector, onClick: () -> Unit) {
+private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@Composable
+private fun SelectionCard(title: String, description: String, icon: ImageVector, activityCount: Int? = null, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -587,7 +591,13 @@ private fun SelectionCard(title: String, description: String, icon: ImageVector,
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    activityCount?.let {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("$it actividades", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
                 Text(description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
