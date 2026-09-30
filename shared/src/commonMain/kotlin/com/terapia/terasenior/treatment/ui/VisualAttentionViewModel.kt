@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.treatment.repository.ExerciseContentCatalog
+import com.terapia.terasenior.treatment.repository.RealisticExerciseImageCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,17 +60,7 @@ class VisualAttentionViewModel(
         Icons.Default.Chair, Icons.Default.WatchLater, Icons.Default.MedicalServices, Icons.Default.Build
     )
 
-    // Catálogo de imágenes reales para pacientes mayores (v1.3.3)
-    private val realImageCatalog = listOf(
-        "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200", // Manzana
-        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200", // Perro
-        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200", // Gato
-        "https://images.unsplash.com/photo-1571771894821-ad9b5886419a?w=200", // Plátano
-        "https://images.unsplash.com/photo-1585059895324-582b12879c73?w=200", // Taza
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200", // Reloj
-        "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=200", // Silla
-        "https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?w=200"  // Mesa
-    )
+    private val realImageCatalog = RealisticExerciseImageCatalog.objectImages
 
     private val letterCatalog = ('A'..'Z').toList()
     
@@ -100,8 +91,8 @@ class VisualAttentionViewModel(
         var totalTargets = 0
         var isTargetReal = false
 
-        // Decidir si usamos imágenes reales (50% de probabilidad en niveles de símbolos)
-        val useRealImages = level >= 2 && variation in listOf("attention_different", "attention_equals_model", "attention_symbols") && Random.nextFloat() > 0.5f
+        // Las variantes visuales siempre usan fotografías claras y reconocibles.
+        val useRealImages = variation in listOf("attention_different", "attention_equals_model", "attention_symbols")
 
         when (variation) {
             "attention_different" -> {

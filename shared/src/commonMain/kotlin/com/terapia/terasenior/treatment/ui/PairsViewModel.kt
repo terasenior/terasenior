@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.treatment.repository.RealisticExerciseImageCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,18 +54,7 @@ class PairsViewModel(
         Icons.Default.Light, Icons.Default.Build, Icons.Default.Work, Icons.Default.MenuBook, Icons.Default.PhotoCamera
     )
 
-    private val realImageCatalog = listOf(
-        "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200", // Manzana
-        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=200", // Perro
-        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200", // Gato
-        "https://images.unsplash.com/photo-1571771894821-ad9b5886419a?w=200", // Plátano
-        "https://images.unsplash.com/photo-1585059895324-582b12879c73?w=200", // Taza
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200", // Reloj
-        "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=200", // Silla
-        "https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?w=200", // Mesa
-        "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200", // Autobús
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200"  // Coche
-    )
+    private val realImageCatalog = RealisticExerciseImageCatalog.objectImages
 
     fun startNewGame(level: Int = 3, sessionId: String = "") {
         val numPairs = when(level) {
@@ -76,7 +66,7 @@ class PairsViewModel(
             else -> 6
         }
         
-        val useReal = level >= 2 // A partir de nivel 2 usamos fotos reales
+        val useReal = true // Las imágenes reales se usan en todos los niveles.
         
         val cards = if (useReal) {
             val selected = realImageCatalog.shuffled().take(numPairs)

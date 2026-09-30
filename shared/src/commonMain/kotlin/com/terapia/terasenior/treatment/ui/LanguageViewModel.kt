@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.treatment.repository.RealisticExerciseImageCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,12 +54,12 @@ class LanguageViewModel(
     data class GameItem(val name: String, val icon: ImageVector, val category: String, val imageUrl: String? = null)
 
     private val objects = listOf(
-        GameItem("Manzana", Icons.Default.Restaurant, "Frutas", "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400"),
-        GameItem("Perro", Icons.Default.Pets, "Animales", "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400"),
-        GameItem("Reloj", Icons.Default.WatchLater, "Objetos", "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400"),
-        GameItem("Taza", Icons.Default.Coffee, "Hogar", "https://images.unsplash.com/photo-1585059895324-582b12879c73?w=400"),
-        GameItem("Silla", Icons.Default.Chair, "Hogar", "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=400"),
-        GameItem("Mesa", Icons.Default.TableBar, "Hogar", "https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?w=400")
+        GameItem("Manzana", Icons.Default.Restaurant, "Frutas", RealisticExerciseImageCatalog.apple),
+        GameItem("Perro", Icons.Default.Pets, "Animales", RealisticExerciseImageCatalog.dog),
+        GameItem("Reloj", Icons.Default.WatchLater, "Objetos", RealisticExerciseImageCatalog.clock),
+        GameItem("Taza", Icons.Default.Coffee, "Hogar", RealisticExerciseImageCatalog.cup),
+        GameItem("Silla", Icons.Default.Chair, "Hogar", RealisticExerciseImageCatalog.chair),
+        GameItem("Libro", Icons.AutoMirrored.Filled.MenuBook, "Objetos", RealisticExerciseImageCatalog.book)
     )
 
     fun startNewGame(type: String, level: Int, sessionId: String = "", config: Map<String, String> = emptyMap()) {

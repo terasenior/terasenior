@@ -31,6 +31,7 @@ data class OrientationUiState(
     val questionText: String = "",
     val options: List<String> = emptyList(),
     val correctAnswer: String = "",
+    val imageUrl: String? = null,
     val isCorrect: Boolean? = null,
     val isCompleted: Boolean = false,
     val isSaving: Boolean = false,
@@ -107,6 +108,7 @@ class OrientationViewModel(
                 questionText = question.text,
                 options = if (guided != null) question.options else GdsDifficulty.choices(question.options, question.correctAnswer, it.currentLevel),
                 correctAnswer = question.correctAnswer,
+                imageUrl = guided?.imageUrl,
                 isCorrect = null,
                 debugInfo = it.debugInfo + " -> OK"
             ) }

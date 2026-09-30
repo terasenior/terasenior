@@ -13,13 +13,15 @@ object TherapeuticExerciseCatalog {
         val id: String,
         val name: String,
         val category: String,
-        val description: String
+        val description: String,
+        val imageUrl: String
     )
 
     data class GuidedQuestion(
         val text: String,
         val options: List<String>,
-        val correctAnswer: String
+        val correctAnswer: String,
+        val imageUrl: String? = null
     )
 
     private enum class Family(val title: String, val description: String) {
@@ -46,7 +48,8 @@ object TherapeuticExerciseCatalog {
                 id = "guided_executive_${family.name.lowercase()}_$number",
                 name = "${family.title} ${number.toString().padStart(2, '0')}",
                 category = "Funciones Ejecutivas",
-                description = family.description
+                description = family.description,
+                imageUrl = RealisticExerciseImageCatalog.forExecutiveFamily(family.name.lowercase())
             )
         }
     }
@@ -71,7 +74,7 @@ object TherapeuticExerciseCatalog {
         val family = Family.entries.firstOrNull { it.name.lowercase() == parts.firstOrNull() } ?: return null
         val number = parts.lastOrNull()?.toIntOrNull() ?: return null
         val level = challengeLevel.coerceIn(1, 5)
-        return when (family) {
+        val guided = when (family) {
             Family.COUNTDOWN -> countdown(number, level)
             Family.DECISIONS -> decision(number, level)
             Family.EMOTIONS -> emotion(number, level)
@@ -83,6 +86,7 @@ object TherapeuticExerciseCatalog {
             Family.LOGIC -> logic(number, level)
             Family.PLANNING -> planning(number, level)
         }
+        return guided.copy(imageUrl = activity.imageUrl)
     }
 
     private fun countdown(number: Int, level: Int): GuidedQuestion {

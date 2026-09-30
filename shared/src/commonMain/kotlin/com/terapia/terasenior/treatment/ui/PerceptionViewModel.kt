@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
+import com.terapia.terasenior.treatment.repository.RealisticExerciseImageCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -81,7 +82,7 @@ class PerceptionViewModel(
     )
 
     private val bodyPartsStimuli = listOf(
-        PerceptionStimulus.Image("https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400"), // Yoga/Body
+        PerceptionStimulus.Image(RealisticExerciseImageCatalog.hand),
         null,
         null
     )

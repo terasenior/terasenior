@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +101,19 @@ fun OrientationGame(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            state.imageUrl?.let { imageUrl ->
+                Card(
+                    modifier = Modifier.size(210.dp).padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    KamelImage(
+                        resource = { asyncPainterResource(imageUrl) },
+                        contentDescription = "Imagen de apoyo para la actividad",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
 
             // Opciones (v1.3.39: Rejilla optimizada y siempre visible)
             Box(modifier = Modifier.fillMaxWidth().weight(1f).widthIn(max = 800.dp)) {
