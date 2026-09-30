@@ -31,6 +31,7 @@ import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -220,9 +221,9 @@ private fun ExerciseSelectionStep(
                 Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo."),
                 Triple("perception_shape_fitting", "Encaje de Formas", "Arrastra cada pieza hasta su silueta correspondiente.")
             ).sortedBy { it.second }
-            "Lectoescritura" -> listOf(
-                Triple("literacy_tracing", "Trazos Básicos", "Sigue las líneas punteadas con precisión.")
-            )
+            "Lectoescritura" -> LiteracyExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             else -> emptyList()
         }
     }

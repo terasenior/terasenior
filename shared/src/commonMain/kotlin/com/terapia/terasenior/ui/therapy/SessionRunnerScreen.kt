@@ -25,6 +25,7 @@ import com.terapia.terasenior.domain.model.therapy.TherapySessionExercise
 import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.treatment.ui.*
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 private fun safeDurationSeconds(startTimeMs: Long): Int =
     ((activityTimeMillis() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
@@ -210,7 +211,7 @@ private fun ExerciseRouter(
     val saveUseCase = remember { SaveActivityResultUseCase(resultsRepo) }
 
     when {
-        exercise.exerciseType.startsWith("orientation") || TherapeuticExerciseCatalog.contains(exercise.exerciseType) -> {
+        exercise.exerciseType.startsWith("orientation") || TherapeuticExerciseCatalog.contains(exercise.exerciseType) || LiteracyExerciseCatalog.contains(exercise.exerciseType) -> {
             val gameViewModel = remember(exercise.id) { OrientationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()
