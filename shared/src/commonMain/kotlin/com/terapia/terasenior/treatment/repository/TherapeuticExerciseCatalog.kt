@@ -46,7 +46,7 @@ object TherapeuticExerciseCatalog {
         (1..50).map { number ->
             GuidedExercise(
                 id = "guided_executive_${family.name.lowercase()}_$number",
-                name = "${family.title} ${number.toString().padStart(2, '0')}",
+                name = spokenTitle(family),
                 category = "Funciones Ejecutivas",
                 description = family.description,
                 imageUrl = RealisticExerciseImageCatalog.forExecutiveFamily(family.name.lowercase())
@@ -64,6 +64,19 @@ object TherapeuticExerciseCatalog {
     fun contains(id: String): Boolean = id.startsWith("guided_executive_") && find(id) != null
 
     fun forCategory(category: String): List<GuidedExercise> = items.filter { it.category == category }
+
+    private fun spokenTitle(family: Family): String = when (family) {
+        Family.COUNTDOWN -> "Completa la cuenta atrás"
+        Family.DECISIONS -> "Elige una decisión cotidiana"
+        Family.EMOTIONS -> "Reconoce la emoción"
+        Family.RHYTHMS -> "Completa la secuencia"
+        Family.CALCULATION -> "Resuelve el cálculo"
+        Family.REVERSE -> "Recuerda la serie al revés"
+        Family.FLEXIBILITY -> "Elige una frase con sentido"
+        Family.STORIES -> "Continúa la historia"
+        Family.LOGIC -> "Resuelve el problema"
+        Family.PLANNING -> "Planifica el primer paso"
+    }
 
     /**
      * [challengeLevel] va de 1 (GDS 5, menor carga) a 5 (GDS 3, mayor carga).

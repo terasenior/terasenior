@@ -35,7 +35,7 @@ object MemoryExerciseCatalog {
     val items: List<MemoryExercise> = Family.entries.flatMap { family ->
         (1..50).map { number ->
             val card = cards[(number - 1) % cards.size]
-            MemoryExercise("guided_memory_${family.name.lowercase()}_$number", "${family.title} ${number.toString().padStart(2, '0')}", family.description, card.image)
+            MemoryExercise("guided_memory_${family.name.lowercase()}_$number", spokenTitle(family), family.description, card.image)
         }
     }
 
@@ -46,6 +46,19 @@ object MemoryExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_memory_") && items.any { it.id == id }
     fun forCategory(category: String): List<MemoryExercise> = if (category == "Memoria") items else emptyList()
+
+    private fun spokenTitle(family: Family): String = when (family) {
+        Family.VISUAL -> "Recuerda el objeto de la imagen"
+        Family.ASSOCIATION -> "Recuerda la palabra relacionada"
+        Family.CATEGORY -> "Recuerda el grupo correcto"
+        Family.LOCATION -> "Recuerda dónde se encuentra"
+        Family.USE -> "Recuerda para qué sirve"
+        Family.SEQUENCE -> "Recuerda la secuencia"
+        Family.DAILY -> "Recuerda la rutina diaria"
+        Family.PAIRS -> "Encuentra la pareja relacionada"
+        Family.ORDER -> "Recuerda el orden"
+        Family.WORDS -> "Recuerda la palabra"
+    }
 
     fun question(id: String, challengeLevel: Int): MemoryQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null

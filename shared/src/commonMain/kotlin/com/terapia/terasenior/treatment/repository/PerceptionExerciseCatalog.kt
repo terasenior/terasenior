@@ -54,7 +54,7 @@ object PerceptionExerciseCatalog {
             val item = objects[(number - 1) % objects.size]
             PerceptionExercise(
                 id = "guided_perception_${family.name.lowercase()}_$number",
-                name = "${family.title} ${number.toString().padStart(2, '0')}",
+                name = spokenTitle(family),
                 description = family.description,
                 imageUrl = if (family == Family.BODY) RealisticExerciseImageCatalog.hand else item.image
             )
@@ -68,6 +68,19 @@ object PerceptionExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_perception_") && items.any { it.id == id }
     fun forCategory(category: String): List<PerceptionExercise> = if (category == "Percepción") items else emptyList()
+
+    private fun spokenTitle(family: Family): String = when (family) {
+        Family.IDENTIFY -> "Reconoce el objeto de la imagen"
+        Family.CATEGORY -> "Clasifica el objeto"
+        Family.FUNCTION -> "Para qué sirve el objeto"
+        Family.COLOR -> "Identifica el color"
+        Family.SHAPE -> "Reconoce la forma"
+        Family.DETAIL -> "Observa el detalle"
+        Family.POSITION -> "Indica dónde está"
+        Family.BODY -> "Reconoce una parte del cuerpo"
+        Family.DIFFERENCE -> "Encuentra la diferencia"
+        Family.CONTEXT -> "Relaciona la imagen con su situación"
+    }
 
     fun question(id: String, challengeLevel: Int): PerceptionQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null

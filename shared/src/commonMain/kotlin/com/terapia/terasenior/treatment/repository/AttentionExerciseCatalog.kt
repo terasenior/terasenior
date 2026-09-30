@@ -35,7 +35,7 @@ object AttentionExerciseCatalog {
     val items: List<AttentionExercise> = Family.entries.flatMap { family ->
         (1..50).map { number ->
             val stimulus = stimuli[(number - 1) % stimuli.size]
-            AttentionExercise("guided_attention_${family.name.lowercase()}_$number", "${family.title} ${number.toString().padStart(2, '0')}", family.description, stimulus.image)
+            AttentionExercise("guided_attention_${family.name.lowercase()}_$number", spokenTitle(family), family.description, stimulus.image)
         }
     }
 
@@ -46,6 +46,19 @@ object AttentionExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_attention_") && items.any { it.id == id }
     fun forCategory(category: String): List<AttentionExercise> = if (category == "Atención") items else emptyList()
+
+    private fun spokenTitle(family: Family): String = when (family) {
+        Family.TARGET -> "Mira y reconoce el objeto"
+        Family.SAME -> "Busca la palabra igual"
+        Family.DIFFERENT -> "Encuentra lo diferente"
+        Family.COUNT -> "Cuenta con atención"
+        Family.SEQUENCE -> "Completa la secuencia"
+        Family.CATEGORY -> "Reconoce el grupo correcto"
+        Family.COLOR -> "Fíjate en el color"
+        Family.POSITION -> "Indica la posición"
+        Family.RULE -> "Sigue la regla"
+        Family.DAILY -> "Presta atención a la situación"
+    }
 
     fun question(id: String, challengeLevel: Int): AttentionQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null

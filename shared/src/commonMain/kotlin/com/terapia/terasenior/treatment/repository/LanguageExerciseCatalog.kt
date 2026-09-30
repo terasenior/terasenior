@@ -41,7 +41,7 @@ object LanguageExerciseCatalog {
             val word = words[(number - 1) % words.size]
             LanguageExercise(
                 id = "guided_language_${family.name.lowercase()}_$number",
-                name = "${family.title} ${number.toString().padStart(2, '0')}",
+                name = spokenTitle(family),
                 description = family.description,
                 imageUrl = word.image
             )
@@ -55,6 +55,19 @@ object LanguageExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_language_") && items.any { it.id == id }
     fun forCategory(category: String): List<LanguageExercise> = if (category == "Lenguaje") items else emptyList()
+
+    private fun spokenTitle(family: Family): String = when (family) {
+        Family.NAMING -> "Nombra el objeto de la imagen"
+        Family.CATEGORY -> "Reconoce la categoría de la palabra"
+        Family.FUNCTION -> "Indica para qué sirve"
+        Family.INITIAL -> "Encuentra la letra inicial"
+        Family.SYLLABLE -> "Completa la palabra"
+        Family.OPPOSITES -> "Busca la palabra contraria"
+        Family.SENTENCES -> "Completa la frase"
+        Family.COMPREHENSION -> "Comprende la instrucción"
+        Family.EXPRESSIONS -> "Completa la expresión"
+        Family.COMMUNICATION -> "Elige una respuesta adecuada"
+    }
 
     fun question(id: String, challengeLevel: Int): LanguageQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null

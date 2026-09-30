@@ -42,7 +42,7 @@ object LiteracyExerciseCatalog {
         (1..50).map { number ->
             LiteracyExercise(
                 id = "guided_literacy_${family.name.lowercase()}_$number",
-                name = "${family.title} ${number.toString().padStart(2, '0')}",
+                name = spokenTitle(family),
                 description = family.description,
                 imageUrl = family.image
             )
@@ -56,6 +56,19 @@ object LiteracyExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_literacy_") && items.any { it.id == id }
     fun forCategory(category: String): List<LiteracyExercise> = if (category == "Lectoescritura") items else emptyList()
+
+    private fun spokenTitle(family: Family): String = when (family) {
+        Family.INITIAL_LETTER -> "Encuentra la letra inicial"
+        Family.FINAL_LETTER -> "Encuentra la última letra"
+        Family.SYLLABLE -> "Completa la palabra"
+        Family.WORD_IMAGE -> "Lee la palabra y mira la imagen"
+        Family.USEFUL_WORDS -> "Reconoce una palabra útil"
+        Family.SENTENCE -> "Completa la frase"
+        Family.READING -> "Comprende la instrucción"
+        Family.ORDER -> "Ordena la frase"
+        Family.RHYME -> "Busca una palabra parecida"
+        Family.WRITING -> "Elige la palabra adecuada"
+    }
 
     fun question(id: String, challengeLevel: Int): LiteracyQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null
