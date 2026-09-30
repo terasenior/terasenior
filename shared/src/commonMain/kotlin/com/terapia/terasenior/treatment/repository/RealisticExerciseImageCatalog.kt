@@ -11,7 +11,7 @@ package com.terapia.terasenior.treatment.repository
 object RealisticExerciseImageCatalog {
     private const val baseUrl =
         "https://raw.githubusercontent.com/terasenior/terasenior/main/" +
-            "shared/src/commonMain/composeResources/drawable/therapeutic/"
+            "shared/src/commonMain/composeResources/drawable/"
 
     val apple = baseUrl + "realistic_apple.png"
     val banana = baseUrl + "realistic_banana.png"
@@ -42,3 +42,4 @@ object RealisticExerciseImageCatalog {
         else -> book
     }
 }
+
