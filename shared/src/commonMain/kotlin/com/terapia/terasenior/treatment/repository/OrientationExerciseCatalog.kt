@@ -24,7 +24,12 @@ object OrientationExerciseCatalog {
 
     val items: List<OrientationExercise> = Family.entries.flatMap { family ->
         (1..50).map { number ->
-            OrientationExercise("guided_orientation_${family.name.lowercase()}_$number", "${family.title} ${number.toString().padStart(2, '0')}", family.description, family.image)
+            OrientationExercise(
+                "guided_orientation_${family.name.lowercase()}_$number",
+                titleFor(family, number),
+                family.description,
+                family.image
+            )
         }
     }
 
@@ -35,6 +40,20 @@ object OrientationExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_orientation_") && items.any { it.id == id }
     fun forCategory(category: String): List<OrientationExercise> = if (category == "Orientación") items else emptyList()
+
+    /** Título que escucha la persona antes de empezar; nunca expone el número técnico del catálogo. */
+    private fun titleFor(family: Family, number: Int): String = when (family) {
+        Family.WEEK -> week(number, 1).first
+        Family.MONTH -> month(number, 1).first
+        Family.SEASON -> season(number, 1).first
+        Family.DAYTIME -> daytime(number, 1).first
+        Family.HOME -> home(number, 1).first
+        Family.COMMUNITY -> community(number, 1).first
+        Family.TIME_USE -> timeUse(number, 1).first
+        Family.WEATHER -> weather(number, 1).first
+        Family.ROUTINE -> routine(number, 1).first
+        Family.SITUATION -> situation(number, 1).first
+    }
 
     fun question(id: String, challengeLevel: Int): OrientationQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null
