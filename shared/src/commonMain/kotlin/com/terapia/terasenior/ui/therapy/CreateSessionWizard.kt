@@ -32,6 +32,7 @@ import com.terapia.terasenior.domain.model.therapy.ExerciseConfig
 import com.terapia.terasenior.domain.model.therapy.SessionMode
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
+import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -213,14 +214,9 @@ private fun ExerciseSelectionStep(
                 .forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
                 .sortedBy { it.second }
-            "Percepción" -> listOf(
-                Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
-                Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
-                Triple("perception_lateral_dominance", "Dominancia Lateral (Izq/Der)", "Identificar izquierda y derecha."),
-                Triple("perception_mirror", "Imagen en Espejo", "Reconocer formas y letras reflejadas."),
-                Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo."),
-                Triple("perception_shape_fitting", "Encaje de Formas", "Arrastra cada pieza hasta su silueta correspondiente.")
-            ).sortedBy { it.second }
+            "Percepción" -> PerceptionExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             "Lectoescritura" -> LiteracyExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
                 .sortedBy { it.second }

@@ -13,6 +13,7 @@ import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
+import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -171,6 +172,11 @@ class CreateSessionViewModel(
         }
         if (category == "Lectoescritura") {
             return LiteracyExerciseCatalog.forCategory(category).map {
+                Triple(it.id, it.name, it.description)
+            }
+        }
+        if (category == "Percepción") {
+            return PerceptionExerciseCatalog.forCategory(category).map {
                 Triple(it.id, it.name, it.description)
             }
         }
@@ -436,14 +442,7 @@ class CreateSessionViewModel(
             )
             // Las propuestas nuevas se devuelven al principio de esta función.
             "Funciones Ejecutivas" -> emptyList()
-            "Percepción" -> listOf(
-                Triple("perception_color_identification", "Identificación de Colores", "Toca el color que se indica por nombre."),
-                Triple("perception_size_ordering", "Orden de Tamaños", "Ordena los objetos de menor a mayor tamaño."),
-                Triple("perception_lateral_dominance", "Dominancia Lateral (Izq/Der)", "Identificar izquierda y derecha."),
-                Triple("perception_mirror", "Imagen en Espejo", "Reconocer formas y letras reflejadas."),
-                Triple("perception_body_parts", "Partes del Cuerpo", "Identificar y nombrar partes del cuerpo."),
-                Triple("perception_shape_fitting", "Encaje de Formas", "Arrastra cada pieza hasta su silueta correspondiente.")
-            )
+            "Percepción" -> emptyList()
             "Lectoescritura" -> emptyList()
             else -> emptyList()
         }
