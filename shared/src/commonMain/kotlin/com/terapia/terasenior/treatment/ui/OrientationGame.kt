@@ -37,6 +37,7 @@ fun OrientationGame(
     val isExecutiveExercise = state.currentType.startsWith("guided_executive_")
     val isLiteracyExercise = state.currentType.startsWith("guided_literacy_")
     val isPerceptionExercise = state.currentType.startsWith("guided_perception_")
+    val isLanguageExercise = state.currentType.startsWith("guided_language_")
     var completionDispatched by remember(state.currentType, state.startTimeMs) { mutableStateOf(false) }
     var navigationStatus by remember(state.currentType, state.startTimeMs) { mutableStateOf("pendiente") }
 
@@ -83,6 +84,7 @@ fun OrientationGame(
                         isExecutiveExercise -> "Funciones Ejecutivas"
                         isLiteracyExercise -> "Lectoescritura"
                         isPerceptionExercise -> "Percepción"
+                        isLanguageExercise -> "Lenguaje"
                         else -> "Orientación de Realidad"
                     },
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)

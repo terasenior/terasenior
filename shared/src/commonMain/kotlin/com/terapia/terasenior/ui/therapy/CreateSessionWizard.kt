@@ -33,6 +33,7 @@ import com.terapia.terasenior.domain.model.therapy.SessionMode
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -205,11 +206,9 @@ private fun ExerciseSelectionStep(
                 Triple("attention_word_search", "Sopa de letras/números", "Búsqueda sistemática.")
             ).sortedBy { it.second }
             "Memoria" -> memoryPool
-            "Lenguaje" -> listOf(
-                Triple("language_word_image", "Vocabulario: Palabra-Imagen", "Identifica la imagen que corresponde a la palabra."),
-                Triple("language_denomination", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
-                Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
-            ).sortedBy { it.second }
+            "Lenguaje" -> LanguageExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             "Funciones Ejecutivas" -> TherapeuticExerciseCatalog
                 .forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }

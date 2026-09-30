@@ -14,6 +14,7 @@ import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -177,6 +178,11 @@ class CreateSessionViewModel(
         }
         if (category == "Percepción") {
             return PerceptionExerciseCatalog.forCategory(category).map {
+                Triple(it.id, it.name, it.description)
+            }
+        }
+        if (category == "Lenguaje") {
+            return LanguageExerciseCatalog.forCategory(category).map {
                 Triple(it.id, it.name, it.description)
             }
         }
@@ -435,11 +441,7 @@ class CreateSessionViewModel(
                 Triple("memory_cultural_beethoven", "Compositor 9ª Sinfonía", "Memoria cultural musical."),
                 Triple("memory_cultural_cervantes_birth", "Ciudad Cervantes", "Memoria cultural literaria.")
             )
-            "Lenguaje" -> listOf(
-                Triple("language_word_image", "Vocabulario: Palabra-Imagen", "Identifica la imagen que corresponde a la palabra."),
-                Triple("language_denomination", "Denominación de Objetos", "Elige el nombre correcto para la imagen mostrada."),
-                Triple("language_semantic_category", "Clasificación Semántica", "Agrupa los objetos según su familia o categoría.")
-            )
+            "Lenguaje" -> emptyList()
             // Las propuestas nuevas se devuelven al principio de esta función.
             "Funciones Ejecutivas" -> emptyList()
             "Percepción" -> emptyList()

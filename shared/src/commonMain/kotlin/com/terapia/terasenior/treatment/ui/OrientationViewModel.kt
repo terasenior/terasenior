@@ -7,6 +7,7 @@ import com.terapia.terasenior.domain.usecase.results.SaveActivityResultUseCase
 import com.terapia.terasenior.treatment.repository.OrientationCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,13 +99,14 @@ class OrientationViewModel(
             val executiveQuestion = TherapeuticExerciseCatalog.question(type, _uiState.value.currentLevel)
             val literacyQuestion = LiteracyExerciseCatalog.question(type, _uiState.value.currentLevel)
             val perceptionQuestion = PerceptionExerciseCatalog.question(type, _uiState.value.currentLevel)
-            val hasGuidedQuestion = executiveQuestion != null || literacyQuestion != null || perceptionQuestion != null
+            val languageQuestion = LanguageExerciseCatalog.question(type, _uiState.value.currentLevel)
+            val hasGuidedQuestion = executiveQuestion != null || literacyQuestion != null || perceptionQuestion != null || languageQuestion != null
             val question = if (hasGuidedQuestion) {
                 OrientationCatalog.OrientationQuestion(
                     type = type,
-                    text = executiveQuestion?.text ?: literacyQuestion?.text ?: perceptionQuestion!!.text,
-                    options = executiveQuestion?.options ?: literacyQuestion?.options ?: perceptionQuestion!!.options,
-                    correctAnswer = executiveQuestion?.correctAnswer ?: literacyQuestion?.correctAnswer ?: perceptionQuestion!!.correctAnswer
+                    text = executiveQuestion?.text ?: literacyQuestion?.text ?: perceptionQuestion?.text ?: languageQuestion!!.text,
+                    options = executiveQuestion?.options ?: literacyQuestion?.options ?: perceptionQuestion?.options ?: languageQuestion!!.options,
+                    correctAnswer = executiveQuestion?.correctAnswer ?: literacyQuestion?.correctAnswer ?: perceptionQuestion?.correctAnswer ?: languageQuestion!!.correctAnswer
                 )
             } else {
                 OrientationCatalog.getQuestion(type)
@@ -113,7 +115,7 @@ class OrientationViewModel(
                 questionText = question.text,
                 options = if (hasGuidedQuestion) question.options else GdsDifficulty.choices(question.options, question.correctAnswer, it.currentLevel),
                 correctAnswer = question.correctAnswer,
-                imageUrl = executiveQuestion?.imageUrl ?: literacyQuestion?.imageUrl ?: perceptionQuestion?.imageUrl,
+                imageUrl = executiveQuestion?.imageUrl ?: literacyQuestion?.imageUrl ?: perceptionQuestion?.imageUrl ?: languageQuestion?.imageUrl,
                 isCorrect = null,
                 debugInfo = it.debugInfo + " -> OK"
             ) }
