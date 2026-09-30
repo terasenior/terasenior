@@ -16,6 +16,7 @@ import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
+import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -189,6 +190,11 @@ class CreateSessionViewModel(
         }
         if (category == "Atención") {
             return AttentionExerciseCatalog.forCategory(category).map {
+                Triple(it.id, it.name, it.description)
+            }
+        }
+        if (category == "Memoria") {
+            return MemoryExerciseCatalog.forCategory(category).map {
                 Triple(it.id, it.name, it.description)
             }
         }

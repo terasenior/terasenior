@@ -334,6 +334,7 @@ class SessionRunnerViewModel(
         activityType.startsWith("attention") || activityType == "number_search" -> "Atención"
         activityType.startsWith("guided_attention_") -> "Atención"
         activityType.startsWith("memory") -> "Memoria"
+        activityType.startsWith("guided_memory_") -> "Memoria"
         activityType.startsWith("language") -> "Lenguaje"
         activityType.startsWith("guided_language_") -> "Lenguaje"
         activityType.startsWith("executive") || activityType.startsWith("calculation") -> "Funciones ejecutivas"

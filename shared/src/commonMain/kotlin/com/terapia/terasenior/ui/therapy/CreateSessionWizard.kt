@@ -35,6 +35,7 @@ import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
+import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,7 +192,9 @@ private fun ExerciseSelectionStep(
             "Atención" -> AttentionExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
                 .sortedBy { it.second }
-            "Memoria" -> memoryPool
+            "Memoria" -> MemoryExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             "Lenguaje" -> LanguageExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
                 .sortedBy { it.second }
