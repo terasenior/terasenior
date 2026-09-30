@@ -332,12 +332,16 @@ class SessionRunnerViewModel(
     private fun cognitiveArea(activityType: String): String = when {
         activityType.startsWith("orientation") -> "Orientación"
         activityType.startsWith("attention") || activityType == "number_search" -> "Atención"
+        activityType.startsWith("guided_attention_") -> "Atención"
         activityType.startsWith("memory") -> "Memoria"
         activityType.startsWith("language") -> "Lenguaje"
+        activityType.startsWith("guided_language_") -> "Lenguaje"
         activityType.startsWith("executive") || activityType.startsWith("calculation") -> "Funciones ejecutivas"
         activityType.startsWith("guided_executive_") -> "Funciones ejecutivas"
         activityType.startsWith("perception") -> "Percepción"
+        activityType.startsWith("guided_perception_") -> "Percepción"
         activityType.startsWith("literacy") -> "Lectoescritura"
+        activityType.startsWith("guided_literacy_") -> "Lectoescritura"
         else -> "Otros"
     }
 }

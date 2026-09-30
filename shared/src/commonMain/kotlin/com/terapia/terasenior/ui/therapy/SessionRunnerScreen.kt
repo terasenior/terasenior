@@ -28,6 +28,7 @@ import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
+import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 private fun safeDurationSeconds(startTimeMs: Long): Int =
     ((activityTimeMillis() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
@@ -213,7 +214,7 @@ private fun ExerciseRouter(
     val saveUseCase = remember { SaveActivityResultUseCase(resultsRepo) }
 
     when {
-        exercise.exerciseType.startsWith("orientation") || TherapeuticExerciseCatalog.contains(exercise.exerciseType) || LiteracyExerciseCatalog.contains(exercise.exerciseType) || PerceptionExerciseCatalog.contains(exercise.exerciseType) || LanguageExerciseCatalog.contains(exercise.exerciseType) -> {
+        exercise.exerciseType.startsWith("orientation") || TherapeuticExerciseCatalog.contains(exercise.exerciseType) || LiteracyExerciseCatalog.contains(exercise.exerciseType) || PerceptionExerciseCatalog.contains(exercise.exerciseType) || LanguageExerciseCatalog.contains(exercise.exerciseType) || AttentionExerciseCatalog.contains(exercise.exerciseType) -> {
             val gameViewModel = remember(exercise.id) { OrientationViewModel(saveUseCase) }
             LaunchedEffect(exercise.id) { gameViewModel.startNewGame(exercise.exerciseType, challengeLevel, sessionId) }
             val gameState by gameViewModel.uiState.collectAsState()

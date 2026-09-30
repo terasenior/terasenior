@@ -34,6 +34,7 @@ import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
+import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -187,24 +188,9 @@ private fun ExerciseSelectionStep(
     val exercises = remember(category) {
         when (category) {
             "Orientación" -> orientationPool
-            "Atención" -> listOf(
-                Triple("number_search", "Busca el Número", "Entrenamiento de atención focalizada."),
-                Triple("attention_different", "Rodear el diferente", "Buscar el elemento intruso."),
-                Triple("attention_equals_model", "Rodear los iguales al modelo", "Búsqueda visual selectiva."),
-                Triple("attention_positions", "Rodear posiciones iguales", "Orientación espacial."),
-                Triple("attention_differences", "Buscar diferencias", "Atención al detalle."),
-                Triple("attention_letters", "Rodear las letras iguales", "Búsqueda de grafemas."),
-                Triple("attention_symbols", "Rodear símbolos iguales", "Atención visual simbólica."),
-                Triple("attention_matrices", "Matrices (Animales/Símbolos)", "Atención en cuadrícula."),
-                Triple("attention_row_cancel", "Tachado por filas con recuento", "Cancelación y conteo."),
-                Triple("attention_consecutive", "Rodear números consecutivos", "Atención sostenida."),
-                Triple("attention_yes_no", "Tachar una sí y otra no", "Alternancia atencional."),
-                Triple("attention_dual_task", "Tarea Dual (Doble instrucción)", "Atención dividida."),
-                Triple("attention_count", "Contar dibujos", "Conteo visual."),
-                Triple("attention_longest", "Palabra/Cifra más larga", "Discriminación visual."),
-                Triple("attention_missing_part", "Parte del dibujo que falta", "Integración visual."),
-                Triple("attention_word_search", "Sopa de letras/números", "Búsqueda sistemática.")
-            ).sortedBy { it.second }
+            "Atención" -> AttentionExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             "Memoria" -> memoryPool
             "Lenguaje" -> LanguageExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }

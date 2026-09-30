@@ -15,6 +15,7 @@ import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
 import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
+import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -186,6 +187,11 @@ class CreateSessionViewModel(
                 Triple(it.id, it.name, it.description)
             }
         }
+        if (category == "Atención") {
+            return AttentionExerciseCatalog.forCategory(category).map {
+                Triple(it.id, it.name, it.description)
+            }
+        }
         return when (category) {
             "Orientación" -> listOf(
                 Triple("orientation_temporal_day", "Día del mes", "Identificar el número del día actual."),
@@ -312,24 +318,7 @@ class CreateSessionViewModel(
                 Triple("orientation_situational_bee_honey", "Origen miel", "Conocimiento animal."),
                 Triple("orientation_situational_spider_web", "Origen tela araña", "Conocimiento animal.")
             )
-            "Atención" -> listOf(
-                Triple("number_search", "Busca el Número", "Entrenamiento de atención focalizada."),
-                Triple("attention_different", "Rodear el diferente", "Buscar el elemento intruso."),
-                Triple("attention_equals_model", "Rodear los iguales al modelo", "Búsqueda visual selectiva."),
-                Triple("attention_positions", "Rodear posiciones iguales", "Orientación espacial."),
-                Triple("attention_differences", "Buscar diferencias", "Atención al detalle."),
-                Triple("attention_letters", "Rodear las letras iguales", "Búsqueda de grafemas."),
-                Triple("attention_symbols", "Rodear símbolos iguales", "Atención visual simbólica."),
-                Triple("attention_matrices", "Matrices (Animales/Símbolos)", "Atención en cuadrícula."),
-                Triple("attention_row_cancel", "Tachado por filas con recuento", "Cancelación y conteo."),
-                Triple("attention_consecutive", "Rodear números consecutivos", "Atención sostenida."),
-                Triple("attention_yes_no", "Tachar una sí y otra no", "Alternancia atencional."),
-                Triple("attention_dual_task", "Tarea Dual (Doble instrucción)", "Atención dividida."),
-                Triple("attention_count", "Contar dibujos", "Conteo visual."),
-                Triple("attention_longest", "Palabra/Cifra más larga", "Discriminación visual."),
-                Triple("attention_missing_part", "Parte del dibujo que falta", "Integración visual."),
-                Triple("attention_word_search", "Sopa de letras/números", "Búsqueda sistemática.")
-            )
+            "Atención" -> emptyList()
             "Memoria" -> listOf(
                 Triple("memory_pairs", "Parejas de Memoria", "Encuentra las parejas de cartas iguales."),
                 Triple("memory_cultural_inventor", "Inventor de bombilla", "Memoria cultural histórica."),
