@@ -27,6 +27,22 @@ object RealisticExerciseImageCatalog {
 
     val objectImages = listOf(apple, dog, cat, banana, cup, clock, chair, phone, book, bus)
 
+    /** Texto breve para que la fotografía sea una ayuda terapéutica explícita. */
+    fun supportText(imageUrl: String): String = when (imageUrl) {
+        apple -> "Observa la manzana de la imagen. Úsala como ayuda antes de responder."
+        banana -> "Observa el plátano de la imagen. Úsalo como ayuda antes de responder."
+        dog -> "Observa el perro de la imagen. Úsalo como ayuda antes de responder."
+        cat -> "Observa el gato de la imagen. Úsalo como ayuda antes de responder."
+        clock -> "Observa el reloj de la imagen. Úsalo como ayuda antes de responder."
+        cup -> "Observa la taza de la imagen. Úsala como ayuda antes de responder."
+        chair -> "Observa la silla de la imagen. Úsala como ayuda antes de responder."
+        phone -> "Observa el teléfono de la imagen. Úsalo como ayuda antes de responder."
+        book -> "Observa el libro de la imagen. Úsalo como ayuda antes de responder."
+        bus -> "Observa el autobús de la imagen. Úsalo como ayuda antes de responder."
+        hand -> "Observa la mano de la imagen. Úsala como ayuda antes de responder."
+        else -> "Observa la imagen con calma. Úsala como ayuda antes de responder."
+    }
+
     /** Una imagen contextual para cada familia de las 500 actividades ejecutivas. */
     fun forExecutiveFamily(familyId: String): String = when (familyId) {
         "countdown" -> clock

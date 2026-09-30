@@ -1,6 +1,7 @@
 package com.terapia.terasenior.treatment.ui
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -13,14 +14,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
-import io.kamel.image.KamelImage
-import io.kamel.image.asyncPainterResource
+import com.terapia.terasenior.treatment.repository.RealisticExerciseImageCatalog
+import org.jetbrains.compose.resources.painterResource
+import terasenior.shared.generated.resources.Res
+import terasenior.shared.generated.resources.realistic_apple
+import terasenior.shared.generated.resources.realistic_banana
+import terasenior.shared.generated.resources.realistic_book
+import terasenior.shared.generated.resources.realistic_bus
+import terasenior.shared.generated.resources.realistic_cat
+import terasenior.shared.generated.resources.realistic_chair
+import terasenior.shared.generated.resources.realistic_clock
+import terasenior.shared.generated.resources.realistic_cup
+import terasenior.shared.generated.resources.realistic_dog
+import terasenior.shared.generated.resources.realistic_hand
+import terasenior.shared.generated.resources.realistic_phone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +54,7 @@ fun OrientationGame(
     val isLanguageExercise = state.currentType.startsWith("guided_language_")
     val isAttentionExercise = state.currentType.startsWith("guided_attention_")
     val isMemoryExercise = state.currentType.startsWith("guided_memory_")
+    val isOrientationExercise = state.currentType.startsWith("guided_orientation_")
     var completionDispatched by remember(state.currentType, state.startTimeMs) { mutableStateOf(false) }
     var navigationStatus by remember(state.currentType, state.startTimeMs) { mutableStateOf("pendiente") }
 
@@ -89,6 +104,7 @@ fun OrientationGame(
                         isLanguageExercise -> "Lenguaje"
                         isAttentionExercise -> "Atención"
                         isMemoryExercise -> "Memoria"
+                        isOrientationExercise -> "Orientación"
                         else -> "Orientación de Realidad"
                     },
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
@@ -120,15 +136,23 @@ fun OrientationGame(
 
             state.imageUrl?.let { imageUrl ->
                 Card(
-                    modifier = Modifier.size(210.dp).padding(bottom = 16.dp),
+                    modifier = Modifier.size(210.dp),
                     shape = RoundedCornerShape(20.dp)
                 ) {
-                    KamelImage(
-                        resource = { asyncPainterResource(imageUrl) },
+                    Image(
+                        painter = painterResource(realisticPainterFor(imageUrl)),
                         contentDescription = "Imagen de apoyo para la actividad",
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
                 }
+                Text(
+                    text = RealisticExerciseImageCatalog.supportText(imageUrl),
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             // Opciones (v1.3.39: Rejilla optimizada y siempre visible)
@@ -204,4 +228,19 @@ fun OrientationGame(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+}
+
+private fun realisticPainterFor(imageUrl: String) = when (imageUrl) {
+    RealisticExerciseImageCatalog.apple -> Res.drawable.realistic_apple
+    RealisticExerciseImageCatalog.banana -> Res.drawable.realistic_banana
+    RealisticExerciseImageCatalog.dog -> Res.drawable.realistic_dog
+    RealisticExerciseImageCatalog.cat -> Res.drawable.realistic_cat
+    RealisticExerciseImageCatalog.clock -> Res.drawable.realistic_clock
+    RealisticExerciseImageCatalog.cup -> Res.drawable.realistic_cup
+    RealisticExerciseImageCatalog.chair -> Res.drawable.realistic_chair
+    RealisticExerciseImageCatalog.phone -> Res.drawable.realistic_phone
+    RealisticExerciseImageCatalog.book -> Res.drawable.realistic_book
+    RealisticExerciseImageCatalog.bus -> Res.drawable.realistic_bus
+    RealisticExerciseImageCatalog.hand -> Res.drawable.realistic_hand
+    else -> Res.drawable.realistic_book
 }

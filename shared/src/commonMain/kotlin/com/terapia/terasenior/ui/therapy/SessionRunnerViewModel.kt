@@ -9,6 +9,12 @@ import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.results.ResultsRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
 import com.terapia.terasenior.treatment.repository.TherapeuticExerciseCatalog
+import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
+import com.terapia.terasenior.treatment.repository.LiteracyExerciseCatalog
+import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
+import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
+import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -308,7 +314,14 @@ class SessionRunnerViewModel(
     }
 
     private fun getExerciseDisplayName(type: String): String =
-        TherapeuticExerciseCatalog.find(type)?.name ?: ExerciseTranslationUtils.getDisplayName(type)
+        TherapeuticExerciseCatalog.find(type)?.name
+            ?: OrientationExerciseCatalog.items.firstOrNull { it.id == type }?.name
+            ?: AttentionExerciseCatalog.items.firstOrNull { it.id == type }?.name
+            ?: MemoryExerciseCatalog.items.firstOrNull { it.id == type }?.name
+            ?: LanguageExerciseCatalog.items.firstOrNull { it.id == type }?.name
+            ?: PerceptionExerciseCatalog.items.firstOrNull { it.id == type }?.name
+            ?: LiteracyExerciseCatalog.items.firstOrNull { it.id == type }?.name
+            ?: ExerciseTranslationUtils.getDisplayName(type)
 
     private suspend fun saveMissingPatientResults(
         session: TherapySession,
