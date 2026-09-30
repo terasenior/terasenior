@@ -36,6 +36,7 @@ import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
+import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -150,7 +151,7 @@ private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         val categories = listOf(
-            Quadruple("Orientación", "Tiempo, espacio y persona.", Icons.Default.Event, getOrientationPool().size),
+            Quadruple("Orientación", "Tiempo, espacio y persona.", Icons.Default.Event, OrientationExerciseCatalog.items.size),
             Quadruple("Atención", "Focalización y mantenimiento visual.", Icons.Default.Visibility, AttentionExerciseCatalog.items.size),
             Quadruple("Memoria", "Codificación y recuperación.", Icons.Default.Psychology, MemoryExerciseCatalog.items.size),
             Quadruple("Lenguaje", "Fluidez y comprensión.", Icons.Default.RecordVoiceOver, LanguageExerciseCatalog.items.size),
@@ -185,11 +186,11 @@ private fun ExerciseSelectionStep(
     onToggle: (type: String, name: String, category: String, desc: String) -> Unit,
     onNext: () -> Unit
 ) {
-    val orientationPool = remember { getOrientationPool() }
-    val memoryPool = remember { getMemoryPool() }
     val exercises = remember(category) {
         when (category) {
-            "Orientación" -> orientationPool
+            "Orientación" -> OrientationExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) }
+                .sortedBy { it.second }
             "Atención" -> AttentionExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
                 .sortedBy { it.second }
@@ -589,11 +590,11 @@ private fun SelectionCard(title: String, description: String, icon: ImageVector,
                 Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.weight(1f))
                     activityCount?.let {
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text("$it actividades", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     }
                 }

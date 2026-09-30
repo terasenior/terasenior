@@ -331,6 +331,7 @@ class SessionRunnerViewModel(
 
     private fun cognitiveArea(activityType: String): String = when {
         activityType.startsWith("orientation") -> "Orientación"
+        activityType.startsWith("guided_orientation_") -> "Orientación"
         activityType.startsWith("attention") || activityType == "number_search" -> "Atención"
         activityType.startsWith("guided_attention_") -> "Atención"
         activityType.startsWith("memory") -> "Memoria"

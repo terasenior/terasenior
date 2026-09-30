@@ -17,6 +17,7 @@ import com.terapia.terasenior.treatment.repository.PerceptionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
+import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -168,6 +169,11 @@ class CreateSessionViewModel(
     }
 
     private fun getExercisesForCategory(category: String): List<Triple<String, String, String>> {
+        if (category == "Orientación") {
+            return OrientationExerciseCatalog.forCategory(category).map {
+                Triple(it.id, it.name, it.description)
+            }
+        }
         if (category == "Funciones Ejecutivas") {
             return TherapeuticExerciseCatalog.forCategory(category).map {
                 Triple(it.id, it.name, it.description)
