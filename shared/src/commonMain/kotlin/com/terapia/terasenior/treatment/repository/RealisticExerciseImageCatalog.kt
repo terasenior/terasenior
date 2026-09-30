@@ -24,6 +24,11 @@ object RealisticExerciseImageCatalog {
     val book = baseUrl + "realistic_book.png"
     val bus = baseUrl + "realistic_bus.png"
     val hand = baseUrl + "realistic_hand.png"
+    val weekCalendar = baseUrl + "realistic_week_calendar.png"
+    val seasons = baseUrl + "realistic_seasons.png"
+    val dailyCalendar = baseUrl + "realistic_daily_calendar.png"
+    val emotions = baseUrl + "realistic_emotions.png"
+    val homeCommunity = baseUrl + "realistic_home_community.png"
 
     val objectImages = listOf(apple, dog, cat, banana, cup, clock, chair, phone, book, bus)
 
@@ -40,21 +45,26 @@ object RealisticExerciseImageCatalog {
         book -> "Observa el libro de la imagen. Úsalo como ayuda antes de responder."
         bus -> "Observa el autobús de la imagen. Úsalo como ayuda antes de responder."
         hand -> "Observa la mano de la imagen. Úsala como ayuda antes de responder."
+        weekCalendar -> "Observa el calendario semanal. Sigue el orden de los días antes de responder."
+        seasons -> "Observa las cuatro estaciones. Fíjate en el tiempo y en los cambios del paisaje."
+        dailyCalendar -> "Observa el calendario y los objetos de la mañana. Úsalos como ayuda antes de responder."
+        emotions -> "Observa las expresiones de las personas. Fíjate en cómo se sienten antes de responder."
+        homeCommunity -> "Observa las habitaciones y los lugares del barrio. Úsalos como ayuda antes de responder."
         else -> "Observa la imagen con calma. Úsala como ayuda antes de responder."
     }
 
     /** Una imagen contextual para cada familia de las 500 actividades ejecutivas. */
     fun forExecutiveFamily(familyId: String): String = when (familyId) {
         "countdown" -> clock
-        "decisions" -> phone
-        "emotions" -> dog
-        "rhythms" -> cup
+        "decisions" -> homeCommunity
+        "emotions" -> emotions
+        "rhythms" -> hand
         "calculation" -> apple
         "reverse" -> book
-        "flexibility" -> chair
-        "stories" -> bus
-        "logic" -> banana
-        "planning" -> phone
+        "flexibility" -> book
+        "stories" -> homeCommunity
+        "logic" -> dailyCalendar
+        "planning" -> dailyCalendar
         else -> book
     }
 }

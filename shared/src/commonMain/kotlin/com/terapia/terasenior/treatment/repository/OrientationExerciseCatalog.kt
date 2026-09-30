@@ -10,16 +10,16 @@ object OrientationExerciseCatalog {
     data class OrientationQuestion(val text: String, val options: List<String>, val correctAnswer: String, val imageUrl: String)
 
     private enum class Family(val title: String, val description: String, val image: String) {
-        WEEK("Días de la semana", "Ordena y reconoce los días de la semana.", RealisticExerciseImageCatalog.clock),
-        MONTH("Meses del año", "Reconoce el orden de los meses.", RealisticExerciseImageCatalog.book),
-        SEASON("Estaciones", "Relaciona el tiempo con una estación.", RealisticExerciseImageCatalog.bus),
-        DAYTIME("Momento del día", "Distingue mañana, tarde y noche.", RealisticExerciseImageCatalog.clock),
-        HOME("Orientación en casa", "Identifica espacios y objetos cotidianos.", RealisticExerciseImageCatalog.chair),
-        COMMUNITY("Orientación comunitaria", "Reconoce lugares y servicios del entorno.", RealisticExerciseImageCatalog.bus),
-        TIME_USE("Uso del tiempo", "Relaciona objetos con información temporal.", RealisticExerciseImageCatalog.clock),
-        WEATHER("Tiempo y preparación", "Elige una acción adecuada según el tiempo.", RealisticExerciseImageCatalog.book),
-        ROUTINE("Rutinas diarias", "Ordena acciones habituales del día.", RealisticExerciseImageCatalog.cup),
-        SITUATION("Situaciones cotidianas", "Reconoce la referencia adecuada en una situación.", RealisticExerciseImageCatalog.phone)
+        WEEK("Días de la semana", "Ordena y reconoce los días de la semana.", RealisticExerciseImageCatalog.weekCalendar),
+        MONTH("Meses del año", "Reconoce el orden de los meses.", RealisticExerciseImageCatalog.dailyCalendar),
+        SEASON("Estaciones", "Relaciona el tiempo con una estación.", RealisticExerciseImageCatalog.seasons),
+        DAYTIME("Momento del día", "Distingue mañana, tarde y noche.", RealisticExerciseImageCatalog.dailyCalendar),
+        HOME("Orientación en casa", "Identifica espacios y objetos cotidianos.", RealisticExerciseImageCatalog.homeCommunity),
+        COMMUNITY("Orientación comunitaria", "Reconoce lugares y servicios del entorno.", RealisticExerciseImageCatalog.homeCommunity),
+        TIME_USE("Uso del tiempo", "Relaciona objetos con información temporal.", RealisticExerciseImageCatalog.dailyCalendar),
+        WEATHER("Tiempo y preparación", "Elige una acción adecuada según el tiempo.", RealisticExerciseImageCatalog.seasons),
+        ROUTINE("Rutinas diarias", "Ordena acciones habituales del día.", RealisticExerciseImageCatalog.dailyCalendar),
+        SITUATION("Situaciones cotidianas", "Reconoce la referencia adecuada en una situación.", RealisticExerciseImageCatalog.homeCommunity)
     }
 
     val items: List<OrientationExercise> = Family.entries.flatMap { family ->

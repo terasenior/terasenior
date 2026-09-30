@@ -35,6 +35,11 @@ import terasenior.shared.generated.resources.realistic_cup
 import terasenior.shared.generated.resources.realistic_dog
 import terasenior.shared.generated.resources.realistic_hand
 import terasenior.shared.generated.resources.realistic_phone
+import terasenior.shared.generated.resources.realistic_week_calendar
+import terasenior.shared.generated.resources.realistic_seasons
+import terasenior.shared.generated.resources.realistic_daily_calendar
+import terasenior.shared.generated.resources.realistic_emotions
+import terasenior.shared.generated.resources.realistic_home_community
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -242,5 +247,10 @@ private fun realisticPainterFor(imageUrl: String) = when (imageUrl) {
     RealisticExerciseImageCatalog.book -> Res.drawable.realistic_book
     RealisticExerciseImageCatalog.bus -> Res.drawable.realistic_bus
     RealisticExerciseImageCatalog.hand -> Res.drawable.realistic_hand
+    RealisticExerciseImageCatalog.weekCalendar -> Res.drawable.realistic_week_calendar
+    RealisticExerciseImageCatalog.seasons -> Res.drawable.realistic_seasons
+    RealisticExerciseImageCatalog.dailyCalendar -> Res.drawable.realistic_daily_calendar
+    RealisticExerciseImageCatalog.emotions -> Res.drawable.realistic_emotions
+    RealisticExerciseImageCatalog.homeCommunity -> Res.drawable.realistic_home_community
     else -> Res.drawable.realistic_book
 }

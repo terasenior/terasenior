@@ -44,7 +44,7 @@ object LiteracyExerciseCatalog {
                 id = "guided_literacy_${family.name.lowercase()}_$number",
                 name = spokenTitle(family),
                 description = family.description,
-                imageUrl = family.image
+                imageUrl = imageForWord(words[number % words.size])
             )
         }
     }
@@ -56,6 +56,20 @@ object LiteracyExerciseCatalog {
 
     fun contains(id: String): Boolean = id.startsWith("guided_literacy_") && items.any { it.id == id }
     fun forCategory(category: String): List<LiteracyExercise> = if (category == "Lectoescritura") items else emptyList()
+
+    private fun imageForWord(word: String): String = when (word) {
+        "casa" -> RealisticExerciseImageCatalog.chair
+        "mesa" -> RealisticExerciseImageCatalog.cup
+        "mano" -> RealisticExerciseImageCatalog.hand
+        "pan" -> RealisticExerciseImageCatalog.dailyCalendar
+        "flor" -> RealisticExerciseImageCatalog.seasons
+        "sol" -> RealisticExerciseImageCatalog.seasons
+        "taza" -> RealisticExerciseImageCatalog.cup
+        "perro" -> RealisticExerciseImageCatalog.dog
+        "libro" -> RealisticExerciseImageCatalog.book
+        "reloj" -> RealisticExerciseImageCatalog.clock
+        else -> RealisticExerciseImageCatalog.book
+    }
 
     private fun spokenTitle(family: Family): String = when (family) {
         Family.INITIAL_LETTER -> "Encuentra la letra inicial"
