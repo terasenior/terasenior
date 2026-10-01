@@ -57,9 +57,9 @@ object OrientationExerciseCatalog {
 
     fun question(id: String, challengeLevel: Int): OrientationQuestion? {
         val activity = items.firstOrNull { it.id == id } ?: return null
-        val parts = id.removePrefix("guided_orientation_").split("_")
-        val family = Family.entries.firstOrNull { it.name.lowercase() == parts.firstOrNull() } ?: return null
-        val number = parts.lastOrNull()?.toIntOrNull() ?: return null
+        val familyKey = id.removePrefix("guided_orientation_").substringBeforeLast("_")
+        val family = Family.entries.firstOrNull { it.name.lowercase() == familyKey } ?: return null
+        val number = id.substringAfterLast("_").toIntOrNull() ?: return null
         val level = challengeLevel.coerceIn(1, 5)
         val triple = when (family) {
             Family.WEEK -> week(number, level)

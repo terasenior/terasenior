@@ -35,7 +35,12 @@ object MemoryExerciseCatalog {
     val items: List<MemoryExercise> = Family.entries.flatMap { family ->
         (1..50).map { number ->
             val card = cards[(number - 1) % cards.size]
-            MemoryExercise("guided_memory_${family.name.lowercase()}_$number", spokenTitle(family), family.description, card.image)
+            MemoryExercise(
+                "guided_memory_${family.name.lowercase()}_$number",
+                spokenTitle(family),
+                family.description,
+                imageFor(family, number, card)
+            )
         }
     }
 
@@ -58,6 +63,23 @@ object MemoryExerciseCatalog {
         Family.PAIRS -> "Encuentra la pareja relacionada"
         Family.ORDER -> "Recuerda el orden"
         Family.WORDS -> "Recuerda la palabra"
+    }
+
+    /** Selecciona una imagen que apoye la consigna y nunca un objeto ajeno a ella. */
+    private fun imageFor(family: Family, number: Int, card: Card): String = when (family) {
+        Family.SEQUENCE, Family.WORDS -> cards[number % cards.size].image
+        Family.DAILY -> when (number % 5) {
+            2 -> RealisticExerciseImageCatalog.phone
+            else -> RealisticExerciseImageCatalog.dailyCalendar
+        }
+        Family.ORDER -> when (number % 5) {
+            0 -> RealisticExerciseImageCatalog.cup
+            1 -> RealisticExerciseImageCatalog.phone
+            2 -> RealisticExerciseImageCatalog.book
+            3 -> RealisticExerciseImageCatalog.bus
+            else -> RealisticExerciseImageCatalog.chair
+        }
+        else -> card.image
     }
 
     fun question(id: String, challengeLevel: Int): MemoryQuestion? {
