@@ -214,36 +214,57 @@ private fun ExerciseSelectionStep(
         }
     }
 
-    var searchQuery by remember { mutableStateOf("") }
-    val filteredExercises = remember(exercises, searchQuery) {
-        if (searchQuery.isBlank()) exercises
-        else exercises.filter { it.second.contains(searchQuery, ignoreCase = true) }
+    val parts = remember(exercises) {
+        exercises.groupBy { exercisePartKey(it.first) }
+            .map { (key, entries) -> ExercisePart(key, exercisePartTitle(key), entries) }
+            .sortedBy { it.title }
+    }
+    var selectedPartKey by remember(category) { mutableStateOf<String?>(null) }
+    var searchQuery by remember(selectedPartKey) { mutableStateOf("") }
+    val selectedPart = parts.firstOrNull { it.key == selectedPartKey }
+    val filteredExercises = remember(selectedPart, searchQuery) {
+        selectedPart?.exercises.orEmpty().filter {
+            searchQuery.isBlank() || it.second.contains(searchQuery, ignoreCase = true)
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Ejercicios de $category", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(
+                text = selectedPart?.let { "${it.title}" } ?: "Partes de $category",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
             Text("${selectedExercises.size} seleccionados", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
         }
         
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = { Text("Buscar ejercicio...", fontSize = 14.sp) },
-            leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { searchQuery = "" }) { Icon(Icons.Default.Clear, null, modifier = Modifier.size(20.dp)) }
-                }
+        if (selectedPart != null) {
+            TextButton(onClick = { selectedPartKey = null }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Volver a las partes")
             }
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Buscar en esta parte...", fontSize = 14.sp) },
+                leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        } else {
+            Text(
+                "Elige una parte para ver sus ejercicios concretos.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             val listState = rememberLazyListState()
@@ -253,12 +274,23 @@ private fun ExerciseSelectionStep(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                items(filteredExercises) { (type, name, desc) ->
-                    ExerciseItem(
-                        title = name,
-                        isSelected = selectedExercises.any { it.type == type },
-                        onToggle = { onToggle(type, name, category, desc) }
-                    )
+                if (selectedPart == null) {
+                    items(parts) { part ->
+                        PartItem(
+                            title = part.title,
+                            description = "${part.exercises.size} ejercicios disponibles",
+                            onClick = { selectedPartKey = part.key }
+                        )
+                    }
+                } else {
+                    items(filteredExercises.withIndex().toList()) { indexed ->
+                        val (type, name, desc) = indexed.value
+                        ExerciseItem(
+                            title = "Ejercicio ${indexed.index + 1}: $name",
+                            isSelected = selectedExercises.any { it.type == type },
+                            onToggle = { onToggle(type, name, category, desc) }
+                        )
+                    }
                 }
             }
         }
@@ -267,6 +299,97 @@ private fun ExerciseSelectionStep(
 
         Button(onClick = onNext, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), enabled = selectedExercises.isNotEmpty()) {
             Text("Siguiente")
+        }
+    }
+}
+
+private data class ExercisePart(
+    val key: String,
+    val title: String,
+    val exercises: List<Triple<String, String, String>>
+)
+
+private fun exercisePartKey(type: String): String {
+    val parts = type.split("_")
+    return if (parts.firstOrNull() == "guided" && parts.size >= 3) parts[2] else type
+}
+
+private fun exercisePartTitle(key: String): String = when (key) {
+    "week" -> "Parte 1 · Días de la semana"
+    "month" -> "Parte 2 · Meses del año"
+    "season" -> "Parte 3 · Estaciones"
+    "daytime" -> "Parte 4 · Momentos del día"
+    "home" -> "Parte 5 · Orientación en casa"
+    "community" -> "Parte 6 · Lugares del entorno"
+    "time" -> "Parte 7 · Uso del tiempo"
+    "weather" -> "Parte 8 · Tiempo y preparación"
+    "routine" -> "Parte 9 · Rutinas diarias"
+    "situation" -> "Parte 10 · Situaciones cotidianas"
+    "target" -> "Parte 1 · Reconocer el objetivo"
+    "same" -> "Parte 2 · Buscar iguales"
+    "different" -> "Parte 3 · Encontrar diferencias"
+    "count" -> "Parte 4 · Conteo atento"
+    "sequence" -> "Parte 5 · Secuencias"
+    "category" -> "Parte 6 · Categorías"
+    "color" -> "Parte 7 · Colores"
+    "position" -> "Parte 8 · Posiciones"
+    "rule" -> "Parte 9 · Cambio de regla"
+    "daily" -> "Parte 10 · Situaciones diarias"
+    "visual" -> "Parte 1 · Recuerdo visual"
+    "association" -> "Parte 2 · Asociaciones"
+    "location" -> "Parte 4 · Dónde estaba"
+    "use" -> "Parte 5 · Para qué sirve"
+    "pairs" -> "Parte 8 · Parejas"
+    "order" -> "Parte 9 · Orden temporal"
+    "words" -> "Parte 10 · Palabras recordadas"
+    "naming" -> "Parte 1 · Nombrar objetos"
+    "function" -> "Parte 3 · Palabras y uso"
+    "initial" -> "Parte 4 · Letra inicial"
+    "syllable" -> "Parte 5 · Completar sílabas"
+    "opposites" -> "Parte 6 · Palabras opuestas"
+    "sentences" -> "Parte 7 · Completar frases"
+    "comprehension" -> "Parte 8 · Comprensión"
+    "expressions" -> "Parte 9 · Expresiones cotidianas"
+    "communication" -> "Parte 10 · Comunicación práctica"
+    "countdown" -> "Parte 1 · Cuenta atrás"
+    "decisions" -> "Parte 2 · Decisiones cotidianas"
+    "emotions" -> "Parte 3 · Reconocer emociones"
+    "rhythms" -> "Parte 4 · Ritmos y secuencias"
+    "calculation" -> "Parte 5 · Cálculo con atención"
+    "reverse" -> "Parte 6 · Series al revés"
+    "flexibility" -> "Parte 7 · Frases alternativas"
+    "stories" -> "Parte 8 · Historias encadenadas"
+    "logic" -> "Parte 9 · Problemas sencillos"
+    "planning" -> "Parte 10 · Planifica la tarea"
+    "identify" -> "Parte 1 · Reconocer objetos"
+    "detail" -> "Parte 6 · Detalles visuales"
+    "body" -> "Parte 8 · Percepción corporal"
+    "difference" -> "Parte 9 · Discriminación visual"
+    "context" -> "Parte 10 · Contexto cotidiano"
+    "final" -> "Parte 2 · Letra final"
+    "word" -> "Parte 4 · Palabra e imagen"
+    "useful" -> "Parte 5 · Palabras útiles"
+    "reading" -> "Parte 7 · Comprensión lectora"
+    "rhyme" -> "Parte 9 · Sonidos parecidos"
+    "writing" -> "Parte 10 · Escritura funcional"
+    else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
+}
+
+@Composable
+private fun PartItem(title: String, description: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = CardDefaults.outlinedCardBorder(),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontWeight = FontWeight.Bold)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.Default.ChevronRight, contentDescription = "Ver ejercicios")
         }
     }
 }
