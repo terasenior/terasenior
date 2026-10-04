@@ -38,6 +38,7 @@ import terasenior.shared.generated.resources.realistic_phone
 import terasenior.shared.generated.resources.realistic_week_calendar
 import terasenior.shared.generated.resources.realistic_seasons
 import terasenior.shared.generated.resources.realistic_daily_calendar
+import terasenior.shared.generated.resources.realistic_appointment_calendar
 import terasenior.shared.generated.resources.realistic_emotions
 import terasenior.shared.generated.resources.realistic_home_community
 
