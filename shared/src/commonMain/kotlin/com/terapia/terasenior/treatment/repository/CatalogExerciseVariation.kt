@@ -18,7 +18,7 @@ internal fun distinctCatalogPrompt(text: String, number: Int): String {
         "Cuando estés preparado, contesta:"
     )
     val supports = listOf(
-        "Puedes usar la imagen como ayuda.",
+        "Lee la pregunta con calma.",
         "Elige una sola respuesta.",
         "No hace falta responder deprisa.",
         "Vuelve a leer la pregunta si lo necesitas.",

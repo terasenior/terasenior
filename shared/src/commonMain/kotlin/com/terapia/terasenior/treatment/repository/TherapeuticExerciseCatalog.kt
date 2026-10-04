@@ -102,7 +102,44 @@ object TherapeuticExerciseCatalog {
             Family.LOGIC -> logic(number, level)
             Family.PLANNING -> planning(number, level)
         }
-        return guided.copy(text = distinctCatalogPrompt(guided.text, number), imageUrl = activity.imageUrl)
+        return guided.copy(text = distinctCatalogPrompt(guided.text, number), imageUrl = imageFor(family, number))
+    }
+
+    /** La fotografía acompaña la situación concreta, no solo la familia del ejercicio. */
+    private fun imageFor(family: Family, number: Int): String? = when (family) {
+        Family.COUNTDOWN -> RealisticExerciseImageCatalog.clock
+        Family.DECISIONS -> when (number % 10) {
+            0, 7 -> RealisticExerciseImageCatalog.seasons
+            1 -> RealisticExerciseImageCatalog.dailyCalendar
+            3 -> RealisticExerciseImageCatalog.bus
+            6 -> RealisticExerciseImageCatalog.phone
+            2, 4, 5 -> null
+            else -> RealisticExerciseImageCatalog.homeCommunity
+        }
+        Family.EMOTIONS -> RealisticExerciseImageCatalog.emotions
+        Family.RHYTHMS -> RealisticExerciseImageCatalog.hand
+        Family.CALCULATION, Family.REVERSE, Family.LOGIC -> null
+        Family.FLEXIBILITY -> when (number % 10) {
+            0, 1, 5, 6 -> RealisticExerciseImageCatalog.seasons
+            3 -> RealisticExerciseImageCatalog.homeCommunity
+            else -> null
+        }
+        Family.STORIES -> when (number % 10) {
+            1 -> RealisticExerciseImageCatalog.dailyCalendar
+            4 -> RealisticExerciseImageCatalog.bus
+            5 -> RealisticExerciseImageCatalog.cup
+            8 -> RealisticExerciseImageCatalog.phone
+            9 -> RealisticExerciseImageCatalog.seasons
+            7 -> RealisticExerciseImageCatalog.homeCommunity
+            else -> null
+        }
+        Family.PLANNING -> when (number % 10) {
+            2 -> RealisticExerciseImageCatalog.phone
+            3, 7, 9 -> RealisticExerciseImageCatalog.dailyCalendar
+            6 -> RealisticExerciseImageCatalog.seasons
+            1 -> RealisticExerciseImageCatalog.homeCommunity
+            else -> null
+        }
     }
 
     private fun countdown(number: Int, level: Int): GuidedQuestion {
