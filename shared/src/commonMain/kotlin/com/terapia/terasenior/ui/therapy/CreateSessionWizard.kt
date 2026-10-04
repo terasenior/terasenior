@@ -216,8 +216,10 @@ private fun ExerciseSelectionStep(
 
     val parts = remember(exercises) {
         exercises.groupBy { exercisePartKey(it.first) }
-            .map { (key, entries) -> ExercisePart(key, exercisePartTitle(key), entries) }
-            .sortedBy { it.title }
+            .map { (key, entries) ->
+                ExercisePart(key, exercisePartTitle(key), entries.sortedBy { exerciseOrdinal(it.first) })
+            }
+            .sortedBy { exercisePartOrdinal(it.title) }
     }
     var selectedPartKey by remember(category) { mutableStateOf<String?>(null) }
     var searchQuery by remember(selectedPartKey) { mutableStateOf("") }
@@ -308,6 +310,11 @@ private data class ExercisePart(
     val title: String,
     val exercises: List<Triple<String, String, String>>
 )
+
+private fun exercisePartOrdinal(title: String): Int =
+    Regex("""Parte\s+(\d+)""").find(title)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: Int.MAX_VALUE
+
+private fun exerciseOrdinal(type: String): Int = type.substringAfterLast("_").toIntOrNull() ?: Int.MAX_VALUE
 
 private fun exercisePartKey(type: String): String {
     val parts = type.split("_")
