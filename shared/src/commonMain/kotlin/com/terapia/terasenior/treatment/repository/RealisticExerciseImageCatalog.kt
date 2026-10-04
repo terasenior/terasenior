@@ -27,6 +27,7 @@ object RealisticExerciseImageCatalog {
     val weekCalendar = baseUrl + "realistic_week_calendar.png"
     val seasons = baseUrl + "realistic_seasons.png"
     val dailyCalendar = baseUrl + "realistic_daily_calendar.png"
+    val appointmentCalendar = baseUrl + "realistic_appointment_calendar.png"
     val emotions = baseUrl + "realistic_emotions.png"
     val homeCommunity = baseUrl + "realistic_home_community.png"
 
@@ -48,6 +49,7 @@ object RealisticExerciseImageCatalog {
         weekCalendar -> "Observa el calendario semanal. Sigue el orden de los días antes de responder."
         seasons -> "Observa las cuatro estaciones. Fíjate en el tiempo y en los cambios del paisaje."
         dailyCalendar -> "Observa el calendario y los objetos de la mañana. Úsalos como ayuda antes de responder."
+        appointmentCalendar -> "Observa el calendario: hay una fecha marcada para recordar la cita."
         emotions -> "Observa las expresiones de las personas. Fíjate en cómo se sienten antes de responder."
         homeCommunity -> "Observa las habitaciones y los lugares del barrio. Úsalos como ayuda antes de responder."
         else -> "Observa la imagen con calma. Úsala como ayuda antes de responder."

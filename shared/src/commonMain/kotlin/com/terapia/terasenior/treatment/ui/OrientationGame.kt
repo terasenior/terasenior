@@ -250,6 +250,7 @@ private fun realisticPainterFor(imageUrl: String) = when (imageUrl) {
     RealisticExerciseImageCatalog.weekCalendar -> Res.drawable.realistic_week_calendar
     RealisticExerciseImageCatalog.seasons -> Res.drawable.realistic_seasons
     RealisticExerciseImageCatalog.dailyCalendar -> Res.drawable.realistic_daily_calendar
+    RealisticExerciseImageCatalog.appointmentCalendar -> Res.drawable.realistic_appointment_calendar
     RealisticExerciseImageCatalog.emotions -> Res.drawable.realistic_emotions
     RealisticExerciseImageCatalog.homeCommunity -> Res.drawable.realistic_home_community
     else -> Res.drawable.realistic_book

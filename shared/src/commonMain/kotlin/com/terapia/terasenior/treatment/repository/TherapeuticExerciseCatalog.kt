@@ -110,7 +110,7 @@ object TherapeuticExerciseCatalog {
         Family.COUNTDOWN -> RealisticExerciseImageCatalog.clock
         Family.DECISIONS -> when (number % 10) {
             0, 7 -> RealisticExerciseImageCatalog.seasons
-            1 -> RealisticExerciseImageCatalog.dailyCalendar
+            1 -> RealisticExerciseImageCatalog.appointmentCalendar
             3 -> RealisticExerciseImageCatalog.bus
             6 -> RealisticExerciseImageCatalog.phone
             2, 4, 5 -> null
