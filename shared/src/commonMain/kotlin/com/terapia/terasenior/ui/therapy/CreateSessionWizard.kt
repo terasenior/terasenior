@@ -217,7 +217,7 @@ private fun ExerciseSelectionStep(
     val parts = remember(exercises) {
         exercises.groupBy { exercisePartKey(it.first) }
             .map { (key, entries) ->
-                ExercisePart(key, exercisePartTitle(key), entries.sortedBy { exerciseOrdinal(it.first) })
+                ExercisePart(key, exercisePartTitle(category, key), entries.sortedBy { exerciseOrdinal(it.first) })
             }
             .sortedBy { exercisePartOrdinal(it.title) }
     }
@@ -319,6 +319,51 @@ private fun exerciseOrdinal(type: String): Int = type.substringAfterLast("_").to
 private fun exercisePartKey(type: String): String {
     val parts = type.split("_")
     return if (parts.firstOrNull() == "guided" && parts.size >= 3) parts[2] else type
+}
+
+private fun exercisePartTitle(category: String, key: String): String {
+    when (category) {
+        "Lectoescritura" -> return when (key) {
+            "initial" -> "Parte 1 · Letra inicial"
+            "final" -> "Parte 2 · Letra final"
+            "syllable" -> "Parte 3 · Completar sílabas"
+            "word" -> "Parte 4 · Palabra e imagen"
+            "useful" -> "Parte 5 · Palabras útiles"
+            "sentence" -> "Parte 6 · Frases cotidianas"
+            "reading" -> "Parte 7 · Comprensión lectora"
+            "order" -> "Parte 8 · Orden de palabras"
+            "rhyme" -> "Parte 9 · Sonidos parecidos"
+            "writing" -> "Parte 10 · Escritura funcional"
+            else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
+        }
+        "Memoria" -> return when (key) {
+            "visual" -> "Parte 1 · Recuerdo visual"
+            "association" -> "Parte 2 · Asociaciones"
+            "category" -> "Parte 3 · Recuerdo por categoría"
+            "location" -> "Parte 4 · Dónde estaba"
+            "use" -> "Parte 5 · Para qué sirve"
+            "sequence" -> "Parte 6 · Secuencias"
+            "daily" -> "Parte 7 · Memoria cotidiana"
+            "pairs" -> "Parte 8 · Parejas"
+            "order" -> "Parte 9 · Orden temporal"
+            "words" -> "Parte 10 · Palabras recordadas"
+            else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
+        }
+        "Percepción" -> return when (key) {
+            "identify" -> "Parte 1 · Reconocer objetos"
+            "category" -> "Parte 2 · Clasificar objetos"
+            "function" -> "Parte 3 · Uso de objetos"
+            "color" -> "Parte 4 · Color predominante"
+            "shape" -> "Parte 5 · Forma general"
+            "detail" -> "Parte 6 · Detalle visual"
+            "position" -> "Parte 7 · Orientación espacial"
+            "body" -> "Parte 8 · Percepción corporal"
+            "difference" -> "Parte 9 · Discriminación visual"
+            "context" -> "Parte 10 · Contexto cotidiano"
+            else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
+        }
+    }
+    return exercisePartTitle(key)
 }
 
 private fun exercisePartTitle(key: String): String = when (key) {
