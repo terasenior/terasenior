@@ -7,7 +7,7 @@ package com.terapia.terasenior.treatment.repository
  */
 object OrientationExerciseCatalog {
     data class OrientationExercise(val id: String, val name: String, val description: String, val imageUrl: String)
-    data class OrientationQuestion(val text: String, val options: List<String>, val correctAnswer: String, val imageUrl: String)
+    data class OrientationQuestion(val text: String, val options: List<String>, val correctAnswer: String, val imageUrl: String?)
 
     private enum class Family(val title: String, val description: String, val image: String) {
         WEEK("Días de la semana", "Ordena y reconoce los días de la semana.", RealisticExerciseImageCatalog.weekCalendar),
@@ -36,6 +36,9 @@ object OrientationExerciseCatalog {
     init {
         check(items.size == 500) { "El catálogo de orientación debe contener 500 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
+        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
+            "Cada actividad de orientación debe tener una consigna distinta."
+        }
     }
 
     fun contains(id: String): Boolean = id.startsWith("guided_orientation_") && items.any { it.id == id }
@@ -73,14 +76,43 @@ object OrientationExerciseCatalog {
             Family.ROUTINE -> routine(number, level)
             Family.SITUATION -> situation(number, level)
         }
-        return OrientationQuestion(triple.first, triple.second, triple.third, activity.imageUrl)
+        return OrientationQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, imageFor(family, number))
+    }
+
+    private fun imageFor(family: Family, number: Int): String? = when (family) {
+        // Un calendario estático no puede indicar correctamente todos los días.
+        Family.WEEK -> null
+        Family.MONTH, Family.DAYTIME, Family.ROUTINE -> RealisticExerciseImageCatalog.dailyCalendar
+        Family.SEASON, Family.WEATHER -> RealisticExerciseImageCatalog.seasons
+        Family.HOME, Family.COMMUNITY -> RealisticExerciseImageCatalog.homeCommunity
+        Family.TIME_USE -> if (number % 5 == 0) RealisticExerciseImageCatalog.clock else RealisticExerciseImageCatalog.dailyCalendar
+        Family.SITUATION -> when (number % 5) {
+            2 -> RealisticExerciseImageCatalog.phone
+            3 -> RealisticExerciseImageCatalog.bus
+            4 -> RealisticExerciseImageCatalog.dailyCalendar
+            else -> RealisticExerciseImageCatalog.homeCommunity
+        }
     }
 
     private fun week(number: Int, level: Int): Triple<String, List<String>, String> {
         val days = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")
         val current = number % days.size
+        val previous = days[(current + days.size - 1) % days.size]
         val next = days[(current + 1) % days.size]
-        return choice("Después de ${days[current]}, ¿qué día viene?", next, days.filter { it != next }, level)
+        val twoBefore = days[(current + days.size - 2) % days.size]
+        val twoAfter = days[(current + 2) % days.size]
+        val variant = (number - 1) / days.size
+        val prompt = when (variant) {
+            0 -> Triple("Después de ${days[current]}, ¿qué día viene?", next, days.filter { it != next })
+            1 -> Triple("Antes de ${days[current]}, ¿qué día fue?", previous, days.filter { it != previous })
+            2 -> Triple("Dos días después de ${days[current]}, ¿qué día será?", twoAfter, days.filter { it != twoAfter })
+            3 -> Triple("Dos días antes de ${days[current]}, ¿qué día fue?", twoBefore, days.filter { it != twoBefore })
+            4 -> Triple("¿Qué día está entre $previous y $next?", days[current], days.filter { it != days[current] })
+            5 -> Triple("Si ayer fue $previous, ¿qué día es hoy?", days[current], days.filter { it != days[current] })
+            6 -> Triple("Si mañana es $next, ¿qué día es hoy?", days[current], days.filter { it != days[current] })
+            else -> Triple("¿Qué día va justo antes de $next?", days[current], days.filter { it != days[current] })
+        }
+        return choice(prompt.first, prompt.second, prompt.third, level)
     }
 
     private fun month(number: Int, level: Int): Triple<String, List<String>, String> {

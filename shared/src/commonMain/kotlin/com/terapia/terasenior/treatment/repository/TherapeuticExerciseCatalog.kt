@@ -57,6 +57,9 @@ object TherapeuticExerciseCatalog {
     init {
         check(items.size == 500) { "El catálogo debe contener exactamente 500 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
+        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
+            "Cada actividad de funciones ejecutivas debe tener una consigna distinta."
+        }
     }
 
     fun find(id: String): GuidedExercise? = items.firstOrNull { it.id == id }
@@ -99,7 +102,7 @@ object TherapeuticExerciseCatalog {
             Family.LOGIC -> logic(number, level)
             Family.PLANNING -> planning(number, level)
         }
-        return guided.copy(imageUrl = activity.imageUrl)
+        return guided.copy(text = distinctCatalogPrompt(guided.text, number), imageUrl = activity.imageUrl)
     }
 
     private fun countdown(number: Int, level: Int): GuidedQuestion {

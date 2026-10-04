@@ -64,6 +64,9 @@ object PerceptionExerciseCatalog {
     init {
         check(items.size == 500) { "El catálogo de percepción debe contener 500 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
+        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
+            "Cada actividad de percepción debe tener una consigna distinta."
+        }
     }
 
     fun contains(id: String): Boolean = id.startsWith("guided_perception_") && items.any { it.id == id }
@@ -101,7 +104,7 @@ object PerceptionExerciseCatalog {
             Family.DIFFERENCE -> difference(item, level)
             Family.CONTEXT -> context(item, level)
         }
-        return PerceptionQuestion(triple.first, triple.second, triple.third, activity.imageUrl)
+        return PerceptionQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, activity.imageUrl)
     }
 
     private fun shape(item: ObjectCard, level: Int): Triple<String, List<String>, String> {

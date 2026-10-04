@@ -51,6 +51,9 @@ object LanguageExerciseCatalog {
     init {
         check(items.size == 500) { "El catálogo de lenguaje debe contener 500 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
+        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
+            "Cada actividad de lenguaje debe tener una consigna distinta."
+        }
     }
 
     fun contains(id: String): Boolean = id.startsWith("guided_language_") && items.any { it.id == id }
@@ -88,7 +91,7 @@ object LanguageExerciseCatalog {
             Family.EXPRESSIONS -> expression(number, level)
             Family.COMMUNICATION -> communication(number, level)
         }
-        return LanguageQuestion(triple.first, triple.second, triple.third, activity.imageUrl)
+        return LanguageQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, activity.imageUrl)
     }
 
     private fun syllable(word: String, level: Int): Triple<String, List<String>, String> {

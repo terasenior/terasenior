@@ -42,6 +42,9 @@ object AttentionExerciseCatalog {
     init {
         check(items.size == 500) { "El catálogo de atención debe contener 500 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
+        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
+            "Cada actividad de atención debe tener una consigna distinta."
+        }
     }
 
     fun contains(id: String): Boolean = id.startsWith("guided_attention_") && items.any { it.id == id }
@@ -79,7 +82,7 @@ object AttentionExerciseCatalog {
             Family.RULE -> rule(number, level)
             Family.DAILY -> daily(number, level)
         }
-        return AttentionQuestion(triple.first, triple.second, triple.third, activity.imageUrl)
+        return AttentionQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, activity.imageUrl)
     }
 
     private fun different(stimulus: Stimulus, level: Int): Triple<String, List<String>, String> {

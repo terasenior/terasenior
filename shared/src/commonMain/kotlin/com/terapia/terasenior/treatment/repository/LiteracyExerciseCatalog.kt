@@ -52,6 +52,9 @@ object LiteracyExerciseCatalog {
     init {
         check(items.size == 500) { "El catálogo de lectoescritura debe contener 500 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
+        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
+            "Cada actividad de lectoescritura debe tener una consigna distinta."
+        }
     }
 
     fun contains(id: String): Boolean = id.startsWith("guided_literacy_") && items.any { it.id == id }
@@ -103,7 +106,7 @@ object LiteracyExerciseCatalog {
             Family.RHYME -> rhyme(word, level)
             Family.WRITING -> writing(number, level)
         }
-        return LiteracyQuestion(question.first, question.second, question.third, activity.imageUrl)
+        return LiteracyQuestion(distinctCatalogPrompt(question.first, number), question.second, question.third, activity.imageUrl)
     }
 
     private fun syllable(word: String, level: Int): Triple<String, List<String>, String> {
