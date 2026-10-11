@@ -37,7 +37,13 @@ import terasenior.shared.generated.resources.realistic_hand
 import terasenior.shared.generated.resources.realistic_phone
 import terasenior.shared.generated.resources.realistic_week_calendar
 import terasenior.shared.generated.resources.realistic_seasons
+import terasenior.shared.generated.resources.realistic_seasons_landscape
 import terasenior.shared.generated.resources.realistic_daily_calendar
+import terasenior.shared.generated.resources.realistic_after_lunch
+import terasenior.shared.generated.resources.realistic_dinner_night
+import terasenior.shared.generated.resources.realistic_sunrise
+import terasenior.shared.generated.resources.realistic_early_morning
+import terasenior.shared.generated.resources.realistic_year_calendar
 import terasenior.shared.generated.resources.realistic_appointment_calendar
 import terasenior.shared.generated.resources.realistic_emotions
 import terasenior.shared.generated.resources.realistic_home_community
@@ -141,15 +147,20 @@ fun OrientationGame(
             Spacer(modifier = Modifier.height(24.dp))
 
             state.imageUrl?.let { imageUrl ->
+                val isLandscapeImage = imageUrl == RealisticExerciseImageCatalog.seasonsLandscape
                 Card(
-                    modifier = Modifier.size(210.dp),
+                    modifier = if (isLandscapeImage) {
+                        Modifier.fillMaxWidth().widthIn(max = 620.dp).height(260.dp)
+                    } else {
+                        Modifier.size(210.dp)
+                    },
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Image(
                         painter = painterResource(realisticPainterFor(imageUrl)),
                         contentDescription = "Imagen de apoyo para la actividad",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = if (isLandscapeImage) ContentScale.Fit else ContentScale.Crop
                     )
                 }
                 Text(
@@ -250,7 +261,13 @@ private fun realisticPainterFor(imageUrl: String) = when (imageUrl) {
     RealisticExerciseImageCatalog.hand -> Res.drawable.realistic_hand
     RealisticExerciseImageCatalog.weekCalendar -> Res.drawable.realistic_week_calendar
     RealisticExerciseImageCatalog.seasons -> Res.drawable.realistic_seasons
+    RealisticExerciseImageCatalog.seasonsLandscape -> Res.drawable.realistic_seasons_landscape
     RealisticExerciseImageCatalog.dailyCalendar -> Res.drawable.realistic_daily_calendar
+    RealisticExerciseImageCatalog.afterLunch -> Res.drawable.realistic_after_lunch
+    RealisticExerciseImageCatalog.dinnerNight -> Res.drawable.realistic_dinner_night
+    RealisticExerciseImageCatalog.sunrise -> Res.drawable.realistic_sunrise
+    RealisticExerciseImageCatalog.earlyMorning -> Res.drawable.realistic_early_morning
+    RealisticExerciseImageCatalog.yearCalendar -> Res.drawable.realistic_year_calendar
     RealisticExerciseImageCatalog.appointmentCalendar -> Res.drawable.realistic_appointment_calendar
     RealisticExerciseImageCatalog.emotions -> Res.drawable.realistic_emotions
     RealisticExerciseImageCatalog.homeCommunity -> Res.drawable.realistic_home_community

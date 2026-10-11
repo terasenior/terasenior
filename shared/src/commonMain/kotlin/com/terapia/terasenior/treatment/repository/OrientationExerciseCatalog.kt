@@ -11,8 +11,8 @@ object OrientationExerciseCatalog {
 
     private enum class Family(val title: String, val description: String, val image: String) {
         WEEK("Días de la semana", "Ordena y reconoce los días de la semana.", RealisticExerciseImageCatalog.weekCalendar),
-        MONTH("Meses del año", "Reconoce el orden de los meses.", RealisticExerciseImageCatalog.dailyCalendar),
-        SEASON("Estaciones", "Relaciona el tiempo con una estación.", RealisticExerciseImageCatalog.seasons),
+        MONTH("Meses del año", "Reconoce el orden de los meses.", RealisticExerciseImageCatalog.yearCalendar),
+        SEASON("Estaciones", "Relaciona el tiempo con una estación.", RealisticExerciseImageCatalog.seasonsLandscape),
         DAYTIME("Momento del día", "Distingue mañana, tarde y noche.", RealisticExerciseImageCatalog.dailyCalendar),
         HOME("Orientación en casa", "Identifica espacios y objetos cotidianos.", RealisticExerciseImageCatalog.homeCommunity),
         COMMUNITY("Orientación comunitaria", "Reconoce lugares y servicios del entorno.", RealisticExerciseImageCatalog.homeCommunity),
@@ -82,8 +82,10 @@ object OrientationExerciseCatalog {
     private fun imageFor(family: Family, number: Int): String? = when (family) {
         // Un calendario estático no puede indicar correctamente todos los días.
         Family.WEEK -> null
-        Family.MONTH, Family.DAYTIME, Family.ROUTINE -> RealisticExerciseImageCatalog.dailyCalendar
-        Family.SEASON, Family.WEATHER -> RealisticExerciseImageCatalog.seasons
+        Family.MONTH -> RealisticExerciseImageCatalog.yearCalendar
+        Family.DAYTIME -> daytimeScenario(number).imageUrl
+        Family.ROUTINE -> RealisticExerciseImageCatalog.dailyCalendar
+        Family.SEASON, Family.WEATHER -> RealisticExerciseImageCatalog.seasonsLandscape
         Family.HOME, Family.COMMUNITY -> RealisticExerciseImageCatalog.homeCommunity
         Family.TIME_USE -> if (number % 5 == 0) RealisticExerciseImageCatalog.clock else RealisticExerciseImageCatalog.dailyCalendar
         Family.SITUATION -> when (number % 5) {
@@ -132,14 +134,72 @@ object OrientationExerciseCatalog {
         return choice(item.first, item.second, listOf(item.third, "Noche", "Mañana"), level)
     }
 
+    private data class DaytimeScenario(val text: String, val answer: String, val imageUrl: String)
+
+    private val daytimeScenarios = listOf(
+        DaytimeScenario("Solemos desayunar por la…", "Mañana", RealisticExerciseImageCatalog.dailyCalendar),
+        DaytimeScenario("Cuando abrimos las persianas y entra luz, suele ser la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Si vemos salir el sol, comienza la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Antes de ir a una cita temprano, es la…", "Mañana", RealisticExerciseImageCatalog.dailyCalendar),
+        DaytimeScenario("Al levantarnos de la cama normalmente es la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Tomar café y tostada suele hacerse por la…", "Mañana", RealisticExerciseImageCatalog.dailyCalendar),
+        DaytimeScenario("Cuando el reloj marca las ocho y hay luz, es la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Lavarse y vestirse para empezar el día se hace por la…", "Mañana", RealisticExerciseImageCatalog.dailyCalendar),
+        DaytimeScenario("Un paseo temprano, antes de comer, suele ser por la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("La primera comida del día se toma por la…", "Mañana", RealisticExerciseImageCatalog.dailyCalendar),
+        DaytimeScenario("Cuando la calle empieza a tener movimiento, suele ser la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Preparar el desayuno corresponde a la…", "Mañana", RealisticExerciseImageCatalog.dailyCalendar),
+        DaytimeScenario("Si la luz del sol entra poco a poco por la ventana, es la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Cuando empieza a clarear justo al despertar, corresponde a la…", "Mañana", RealisticExerciseImageCatalog.sunrise),
+        DaytimeScenario("Después de comer suele ser la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("La merienda se toma habitualmente por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Cuando terminamos la comida del mediodía, empieza la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Una siesta corta se hace normalmente por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Ir a hacer una compra después de comer suele ser por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Si el reloj marca las cinco, es la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Visitar a un amigo después de la comida suele ser por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Regar las plantas cuando el sol aún está alto suele ser por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("¿Cuándo solemos tomar una merienda de fruta o una infusión?", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Cuando recogemos la mesa de la comida, estamos en la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Si todavía hay mucha luz pero ya hemos comido, es la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Un paseo tranquilo antes de cenar suele ser por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Las actividades del centro después de comer son por la…", "Tarde", RealisticExerciseImageCatalog.afterLunch),
+        DaytimeScenario("Solemos cenar por la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Si fuera está oscuro y encendemos la lámpara, es de…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Ponerse el pijama suele hacerse por la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Cepillarse los dientes antes de dormir se hace por la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Ver la luna por la ventana indica que es de…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Cerrar las persianas antes de acostarse corresponde a la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Ver un programa después de cenar suele ser por la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Cuando preparamos la cama para dormir, es de…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Si el reloj marca las diez y el cielo está oscuro, es la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("La cena en casa se toma normalmente por la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Encender una luz porque ya no hay sol es propio de la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Ir a dormir suele hacerse durante la…", "Noche", RealisticExerciseImageCatalog.dinnerNight),
+        DaytimeScenario("Si son las dos de la mañana, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Cuando casi todos duermen y aún está oscuro, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Si el reloj marca las cuatro y no ha salido el sol, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("La parte de la noche justo antes del amanecer es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Mirar la luna a las tres de la mañana corresponde a la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Si la calle está vacía y es muy temprano, puede ser la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Cuando suena una alarma a las cinco y todavía está oscuro, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Antes de que salga el sol, durante la noche, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Si nos despertamos de noche y el reloj marca las tres, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("La hora silenciosa entre la noche y la mañana se llama…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning),
+        DaytimeScenario("Cuando aún no hay luz y falta poco para amanecer, es la…", "Madrugada", RealisticExerciseImageCatalog.earlyMorning)
+    )
+
+    private fun daytimeScenario(number: Int): DaytimeScenario =
+        daytimeScenarios[(number - 1).coerceAtLeast(0) % daytimeScenarios.size]
+
     private fun daytime(number: Int, level: Int): Triple<String, List<String>, String> {
-        val examples = listOf(
-            Triple("Solemos desayunar por la…", "Mañana", "Noche"),
-            Triple("Solemos cenar por la…", "Noche", "Mañana"),
-            Triple("Después de comer suele ser la…", "Tarde", "Madrugada"),
-            Triple("Cuando sale el sol comienza la…", "Mañana", "Noche"))
-        val item = examples[number % examples.size]
-        return choice(item.first, item.second, listOf(item.third, "Invierno", "Domingo"), level)
+        val scenario = daytimeScenario(number)
+        return choice(
+            scenario.text,
+            scenario.answer,
+            listOf("Mañana", "Tarde", "Noche", "Madrugada").filter { it != scenario.answer },
+            level
+        )
     }
 
     private fun home(number: Int, level: Int): Triple<String, List<String>, String> {
