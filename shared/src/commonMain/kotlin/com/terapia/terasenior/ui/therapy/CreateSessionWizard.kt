@@ -96,8 +96,10 @@ fun CreateSessionWizard(
 
 @Composable
 private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
+    var diagnostic by remember { mutableStateOf("Esperando que selecciones una modalidad.") }
+
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -106,14 +108,31 @@ private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
             title = "Con Paciente",
             description = "Registro clínico y seguimiento.",
             icon = Icons.Default.Person,
-            onClick = { onModeSelected(SessionMode.WITH_PATIENT) }
+            onClick = {
+                diagnostic = "Selección recibida: Con Paciente. Abriendo la lista de pacientes..."
+                onModeSelected(SessionMode.WITH_PATIENT)
+            }
         )
         SelectionCard(
             title = "Sin Paciente",
             description = "Uso libre o demostración.",
             icon = Icons.Default.PersonOff,
-            onClick = { onModeSelected(SessionMode.WITHOUT_PATIENT) }
+            onClick = {
+                diagnostic = "Selección recibida: Sin Paciente. Abriendo las áreas cognitivas..."
+                onModeSelected(SessionMode.WITHOUT_PATIENT)
+            }
         )
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.align(Alignment.Start)
+        ) {
+            Text(
+                text = "Diagnóstico: $diagnostic",
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 
