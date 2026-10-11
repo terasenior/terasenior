@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.util.DateUtils
@@ -23,6 +24,7 @@ fun EditPatientDialog(
     onConfirm: (Patient) -> Unit,
     isLoading: Boolean
 ) {
+    val layout = com.terapia.terasenior.ui.components.LocalTeraseniorLayout.current
     var externalId by remember { mutableStateOf(patient.externalId ?: "") }
     var nif by remember { mutableStateOf(patient.nif ?: "") }
     var firstName by remember { mutableStateOf(patient.firstName) }
@@ -45,9 +47,14 @@ fun EditPatientDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier
+            .fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.9f)
+            .widthIn(max = 760.dp)
+            .heightIn(max = if (layout.isCompactHeight) 620.dp else 720.dp),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text("Edición de Ficha Clínica", style = MaterialTheme.typography.headlineSmall) },
         text = {
-            Column(modifier = Modifier.fillMaxWidth().heightIn(min = 450.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = if (layout.isCompactHeight) 430.dp else 520.dp)) {
                 
                 TabRow(selectedTabIndex = selectedTab, modifier = Modifier.padding(bottom = 16.dp)) {
                     Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Gestión") })

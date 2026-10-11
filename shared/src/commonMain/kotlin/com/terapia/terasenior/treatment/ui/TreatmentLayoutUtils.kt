@@ -12,7 +12,8 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Componente de Cuadrícula Responsiva que ajusta el tamaño de los elementos 
- * para que siempre quepan en la pantalla disponible sin hacer scroll (v1.3.3).
+ * para aprovechar el espacio disponible. En pantallas bajas conserva un
+ * tamaño táctil cómodo y permite desplazarse con rueda o panel táctil.
  */
 @Composable
 fun <T> ResponsiveGrid(
@@ -33,7 +34,10 @@ fun <T> ResponsiveGrid(
         val cellWidth = (availableWidth - (spacing * (columns + 1))) / columns
         val cellHeight = (availableHeight - (spacing * (numRows + 1))) / numRows
         
-        val itemSize = minOf(cellWidth, cellHeight)
+        // No reducimos los controles hasta hacerlos difíciles de pulsar en un
+        // portátil. Si no caben, la cuadrícula se desplaza verticalmente.
+        val itemSize = maxOf(72.dp, minOf(cellWidth, cellHeight))
+        val needsScroll = itemSize > cellHeight
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
@@ -41,7 +45,7 @@ fun <T> ResponsiveGrid(
             verticalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterVertically),
             contentPadding = PaddingValues(spacing),
             modifier = Modifier.fillMaxSize(),
-            userScrollEnabled = false
+            userScrollEnabled = needsScroll
         ) {
             itemsIndexed(items) { index, item ->
                 content(index, item, itemSize)

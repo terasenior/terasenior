@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.agenda.AppointmentType
 import com.terapia.terasenior.domain.model.patient.Patient
@@ -38,6 +39,7 @@ fun CreateAppointmentDialog(
     onConfirm: (title: String, desc: String?, start: LocalTime, end: LocalTime, type: AppointmentType, staff: List<String>, attendees: List<String>, exercises: List<ExerciseConfig>) -> Unit,
     isLoading: Boolean
 ) {
+    val layout = com.terapia.terasenior.ui.components.LocalTeraseniorLayout.current
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     
@@ -59,6 +61,11 @@ fun CreateAppointmentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier
+            .fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.9f)
+            .widthIn(max = 760.dp)
+            .heightIn(max = if (layout.isCompactHeight) 620.dp else 720.dp),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text(if (conflictAppt != null) "¡Conflicto de Horario!" else "Programar Sesión Terapéutica", style = MaterialTheme.typography.headlineSmall) },
         text = {
             if (conflictAppt != null) {

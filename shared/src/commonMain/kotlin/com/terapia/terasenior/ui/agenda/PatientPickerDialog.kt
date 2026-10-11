@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.terapia.terasenior.domain.model.patient.Patient
 
 @Composable
@@ -22,6 +23,7 @@ fun PatientPickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (List<String>) -> Unit
 ) {
+    val layout = com.terapia.terasenior.ui.components.LocalTeraseniorLayout.current
     val selectedIds = remember { mutableStateListOf<String>().apply { addAll(initiallySelectedIds) } }
     var query by remember { mutableStateOf("") }
     
@@ -32,9 +34,14 @@ fun PatientPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier
+            .fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.9f)
+            .widthIn(max = 720.dp)
+            .heightIn(max = if (layout.isCompactHeight) 620.dp else 720.dp),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text("Seleccionar Asistentes", style = MaterialTheme.typography.headlineSmall) },
         text = {
-            Column(modifier = Modifier.fillMaxWidth().heightIn(min = 400.dp, max = 500.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = if (layout.isCompactHeight) 420.dp else 500.dp)) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },

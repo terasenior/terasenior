@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.util.DateUtils
 
@@ -39,6 +40,7 @@ fun CreatePatientDialog(
     isLoading: Boolean,
     errorMessage: String? = null
 ) {
+    val layout = com.terapia.terasenior.ui.components.LocalTeraseniorLayout.current
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var preferredName by remember { mutableStateOf("") }
@@ -60,9 +62,14 @@ fun CreatePatientDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier
+            .fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.9f)
+            .widthIn(max = 760.dp)
+            .heightIn(max = if (layout.isCompactHeight) 620.dp else 720.dp),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text("Alta de Nuevo Paciente", style = MaterialTheme.typography.headlineSmall) },
         text = {
-            Column(modifier = Modifier.fillMaxWidth().heightIn(min = 400.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = if (layout.isCompactHeight) 430.dp else 520.dp)) {
                 if (errorMessage != null) {
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer), modifier = Modifier.padding(bottom = 12.dp)) {
                         Text(text = errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +34,7 @@ fun PairsGame(
     onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val compactHeight = LocalTeraseniorLayout.current.isCompactHeight
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -54,10 +56,12 @@ fun PairsGame(
                 Box(modifier = Modifier.size(48.dp))
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(if (compactHeight) 12.dp else 24.dp))
 
             // Game Grid (v1.3.3 - Responsive)
-            BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            BoxWithConstraints(
+                modifier = if (compactHeight) Modifier.fillMaxWidth().height(360.dp) else Modifier.weight(1f).fillMaxWidth()
+            ) {
                 val availableWidth = maxWidth
                 val availableHeight = maxHeight
                 
@@ -66,7 +70,8 @@ fun PairsGame(
                 
                 val cellWidth = (availableWidth - (12.dp * (gridSize + 1))) / gridSize
                 val cellHeight = (availableHeight - (12.dp * (numRows + 1))) / numRows
-                val itemSize = minOf(cellWidth, cellHeight)
+                val itemSize = maxOf(64.dp, minOf(cellWidth, cellHeight))
+                val needsScroll = itemSize > cellHeight
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(gridSize),
@@ -74,7 +79,7 @@ fun PairsGame(
                     verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
                     contentPadding = PaddingValues(8.dp),
                     modifier = Modifier.fillMaxSize(),
-                    userScrollEnabled = false
+                    userScrollEnabled = needsScroll
                 ) {
                     itemsIndexed(state.cards) { index, card ->
                         MemoryCardItem(

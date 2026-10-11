@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +39,7 @@ import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
 import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
+import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,8 +146,9 @@ private fun PatientSelectionStep(patients: List<Patient>, isLoading: Boolean, on
 
 @Composable
 private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
+    val layout = LocalTeraseniorLayout.current
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)
+        modifier = Modifier.fillMaxSize().padding(horizontal = if (layout.isCompactWidth) 16.dp else 24.dp, vertical = 16.dp)
     ) {
         Text("Área Cognitiva", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
@@ -161,7 +164,7 @@ private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
         )
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Fixed(if (layout.isCompactWidth) 1 else 2),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
@@ -755,8 +758,9 @@ private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third:
 @Composable
 private fun SelectionCard(title: String, description: String, icon: ImageVector, activityCount: Int? = null, onClick: () -> Unit) {
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Button, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {

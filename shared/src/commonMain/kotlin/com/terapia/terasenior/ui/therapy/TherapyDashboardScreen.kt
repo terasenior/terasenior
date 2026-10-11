@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.model.therapy.SessionStatus
+import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -37,6 +38,7 @@ fun TherapyDashboardScreen(
     onPatientClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val layout = LocalTeraseniorLayout.current
 
     LaunchedEffect(therapistId) {
         viewModel.loadDashboard(therapistId)
@@ -96,7 +98,17 @@ fun TherapyDashboardScreen(
 
             // DISTRIBUCIÓN EN DOS COLUMNAS
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                val overviewModifier = Modifier.fillMaxWidth()
+                if (layout.isCompactWidth) {
+                    Column(modifier = overviewModifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        DashboardOverviewColumn(
+                            sessions = uiState.todayAppointments,
+                            patients = uiState.todayPatients,
+                            onAppointmentClick = onAppointmentClick,
+                            onPatientClick = onPatientClick
+                        )
+                    }
+                } else Row(modifier = overviewModifier, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     // COLUMNA IZQUIERDA: SESIONES
                     Column(modifier = Modifier.weight(1.2f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("Sesiones programadas para hoy", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -143,6 +155,46 @@ fun TherapyDashboardScreen(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardOverviewColumn(
+    sessions: List<Pair<Appointment, List<String>>>,
+    patients: List<Pair<String, String>>,
+    onAppointmentClick: (String) -> Unit,
+    onPatientClick: (String) -> Unit
+) {
+    Text("Sesiones programadas para hoy", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    if (sessions.isEmpty()) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
+            Text("Sin sesiones hoy.", modifier = Modifier.padding(12.dp), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+        }
+    } else {
+        sessions.forEach { pair -> TodayAppointmentItem(pair.first, pair.second) { onAppointmentClick(pair.first.id) } }
+    }
+    Text("Pacientes del Día", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    if (patients.isEmpty()) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))) {
+            Text("Sin pacientes.", modifier = Modifier.padding(12.dp), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+        }
+    } else {
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+            Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                patients.forEachIndexed { index, info ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable { onPatientClick(info.first) }.padding(8.dp)
+                    ) {
+                        Text(text = "${index + 1}.", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary, modifier = Modifier.width(20.dp))
+                        Text(info.second, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(Icons.Default.ChevronRight, null, tint = Color.LightGray, modifier = Modifier.size(14.dp))
+                    }
+                    if (index < patients.size - 1) HorizontalDivider(modifier = Modifier.padding(horizontal = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
             }
         }

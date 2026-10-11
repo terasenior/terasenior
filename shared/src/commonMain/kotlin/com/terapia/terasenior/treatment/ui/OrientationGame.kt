@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
+import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
 import com.terapia.terasenior.treatment.repository.RealisticExerciseImageCatalog
 import org.jetbrains.compose.resources.painterResource
 import terasenior.shared.generated.resources.Res
@@ -59,6 +62,8 @@ fun OrientationGame(
     onCompleted: () -> Boolean
 ) {
     val state by viewModel.uiState.collectAsState()
+    val layout = LocalTeraseniorLayout.current
+    val compactHeight = layout.isCompactHeight
     val speechManager = remember { SpeechManager() }
     val isExecutiveExercise = state.currentType.startsWith("guided_executive_")
     val isLiteracyExercise = state.currentType.startsWith("guided_literacy_")
@@ -96,7 +101,11 @@ fun OrientationGame(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(20.dp),
+            modifier = (if (compactHeight) {
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            } else {
+                Modifier.fillMaxSize()
+            }).padding(if (compactHeight) 12.dp else 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Barra de Navegación Profesional
@@ -126,7 +135,7 @@ fun OrientationGame(
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(if (compactHeight) 12.dp else 48.dp))
 
             // Pregunta (v1.3.39: Ajuste de altura para visibilidad de botones)
             Card(
@@ -134,25 +143,25 @@ fun OrientationGame(
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxWidth().padding(if (compactHeight) 16.dp else 24.dp), contentAlignment = Alignment.Center) {
                     Text(
                         text = if (state.questionText.isBlank()) "Cargando..." else state.questionText,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                        style = (if (compactHeight) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium).copy(fontWeight = FontWeight.Black),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(if (compactHeight) 12.dp else 24.dp))
 
             state.imageUrl?.let { imageUrl ->
                 val isLandscapeImage = imageUrl == RealisticExerciseImageCatalog.seasonsLandscape
                 Card(
                     modifier = if (isLandscapeImage) {
-                        Modifier.fillMaxWidth().widthIn(max = 620.dp).height(260.dp)
+                        Modifier.fillMaxWidth().widthIn(max = 620.dp).height(if (compactHeight) 180.dp else 260.dp)
                     } else {
-                        Modifier.size(210.dp)
+                        Modifier.size(if (compactHeight) 150.dp else 210.dp)
                     },
                     shape = RoundedCornerShape(20.dp)
                 ) {
@@ -173,7 +182,13 @@ fun OrientationGame(
             }
 
             // Opciones (v1.3.39: Rejilla optimizada y siempre visible)
-            Box(modifier = Modifier.fillMaxWidth().weight(1f).widthIn(max = 800.dp)) {
+            Box(
+                modifier = (if (compactHeight) {
+                    Modifier.fillMaxWidth().height(232.dp)
+                } else {
+                    Modifier.fillMaxWidth().weight(1f)
+                }).widthIn(max = 800.dp)
+            ) {
                 if (state.options.isEmpty() && !state.isCompleted) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
@@ -192,7 +207,7 @@ fun OrientationGame(
 
                             Button(
                                 onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                                modifier = Modifier.height(80.dp).fillMaxWidth(),
+                                modifier = Modifier.height(if (compactHeight) 72.dp else 80.dp).fillMaxWidth(),
                                 shape = RoundedCornerShape(24.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = when {
@@ -242,7 +257,7 @@ fun OrientationGame(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(if (compactHeight) 12.dp else 32.dp))
         }
     }
 }

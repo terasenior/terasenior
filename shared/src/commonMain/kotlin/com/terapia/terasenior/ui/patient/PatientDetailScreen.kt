@@ -37,6 +37,7 @@ import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.components.PaginationControls
+import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import com.terapia.terasenior.util.DateUtils
 import kotlinx.datetime.TimeZone
@@ -342,11 +343,19 @@ private fun AssessmentSummary(label: String, value: String?) { if (!value.isNull
 
 @Composable
 private fun AssessmentEditorDialog(existing: PatientAssessment?, patientId: String, onDismiss: () -> Unit, onSave: (PatientAssessment) -> Unit) {
+    val layout = LocalTeraseniorLayout.current
     var mobility by remember(existing) { mutableStateOf(existing?.mobility.orEmpty()) }; var basic by remember(existing) { mutableStateOf(existing?.basicActivities.orEmpty()) }; var instrumental by remember(existing) { mutableStateOf(existing?.instrumentalActivities.orEmpty()) }; var cognitive by remember(existing) { mutableStateOf(existing?.cognitiveStatus.orEmpty()) }; var emotional by remember(existing) { mutableStateOf(existing?.emotionalStatus.orEmpty()) }; var risks by remember(existing) { mutableStateOf(existing?.risks.orEmpty()) }; var decision by remember(existing) { mutableStateOf(existing?.decisionCapacity.orEmpty()) }
     var section by remember { mutableStateOf(0) }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth(0.88f).heightIn(min = 620.dp, max = 820.dp)) {
-            Column(Modifier.padding(24.dp)) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.88f)
+                .fillMaxHeight(if (layout.isCompactHeight) 0.94f else 0.86f)
+                .heightIn(max = 820.dp)
+        ) {
+            Column(Modifier.padding(if (layout.isCompactHeight) 16.dp else 24.dp)) {
                 Text(if (existing == null) "Nueva valoración" else "Modificar valoración", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(16.dp))
                 TabRow(selectedTabIndex = section) {
