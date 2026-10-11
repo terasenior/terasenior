@@ -115,7 +115,10 @@ fun App() {
 
             ModalNavigationDrawer(
                 drawerState = drawerState,
-                gesturesEnabled = currentScreen != Screen.SESSION_RUNNER,
+                // En Web, el detector de gesto del cajón puede quedarse por encima
+                // del asistente y bloquear sus controles. El menú sigue disponible
+                // mediante el botón superior, sin capturar los clics de la sesión.
+                gesturesEnabled = currentScreen != Screen.SESSION_RUNNER && currentScreen != Screen.CREATE_SESSION,
                 drawerContent = {
                     ModalDrawerSheet {
                         Spacer(Modifier.height(12.dp))
