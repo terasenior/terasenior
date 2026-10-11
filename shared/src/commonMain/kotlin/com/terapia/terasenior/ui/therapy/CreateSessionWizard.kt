@@ -1,8 +1,6 @@
 package com.terapia.terasenior.ui.therapy
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -24,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -99,8 +96,6 @@ fun CreateSessionWizard(
 
 @Composable
 private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
-    var diagnostic by remember { mutableStateOf("Esperando que selecciones una modalidad.") }
-
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -111,31 +106,14 @@ private fun ModeSelectionStep(onModeSelected: (SessionMode) -> Unit) {
             title = "Con Paciente",
             description = "Registro clínico y seguimiento.",
             icon = Icons.Default.Person,
-            onClick = {
-                diagnostic = "Selección recibida: Con Paciente. Abriendo la lista de pacientes..."
-                onModeSelected(SessionMode.WITH_PATIENT)
-            }
+            onClick = { onModeSelected(SessionMode.WITH_PATIENT) }
         )
         SelectionCard(
             title = "Sin Paciente",
             description = "Uso libre o demostración.",
             icon = Icons.Default.PersonOff,
-            onClick = {
-                diagnostic = "Selección recibida: Sin Paciente. Abriendo las áreas cognitivas..."
-                onModeSelected(SessionMode.WITHOUT_PATIENT)
-            }
+            onClick = { onModeSelected(SessionMode.WITHOUT_PATIENT) }
         )
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.align(Alignment.Start)
-        ) {
-            Text(
-                text = "Diagnóstico: $diagnostic",
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
     }
 }
 
@@ -777,18 +755,15 @@ private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third:
 
 @Composable
 private fun SelectionCard(title: String, description: String, icon: ImageVector, activityCount: Int? = null, onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
-                    onClick()
-                }
-            },
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
