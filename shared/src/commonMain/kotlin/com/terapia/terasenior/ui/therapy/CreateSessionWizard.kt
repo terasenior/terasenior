@@ -38,6 +38,7 @@ import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
 import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
 import com.terapia.terasenior.ui.therapy.ExerciseTranslationUtils
 import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
+import com.terapia.terasenior.ui.components.ListScrollPositionBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -281,8 +282,8 @@ private fun ExerciseSelectionStep(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
+        val listState = rememberLazyListState()
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            val listState = rememberLazyListState()
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -309,6 +310,12 @@ private fun ExerciseSelectionStep(
                 }
             }
         }
+
+        ListScrollPositionBar(
+            state = listState,
+            itemCount = if (selectedPart == null) parts.size else filteredExercises.size,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+        )
         
         Spacer(modifier = Modifier.height(if (layout.isCompactHeight) 8.dp else 16.dp))
 

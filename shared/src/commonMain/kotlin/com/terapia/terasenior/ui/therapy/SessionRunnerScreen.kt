@@ -32,6 +32,7 @@ import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
 import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
 import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
+import com.terapia.terasenior.ui.components.ScrollPositionBar
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 private fun safeDurationSeconds(startTimeMs: Long): Int =
     ((activityTimeMillis() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
@@ -120,6 +121,7 @@ private fun ClinicalValuationView(
     var participation by remember { mutableStateOf("MEDIUM") }
     var fatigue by remember { mutableStateOf("NONE") }
     var notes by remember { mutableStateOf("") }
+    val scrollState = rememberScrollState()
 
     val minutes = durationSeconds / 60
     val seconds = durationSeconds % 60
@@ -135,9 +137,16 @@ private fun ClinicalValuationView(
             .widthIn(max = 860.dp)
             .fillMaxWidth()
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
         Text("Cierre de Sesión Terapéutica", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -202,7 +211,16 @@ private fun ClinicalValuationView(
             }
         }
 
-        Spacer(modifier = Modifier.height(if (layout.isCompactHeight) 24.dp else 32.dp))
+        Spacer(modifier = Modifier.height(if (layout.isCompactHeight) 16.dp else 24.dp))
+        }
+
+        ScrollPositionBar(
+            state = scrollState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 12.dp)
+        )
+        }
 
         Button(
             onClick = { onSave(participation, fatigue, notes) },
