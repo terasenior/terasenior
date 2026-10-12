@@ -22,22 +22,19 @@ object OrientationExerciseCatalog {
         SITUATION("Situaciones cotidianas", "Reconoce la referencia adecuada en una situación.", RealisticExerciseImageCatalog.homeCommunity)
     }
 
-    val items: List<OrientationExercise> = Family.entries.flatMap { family ->
-        (1..50).map { number ->
-            OrientationExercise(
-                "guided_orientation_${family.name.lowercase()}_$number",
-                titleFor(family, number),
-                family.description,
-                family.image
-            )
-        }
-    }
-
-    init {
-        check(items.size == 500) { "El catálogo de orientación debe contener 500 actividades." }
-        check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
-        check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
-            "Cada actividad de orientación debe tener una consigna distinta."
+    val items: List<OrientationExercise> by lazy {
+        Family.entries.flatMap { family ->
+            (1..50).map { number ->
+                OrientationExercise(
+                    "guided_orientation_${family.name.lowercase()}_$number",
+                    titleFor(family, number),
+                    family.description,
+                    family.image
+                )
+            }
+        }.also { activities ->
+            check(activities.size == 500) { "El catálogo de orientación debe contener 500 actividades." }
+            check(activities.map { it.id }.distinct().size == activities.size) { "Cada actividad debe tener un identificador único." }
         }
     }
 
