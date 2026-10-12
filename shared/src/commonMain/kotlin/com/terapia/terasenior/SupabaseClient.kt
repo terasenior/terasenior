@@ -4,7 +4,6 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.annotations.SupabaseInternal
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.storage.Storage
 
 @OptIn(SupabaseInternal::class)
 val supabase = createSupabaseClient(
@@ -24,5 +23,4 @@ val supabase = createSupabaseClient(
         autoSetupPlatform = false
     }
     install(Postgrest)
-    install(Storage)
 }
