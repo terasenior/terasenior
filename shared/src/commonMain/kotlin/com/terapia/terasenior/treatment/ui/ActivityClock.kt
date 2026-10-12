@@ -4,3 +4,6 @@ package com.terapia.terasenior.treatment.ui
 expect fun platformActivityTimeMillisText(): String
 
 fun activityTimeMillis(): Long = platformActivityTimeMillisText().toLongOrNull() ?: 0L
+
+/** Fecha local en formato ISO para evitar dependencias de fecha incompatibles con WebAssembly. */
+expect fun platformTodayIsoDate(): String

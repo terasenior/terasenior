@@ -5,10 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.terapia.terasenior.domain.model.agenda.Appointment
 import com.terapia.terasenior.domain.repository.agenda.AppointmentRepository
 import com.terapia.terasenior.domain.repository.therapy.TherapySessionRepository
-import com.terapia.terasenior.treatment.ui.activityTimeMillis
+import com.terapia.terasenior.treatment.ui.platformTodayIsoDate
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.datetime.*
 
 data class DashboardUiState(
     val summary: Map<String, Int> = emptyMap(),
@@ -34,14 +33,12 @@ class TherapyDashboardViewModel(
             val summaryResult = repository.getTherapistSummary(therapistId)
             
             // 1. Cargar Citas de Hoy
-            val now = Instant.fromEpochMilliseconds(activityTimeMillis())
-            val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val today = platformTodayIsoDate()
             val appointmentsResult = agendaRepository.getAppointments().first()
             
             val todayAppts = appointmentsResult.getOrDefault(emptyList()).filter { 
                 try {
-                    val start = Instant.parse(it.startAt).toLocalDateTime(TimeZone.currentSystemDefault()).date
-                    start == today
+                    it.startAt.take(10) == today
                 } catch(e: Exception) { false }
             }.sortedBy { it.startAt }
 

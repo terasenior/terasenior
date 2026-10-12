@@ -4,12 +4,11 @@ import com.terapia.terasenior.models.Entity
 import com.terapia.terasenior.models.Profile
 import com.terapia.terasenior.models.UserRole
 import com.terapia.terasenior.supabase
-import com.terapia.terasenior.treatment.ui.activityTimeMillis
+import com.terapia.terasenior.treatment.ui.platformTodayIsoDate
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
-import kotlinx.datetime.*
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.*
@@ -146,9 +145,9 @@ class AuthRepository(
             }.decodeSingleOrNull<Entity>() ?: throw Exception("No se encontró la información de tu centro.")
 
             if (entity.status != "ACTIVE") {
-                val now = Instant.fromEpochMilliseconds(activityTimeMillis())
+                val today = platformTodayIsoDate()
                 val reason = if (entity.licenseExpiresAt != null && 
-                    Instant.parse(entity.licenseExpiresAt) < now) {
+                    entity.licenseExpiresAt.take(10) < today) {
                     "La licencia de tu centro expiró el ${entity.licenseExpiresAt.take(10)} y el acceso ha sido revocado automáticamente."
                 } else {
                     "El acceso para tu centro está suspendido actualmente."
