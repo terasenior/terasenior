@@ -2,6 +2,8 @@ package com.terapia.terasenior
 
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.MemoryCodeVerifierCache
+import io.github.jan.supabase.auth.MemorySessionManager
 import io.github.jan.supabase.annotations.SupabaseInternal
 import io.github.jan.supabase.postgrest.Postgrest
 
@@ -11,9 +13,11 @@ val supabase = createSupabaseClient(
     supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cnlreXlqeHNmYmVhenJvZXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5ODYyNTQsImV4cCI6MjEwMDU2MjI1NH0.Z88UBb_AWQqMdeLSMBiNg0ZYIaz5NGKcTzusnvbHYcI"
 ) {
     install(Auth) {
-        // En WebAssembly la restauración automática de una sesión almacenada
-        // provoca un error nativo dentro de la librería de autenticación.
+        // Wasm no puede inicializar el gestor de Settings de la librería de
+        // autenticación. Usar almacenamiento en memoria evita esa ruta nativa.
         // La sesión se crea normalmente al iniciar sesión de forma explícita.
+        sessionManager = MemorySessionManager()
+        codeVerifierCache = MemoryCodeVerifierCache()
         autoLoadFromStorage = false
         autoSaveToStorage = false
         alwaysAutoRefresh = false
