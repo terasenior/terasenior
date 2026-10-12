@@ -111,7 +111,14 @@ fun App() {
                 }
             }
 
-            ModalNavigationDrawer(
+            if (currentScreen == Screen.CREATE_SESSION) {
+                CreateSessionWizard(
+                    viewModel = createSessionViewModel,
+                    therapistId = currentUserProfile?.id.orEmpty(),
+                    onSessionCreated = { activeSessionId = it; currentScreen = Screen.SESSION_RUNNER },
+                    onCancel = { currentScreen = Screen.THERAPY_DASHBOARD }
+                )
+            } else ModalNavigationDrawer(
                 drawerState = drawerState,
                 // En Web, el detector de gesto del cajón puede quedarse por encima
                 // del asistente y bloquear sus controles. El menú sigue disponible
@@ -274,12 +281,7 @@ fun App() {
                                 )
                             }
                             Screen.REPORTS -> ReportsScreen()
-                            Screen.CREATE_SESSION -> CreateSessionWizard(
-                                viewModel = createSessionViewModel,
-                                therapistId = currentUserProfile?.id ?: "",
-                                onSessionCreated = { activeSessionId = it; currentScreen = Screen.SESSION_RUNNER },
-                                onCancel = { currentScreen = Screen.THERAPY_DASHBOARD }
-                            )
+                            Screen.CREATE_SESSION -> Unit
                             Screen.SESSION_RUNNER -> {
                                 val sessionId = activeSessionId ?: ""
                                 val resultsRepo = remember { SupabaseResultsRepository() }
