@@ -34,16 +34,16 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build Wasm
-        run: ./gradlew :webApp:wasmJsBrowserDistribution
+      - name: Build Web
+        run: ./gradlew :webApp:jsBrowserDistribution
 
       - name: Add CNAME
-        run: cp CNAME ./webApp/build/dist/wasmJs/productionExecutable/CNAME
+        run: cp CNAME ./webApp/build/dist/js/productionExecutable/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./webApp/build/dist/wasmJs/productionExecutable
+          path: ./webApp/build/dist/js/productionExecutable
 
   deploy:
     environment:
