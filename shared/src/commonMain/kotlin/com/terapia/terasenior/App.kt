@@ -57,7 +57,6 @@ enum class Screen {
 @Composable
 fun App() {
     TeraseniorTheme {
-        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         
         var currentUserProfile by remember { mutableStateOf<com.terapia.terasenior.models.Profile?>(null) }
@@ -102,16 +101,25 @@ fun App() {
         } else {
             val userRole = currentUserProfile?.role
             val canAdmin = userRole == UserRole.SUPER_ADMIN || userRole == UserRole.ADMIN_CENTRO
-            // La navegación no puede depender de la animación del cajón: en Web
-            // esa animación puede quedar pendiente y bloquear el botón Volver.
-            val navigateTo: (Screen) -> Unit = { destination ->
-                currentScreen = destination
-                scope.launch {
-                    drawerState.close()
+            // El asistente de sesiones usa su propia barra y sus propios controles.
+            // En Web no se compone dentro del cajón modal para evitar que su estado
+            // de animación intercepte pulsaciones o deje la composición pendiente.
+            if (currentScreen == Screen.CREATE_SESSION) {
+                CreateSessionWizard(
+                    viewModel = createSessionViewModel,
+                    therapistId = currentUserProfile?.id.orEmpty(),
+                    onSessionCreated = { activeSessionId = it; currentScreen = Screen.SESSION_RUNNER },
+                    onCancel = { currentScreen = Screen.THERAPY_DASHBOARD }
+                )
+            } else {
+                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                // La navegación no puede depender de la animación del cajón: en Web
+                // esa animación puede quedar pendiente y bloquear el botón Volver.
+                val navigateTo: (Screen) -> Unit = { destination ->
+                    currentScreen = destination
+                    scope.launch { drawerState.close() }
                 }
-            }
-
-            ModalNavigationDrawer(
+                ModalNavigationDrawer(
                 drawerState = drawerState,
                 // En Web, el detector de gesto del cajón puede quedarse por encima
                 // del asistente y bloquear sus controles. El menú sigue disponible
@@ -398,7 +406,7 @@ fun App() {
                         }
                     }
                 }
-        }
+            }
             }
     }
 }
