@@ -39,6 +39,7 @@ import com.terapia.terasenior.ui.login.LoginScreen
 import com.terapia.terasenior.ui.patient.*
 import com.terapia.terasenior.ui.reports.ReportsScreen
 import com.terapia.terasenior.ui.therapy.*
+import com.terapia.terasenior.ui.components.TeraseniorResponsiveRoot
 import com.terapia.terasenior.ui.theme.TeraseniorTheme
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -57,6 +58,7 @@ enum class Screen {
 @Composable
 fun App() {
     TeraseniorTheme {
+        TeraseniorResponsiveRoot {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         
@@ -402,5 +404,6 @@ fun App() {
                 }
         }
             }
+        }
     }
 }
