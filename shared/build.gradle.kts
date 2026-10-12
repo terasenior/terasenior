@@ -81,7 +81,6 @@ kotlin {
             implementation(libs.kotlin.test)
         }
         jsMain.dependencies {
-            implementation(libs.wrappers.browser)
             implementation("io.ktor:ktor-client-js:3.0.0")
         }
     }
