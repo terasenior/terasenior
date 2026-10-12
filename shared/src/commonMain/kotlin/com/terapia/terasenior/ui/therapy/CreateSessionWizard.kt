@@ -187,6 +187,7 @@ private fun ExerciseSelectionStep(
     onToggle: (type: String, name: String, category: String, desc: String) -> Unit,
     onNext: () -> Unit
 ) {
+    val layout = LocalTeraseniorLayout.current
     val exercises = remember(category) {
         when (category) {
             "Orientación" -> OrientationExerciseCatalog.forCategory(category)
@@ -231,7 +232,18 @@ private fun ExerciseSelectionStep(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = if (layout.isCompactWidth) 16.dp else 24.dp, vertical = if (layout.isCompactHeight) 12.dp else 16.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+    Column(
+        modifier = Modifier
+            .widthIn(max = 1120.dp)
+            .fillMaxWidth()
+            .fillMaxSize()
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = selectedPart?.let { "${it.title}" } ?: "Partes de $category",
@@ -275,7 +287,7 @@ private fun ExerciseSelectionStep(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(bottom = 8.dp)
             ) {
                 if (selectedPart == null) {
                     items(parts) { part ->
@@ -298,11 +310,17 @@ private fun ExerciseSelectionStep(
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(if (layout.isCompactHeight) 8.dp else 16.dp))
 
-        Button(onClick = onNext, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), enabled = selectedExercises.isNotEmpty()) {
+        Button(
+            onClick = onNext,
+            modifier = Modifier.fillMaxWidth().height(if (layout.isCompactHeight) 52.dp else 56.dp),
+            shape = RoundedCornerShape(16.dp),
+            enabled = selectedExercises.isNotEmpty()
+        ) {
             Text("Siguiente")
         }
+    }
     }
 }
 

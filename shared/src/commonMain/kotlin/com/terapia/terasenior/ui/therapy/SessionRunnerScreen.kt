@@ -31,6 +31,7 @@ import com.terapia.terasenior.treatment.repository.LanguageExerciseCatalog
 import com.terapia.terasenior.treatment.repository.AttentionExerciseCatalog
 import com.terapia.terasenior.treatment.repository.MemoryExerciseCatalog
 import com.terapia.terasenior.treatment.repository.OrientationExerciseCatalog
+import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
 import com.terapia.terasenior.ui.components.accessibility.SpeechManager
 private fun safeDurationSeconds(startTimeMs: Long): Int =
     ((activityTimeMillis() - startTimeMs) / 1000).toInt().coerceAtLeast(1)
@@ -115,6 +116,7 @@ private fun ClinicalValuationView(
     areaSummaries: List<CognitiveAreaSummary> = emptyList(),
     onSave: (participation: String, fatigue: String, notes: String) -> Unit
 ) {
+    val layout = LocalTeraseniorLayout.current
     var participation by remember { mutableStateOf("MEDIUM") }
     var fatigue by remember { mutableStateOf("NONE") }
     var notes by remember { mutableStateOf("") }
@@ -122,8 +124,18 @@ private fun ClinicalValuationView(
     val minutes = durationSeconds / 60
     val seconds = durationSeconds % 60
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = if (layout.isCompactWidth) 16.dp else 24.dp, vertical = if (layout.isCompactHeight) 16.dp else 24.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp).verticalScroll(rememberScrollState()),
+        modifier = Modifier
+            .widthIn(max = 860.dp)
+            .fillMaxWidth()
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Cierre de Sesión Terapéutica", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
@@ -131,10 +143,13 @@ private fun ClinicalValuationView(
         Spacer(modifier = Modifier.height(8.dp))
         Text("Valoración profesional de la intervención.", color = Color.Gray)
         
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(if (layout.isCompactHeight) 16.dp else 32.dp))
 
-        Card(modifier = Modifier.fillMaxWidth().widthIn(max = 600.dp), shape = RoundedCornerShape(24.dp)) {
-            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp)) {
+            Column(
+                modifier = Modifier.padding(if (layout.isCompactHeight) 20.dp else 24.dp),
+                verticalArrangement = Arrangement.spacedBy(if (layout.isCompactHeight) 16.dp else 24.dp)
+            ) {
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     StatBox(label = "Aciertos", value = hits.toString(), color = Color(0xFF2E7D32))
@@ -181,23 +196,24 @@ private fun ClinicalValuationView(
                     label = { Text("Observaciones Clínicas") },
                     placeholder = { Text("Ej: Ha necesitado apoyo verbal constante en el cálculo...") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 4,
+                    minLines = if (layout.isCompactHeight) 3 else 4,
                     shape = RoundedCornerShape(16.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(if (layout.isCompactHeight) 24.dp else 32.dp))
 
         Button(
             onClick = { onSave(participation, fatigue, notes) },
-            modifier = Modifier.height(64.dp).width(280.dp),
+            modifier = Modifier.height(if (layout.isCompactHeight) 56.dp else 64.dp).width(280.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
             Icon(Icons.Default.Save, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text("Finalizar y Guardar", fontSize = 18.sp)
         }
+    }
     }
 }
 
