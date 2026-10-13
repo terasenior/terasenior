@@ -38,12 +38,20 @@ fun ListScrollPositionBar(
 
     val scope = rememberCoroutineScope()
     val lastIndex = itemCount - 1
+    val progress = when {
+        !state.canScrollBackward -> 0f
+        !state.canScrollForward -> 1f
+        else -> state.firstVisibleItemIndex.toFloat() / lastIndex
+    }.coerceIn(0f, 1f)
+
     Slider(
-        value = state.firstVisibleItemIndex.coerceIn(0, lastIndex).toFloat(),
+        value = progress,
         onValueChange = { value ->
-            scope.launch { state.scrollToItem(value.roundToInt().coerceIn(0, lastIndex)) }
+            scope.launch {
+                state.scrollToItem((value * lastIndex).roundToInt().coerceIn(0, lastIndex))
+            }
         },
-        valueRange = 0f..lastIndex.toFloat(),
+        valueRange = 0f..1f,
         modifier = modifier.fillMaxWidth()
     )
 }
