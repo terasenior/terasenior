@@ -128,7 +128,8 @@ object OrientationExerciseCatalog {
             Triple("Cuando hace frío y usamos abrigo, ¿qué estación suele ser?", "Invierno", "Verano"),
             Triple("Cuando empiezan a salir flores, ¿qué estación suele ser?", "Primavera", "Otoño"))
         val item = examples[number % examples.size]
-        return choice(item.first, item.second, listOf(item.third, "Noche", "Mañana"), level)
+        val seasons = listOf("Primavera", "Verano", "Otoño", "Invierno")
+        return choice(item.first, item.second, seasons.filter { it != item.second }, level)
     }
 
     private data class DaytimeScenario(val text: String, val answer: String, val imageUrl: String)

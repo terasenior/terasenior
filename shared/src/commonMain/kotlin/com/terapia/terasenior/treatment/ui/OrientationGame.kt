@@ -73,6 +73,7 @@ fun OrientationGame(
     val isAttentionExercise = state.currentType.startsWith("guided_attention_")
     val isMemoryExercise = state.currentType.startsWith("guided_memory_")
     val isOrientationExercise = state.currentType.startsWith("guided_orientation_")
+    val isSeasonExercise = state.currentType.startsWith("guided_orientation_season_")
     var completionDispatched by remember(state.currentType, state.startTimeMs) { mutableStateOf(false) }
     var navigationStatus by remember(state.currentType, state.startTimeMs) { mutableStateOf("pendiente") }
 
@@ -164,10 +165,14 @@ fun OrientationGame(
                     RealisticExerciseImageCatalog.yearMonthsLandscape -> 2172f / 724f
                     else -> 1f
                 }
+                val landscapeMaxWidth = when (imageUrl) {
+                    RealisticExerciseImageCatalog.seasonsLandscape -> if (compactHeight) 320.dp else 500.dp
+                    else -> 620.dp
+                }
                 Card(
                     modifier = if (isLandscapeImage) {
                         Modifier
-                            .widthIn(max = 620.dp)
+                            .widthIn(max = landscapeMaxWidth)
                             .fillMaxWidth()
                             .aspectRatio(landscapeAspectRatio)
                     } else {
@@ -207,8 +212,8 @@ fun OrientationGame(
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(if (isSeasonExercise) 10.dp else 16.dp),
+                        contentPadding = PaddingValues(if (isSeasonExercise) 10.dp else 16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(state.options) { option ->
@@ -217,7 +222,7 @@ fun OrientationGame(
 
                             Button(
                                 onClick = { viewModel.onOptionSelected(option, patientId, professionalId, appointmentId) },
-                                modifier = Modifier.height(if (compactHeight) 72.dp else 80.dp).fillMaxWidth(),
+                                modifier = Modifier.height(if (compactHeight || isSeasonExercise) 72.dp else 80.dp).fillMaxWidth(),
                                 shape = RoundedCornerShape(24.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = when {
