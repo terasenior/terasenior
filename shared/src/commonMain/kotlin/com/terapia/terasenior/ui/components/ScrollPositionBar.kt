@@ -34,7 +34,7 @@ fun ListScrollPositionBar(
     itemCount: Int,
     modifier: Modifier = Modifier
 ) {
-    if (itemCount <= 1 || (!state.canScrollBackward && !state.canScrollForward)) return
+    if (itemCount <= 1) return
 
     val scope = rememberCoroutineScope()
     val lastIndex = itemCount - 1
