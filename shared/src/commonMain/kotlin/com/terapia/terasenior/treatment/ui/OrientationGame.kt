@@ -156,7 +156,8 @@ fun OrientationGame(
             Spacer(modifier = Modifier.height(if (compactHeight) 12.dp else 24.dp))
 
             state.imageUrl?.let { imageUrl ->
-                val isLandscapeImage = imageUrl == RealisticExerciseImageCatalog.seasonsLandscape
+                val isLandscapeImage = imageUrl == RealisticExerciseImageCatalog.seasonsLandscape ||
+                    imageUrl == RealisticExerciseImageCatalog.yearMonthsLandscape
                 Card(
                     modifier = if (isLandscapeImage) {
                         Modifier.fillMaxWidth().widthIn(max = 620.dp).height(if (compactHeight) 180.dp else 260.dp)
@@ -282,7 +283,7 @@ private fun realisticPainterFor(imageUrl: String) = when (imageUrl) {
     RealisticExerciseImageCatalog.dinnerNight -> Res.drawable.realistic_dinner_night
     RealisticExerciseImageCatalog.sunrise -> Res.drawable.realistic_sunrise
     RealisticExerciseImageCatalog.earlyMorning -> Res.drawable.realistic_early_morning
-    RealisticExerciseImageCatalog.yearCalendar -> Res.drawable.realistic_year_calendar
+    RealisticExerciseImageCatalog.yearMonthsLandscape -> Res.drawable.realistic_year_months_landscape
     RealisticExerciseImageCatalog.appointmentCalendar -> Res.drawable.realistic_appointment_calendar
     RealisticExerciseImageCatalog.emotions -> Res.drawable.realistic_emotions
     RealisticExerciseImageCatalog.homeCommunity -> Res.drawable.realistic_home_community

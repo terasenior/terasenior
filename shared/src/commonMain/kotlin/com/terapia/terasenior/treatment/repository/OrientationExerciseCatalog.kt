@@ -11,7 +11,7 @@ object OrientationExerciseCatalog {
 
     private enum class Family(val title: String, val description: String, val image: String) {
         WEEK("Días de la semana", "Ordena y reconoce los días de la semana.", RealisticExerciseImageCatalog.weekCalendar),
-        MONTH("Meses del año", "Reconoce el orden de los meses.", RealisticExerciseImageCatalog.yearCalendar),
+        MONTH("Meses del año", "Reconoce el orden de los meses.", RealisticExerciseImageCatalog.yearMonthsLandscape),
         SEASON("Estaciones", "Relaciona el tiempo con una estación.", RealisticExerciseImageCatalog.seasonsLandscape),
         DAYTIME("Momento del día", "Distingue mañana, tarde y noche.", RealisticExerciseImageCatalog.dailyCalendar),
         HOME("Orientación en casa", "Identifica espacios y objetos cotidianos.", RealisticExerciseImageCatalog.homeCommunity),
@@ -79,7 +79,7 @@ object OrientationExerciseCatalog {
     private fun imageFor(family: Family, number: Int): String? = when (family) {
         // Un calendario estático no puede indicar correctamente todos los días.
         Family.WEEK -> null
-        Family.MONTH -> RealisticExerciseImageCatalog.yearCalendar
+        Family.MONTH -> RealisticExerciseImageCatalog.yearMonthsLandscape
         Family.DAYTIME -> daytimeScenario(number).imageUrl
         Family.ROUTINE -> RealisticExerciseImageCatalog.dailyCalendar
         Family.SEASON, Family.WEATHER -> RealisticExerciseImageCatalog.seasonsLandscape
