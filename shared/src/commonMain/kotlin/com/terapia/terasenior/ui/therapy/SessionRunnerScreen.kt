@@ -136,7 +136,7 @@ private fun ClinicalValuationView(
         modifier = Modifier
             .widthIn(max = 860.dp)
             .fillMaxWidth()
-            .fillMaxSize()
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
