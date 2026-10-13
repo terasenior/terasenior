@@ -18,6 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +36,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build Web
-        run: ./gradlew :webApp:jsBrowserDistribution
+        run: ./gradlew :webApp:jsBrowserDistribution --stacktrace --info
 
       - name: Add CNAME
         run: cp CNAME ./webApp/build/dist/js/productionExecutable/CNAME
