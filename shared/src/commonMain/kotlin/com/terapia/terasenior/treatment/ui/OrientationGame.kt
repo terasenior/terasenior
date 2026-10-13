@@ -47,6 +47,7 @@ import terasenior.shared.generated.resources.realistic_dinner_night
 import terasenior.shared.generated.resources.realistic_sunrise
 import terasenior.shared.generated.resources.realistic_early_morning
 import terasenior.shared.generated.resources.realistic_year_calendar
+import terasenior.shared.generated.resources.realistic_year_months_landscape
 import terasenior.shared.generated.resources.realistic_appointment_calendar
 import terasenior.shared.generated.resources.realistic_emotions
 import terasenior.shared.generated.resources.realistic_home_community
@@ -158,9 +159,17 @@ fun OrientationGame(
             state.imageUrl?.let { imageUrl ->
                 val isLandscapeImage = imageUrl == RealisticExerciseImageCatalog.seasonsLandscape ||
                     imageUrl == RealisticExerciseImageCatalog.yearMonthsLandscape
+                val landscapeAspectRatio = when (imageUrl) {
+                    RealisticExerciseImageCatalog.seasonsLandscape -> 1672f / 940f
+                    RealisticExerciseImageCatalog.yearMonthsLandscape -> 2172f / 724f
+                    else -> 1f
+                }
                 Card(
                     modifier = if (isLandscapeImage) {
-                        Modifier.fillMaxWidth().widthIn(max = 620.dp).height(if (compactHeight) 180.dp else 260.dp)
+                        Modifier
+                            .widthIn(max = 620.dp)
+                            .fillMaxWidth()
+                            .aspectRatio(landscapeAspectRatio)
                     } else {
                         Modifier.size(if (compactHeight) 150.dp else 210.dp)
                     },
