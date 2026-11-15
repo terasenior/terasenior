@@ -152,13 +152,19 @@ private fun CategorySelectionStep(onCategorySelected: (String) -> Unit) {
         Text("Área Cognitiva", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
+        val attentionActivities = AttentionExerciseCatalog.forCategory("Atención").size
+        val executiveActivities = TherapeuticExerciseCatalog.forCategory("Funciones Ejecutivas").size +
+            AttentionExerciseCatalog.forCategory("Funciones Ejecutivas").size
+        val perceptionActivities = PerceptionExerciseCatalog.forCategory("Percepción").size +
+            TherapeuticExerciseCatalog.forCategory("Percepción").size +
+            AttentionExerciseCatalog.forCategory("Percepción").size
         val categories = listOf(
             Quadruple("Orientación", "Tiempo, espacio y persona.", Icons.Default.Event, OrientationExerciseCatalog.items.size),
-            Quadruple("Atención", "Focalización y mantenimiento visual.", Icons.Default.Visibility, AttentionExerciseCatalog.items.size),
+            Quadruple("Atención", "Focalización y mantenimiento visual.", Icons.Default.Visibility, attentionActivities),
             Quadruple("Memoria", "Codificación y recuperación.", Icons.Default.Psychology, MemoryExerciseCatalog.items.size),
             Quadruple("Lenguaje", "Fluidez y comprensión.", Icons.Default.RecordVoiceOver, LanguageExerciseCatalog.items.size),
-            Quadruple("Funciones Ejecutivas", "Planificación, secuencias y cálculo.", Icons.Default.Settings, TherapeuticExerciseCatalog.items.size),
-            Quadruple("Percepción", "Gnosias y capacidades visoespaciales.", Icons.Default.Extension, PerceptionExerciseCatalog.items.size),
+            Quadruple("Funciones Ejecutivas", "Planificación, secuencias y cálculo.", Icons.Default.Settings, executiveActivities),
+            Quadruple("Percepción", "Gnosias y capacidades visoespaciales.", Icons.Default.Extension, perceptionActivities),
             Quadruple("Lectoescritura", "Grafomotricidad y trazos.", Icons.Default.Edit, LiteracyExerciseCatalog.items.size)
         )
 
@@ -203,12 +209,17 @@ private fun ExerciseSelectionStep(
             "Lenguaje" -> LanguageExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
                 .sortedBy { it.second }
-            "Funciones Ejecutivas" -> TherapeuticExerciseCatalog
-                .forCategory(category)
-                .map { Triple(it.id, it.name, it.description) }
+            "Funciones Ejecutivas" -> (TherapeuticExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) } +
+                AttentionExerciseCatalog.forCategory(category)
+                    .map { Triple(it.id, it.name, it.description) })
                 .sortedBy { it.second }
-            "Percepción" -> PerceptionExerciseCatalog.forCategory(category)
-                .map { Triple(it.id, it.name, it.description) }
+            "Percepción" -> (PerceptionExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) } +
+                TherapeuticExerciseCatalog.forCategory(category)
+                    .map { Triple(it.id, it.name, it.description) } +
+                AttentionExerciseCatalog.forCategory(category)
+                    .map { Triple(it.id, it.name, it.description) })
                 .sortedBy { it.second }
             "Lectoescritura" -> LiteracyExerciseCatalog.forCategory(category)
                 .map { Triple(it.id, it.name, it.description) }
@@ -218,7 +229,7 @@ private fun ExerciseSelectionStep(
     }
 
     val parts = remember(exercises) {
-        exercises.groupBy { exercisePartKey(it.first) }
+        exercises.groupBy { exercisePartKey(category, it.first) }
             .map { (key, entries) ->
                 ExercisePart(key, exercisePartTitle(category, key), entries.sortedBy { exerciseOrdinal(it.first) })
             }
@@ -342,9 +353,14 @@ private fun exercisePartOrdinal(title: String): Int =
 
 private fun exerciseOrdinal(type: String): Int = type.substringAfterLast("_").toIntOrNull() ?: Int.MAX_VALUE
 
-private fun exercisePartKey(type: String): String {
+private fun exercisePartKey(category: String, type: String): String {
     val parts = type.split("_")
-    return if (parts.firstOrNull() == "guided" && parts.size >= 3) parts[2] else type
+    val key = if (parts.firstOrNull() == "guided" && parts.size >= 3) parts[2] else type
+    return when (category) {
+        "Percepción" -> if (key == "target") "identify" else key
+        "Funciones Ejecutivas" -> if (key == "daily") "planning" else key
+        else -> key
+    }
 }
 
 private fun exercisePartTitle(category: String, key: String): String {
@@ -372,7 +388,7 @@ private fun exercisePartTitle(category: String, key: String): String {
             "daily" -> "Parte 7 · Memoria cotidiana"
             "pairs" -> "Parte 8 · Parejas"
             "order" -> "Parte 9 · Orden temporal"
-            "words" -> "Parte 10 · Palabras recordadas"
+            "words" -> "Parte 10 · Palabras o imágenes recordadas"
             else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
         }
         "Percepción" -> return when (key) {
@@ -386,6 +402,20 @@ private fun exercisePartTitle(category: String, key: String): String {
             "body" -> "Parte 8 · Percepción corporal"
             "difference" -> "Parte 9 · Discriminación visual"
             "context" -> "Parte 10 · Contexto cotidiano"
+            "emotions" -> "Parte 11 · Reconocimiento de emociones"
+            else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
+        }
+        "Funciones Ejecutivas" -> return when (key) {
+            "countdown" -> "Parte 1 · Cuenta atrás"
+            "decisions" -> "Parte 2 · Decisiones cotidianas"
+            "category" -> "Parte 3 · Evocación categorial"
+            "rhythms" -> "Parte 4 · Ritmos y secuencias"
+            "calculation" -> "Parte 5 · Razonamiento matemático básico"
+            "reverse" -> "Parte 6 · Series al revés"
+            "flexibility" -> "Parte 7 · Frases alternativas"
+            "stories" -> "Parte 8 · Historias encadenadas"
+            "logic" -> "Parte 9 · Operaciones matemáticas"
+            "planning" -> "Parte 10 · Planificación cotidiana"
             else -> "Parte · ${key.replaceFirstChar { it.uppercase() }}"
         }
     }
@@ -419,7 +449,7 @@ private fun exercisePartTitle(key: String): String = when (key) {
     "use" -> "Parte 5 · Para qué sirve"
     "pairs" -> "Parte 8 · Parejas"
     "order" -> "Parte 9 · Orden temporal"
-    "words" -> "Parte 10 · Palabras recordadas"
+    "words" -> "Parte 10 · Palabras o imágenes recordadas"
     "naming" -> "Parte 1 · Nombrar objetos"
     "function" -> "Parte 3 · Palabras y uso"
     "initial" -> "Parte 4 · Letra inicial"
@@ -433,11 +463,11 @@ private fun exercisePartTitle(key: String): String = when (key) {
     "decisions" -> "Parte 2 · Decisiones cotidianas"
     "emotions" -> "Parte 3 · Reconocer emociones"
     "rhythms" -> "Parte 4 · Ritmos y secuencias"
-    "calculation" -> "Parte 5 · Cálculo con atención"
+    "calculation" -> "Parte 5 · Razonamiento matemático básico"
     "reverse" -> "Parte 6 · Series al revés"
     "flexibility" -> "Parte 7 · Frases alternativas"
     "stories" -> "Parte 8 · Historias encadenadas"
-    "logic" -> "Parte 9 · Problemas sencillos"
+    "logic" -> "Parte 9 · Operaciones matemáticas"
     "planning" -> "Parte 10 · Planifica la tarea"
     "identify" -> "Parte 1 · Reconocer objetos"
     "detail" -> "Parte 6 · Detalles visuales"

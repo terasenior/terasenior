@@ -24,16 +24,16 @@ object TherapeuticExerciseCatalog {
         val imageUrl: String? = null
     )
 
-    private enum class Family(val title: String, val description: String) {
+    private enum class Family(val title: String, val description: String, val category: String = "Funciones Ejecutivas") {
         COUNTDOWN("Cuenta atrás", "Cuenta hacia atrás siguiendo una pauta."),
         DECISIONS("Decisiones cotidianas", "Elige una solución sencilla para una situación diaria."),
-        EMOTIONS("Adivina la emoción", "Reconoce la emoción más probable en una situación."),
+        EMOTIONS("Reconocimiento de emociones", "Reconoce una emoción a partir de una expresión o situación.", "Percepción"),
         RHYTHMS("Ritmos y secuencias", "Completa una secuencia de palabras sencillas."),
-        CALCULATION("Cálculo con atención", "Resuelve un cálculo breve sin perder la consigna."),
+        CALCULATION("Razonamiento matemático básico", "Agiliza el cálculo mental con operaciones breves."),
         REVERSE("Series al revés", "Recuerda una serie y reconoce el orden inverso."),
         FLEXIBILITY("Frases alternativas", "Elige una continuación útil y con sentido."),
         STORIES("Historias encadenadas", "Escoge el siguiente paso lógico de una historia."),
-        LOGIC("Problemas sencillos", "Resuelve una relación o regla clara."),
+        LOGIC("Operaciones matemáticas", "Resuelve problemas matemáticos cotidianos sencillos."),
         PLANNING("Planifica la tarea", "Selecciona el primer paso de una tarea cotidiana.")
     }
 
@@ -47,7 +47,7 @@ object TherapeuticExerciseCatalog {
             GuidedExercise(
                 id = "guided_executive_${family.name.lowercase()}_$number",
                 name = spokenTitle(family),
-                category = "Funciones Ejecutivas",
+                category = family.category,
                 description = family.description,
                 imageUrl = RealisticExerciseImageCatalog.forExecutiveFamily(family.name.lowercase())
             )
@@ -73,11 +73,11 @@ object TherapeuticExerciseCatalog {
         Family.DECISIONS -> "Elige una decisión cotidiana"
         Family.EMOTIONS -> "Reconoce la emoción"
         Family.RHYTHMS -> "Completa la secuencia"
-        Family.CALCULATION -> "Resuelve el cálculo"
+        Family.CALCULATION -> "Resuelve el cálculo mental"
         Family.REVERSE -> "Recuerda la serie al revés"
         Family.FLEXIBILITY -> "Elige una frase con sentido"
         Family.STORIES -> "Continúa la historia"
-        Family.LOGIC -> "Resuelve el problema"
+        Family.LOGIC -> "Resuelve la operación"
         Family.PLANNING -> "Planifica el primer paso"
     }
 
@@ -267,19 +267,19 @@ object TherapeuticExerciseCatalog {
 
     private fun logic(number: Int, level: Int): GuidedQuestion {
         val cases = listOf(
-            Triple("Si todos los lunes hay taller y hoy es lunes, ¿hay taller?", "Sí", "No"),
-            Triple("Si una tienda abre a las nueve y son las ocho, ¿está abierta?", "No", "Sí"),
-            Triple("Si el paraguas sirve para la lluvia, ¿lo usamos cuando llueve?", "Sí", "No"),
-            Triple("Si una semana tiene siete días, ¿dos semanas tienen catorce días?", "Sí", "No"),
-            Triple("Si un autobús llega después de las diez y son las nueve, ¿ya ha llegado?", "No", "Sí"),
-            Triple("Si una receta dice 'primero lavar', ¿lavamos antes de cocinar?", "Sí", "No"),
-            Triple("Si una puerta está cerrada, ¿podemos entrar sin abrirla?", "No", "Sí"),
-            Triple("Si una lista tiene tres productos y ya compramos dos, ¿falta uno?", "Sí", "No"),
-            Triple("Si es de noche, ¿solemos encender una luz para ver mejor?", "Sí", "No"),
-            Triple("Si una taza está vacía, ¿tiene café dentro?", "No", "Sí")
+            Triple("En una lista hay 3 productos y ya se han comprado 2. ¿Cuántos faltan?", "1", "2"),
+            Triple("Una barra de pan cuesta 2 euros y se compran 2 barras. ¿Cuánto cuestan?", "4", "3"),
+            Triple("Un autobús tiene 8 viajeros y bajan 3. ¿Cuántos quedan?", "5", "6"),
+            Triple("Hay 4 vasos en la mesa y se colocan 2 más. ¿Cuántos hay?", "6", "5"),
+            Triple("Una semana tiene 7 días. ¿Cuántos días tienen 2 semanas?", "14", "12"),
+            Triple("Se preparan 6 tostadas y se comen 2. ¿Cuántas quedan?", "4", "3"),
+            Triple("En una caja hay 5 lápices y se añaden 3. ¿Cuántos hay?", "8", "7"),
+            Triple("Una receta necesita 4 huevos y ya hay 1. ¿Cuántos faltan?", "3", "2"),
+            Triple("Se tienen 10 euros y se gastan 4. ¿Cuánto queda?", "6", "5"),
+            Triple("Hay 9 flores y se regalan 3. ¿Cuántas quedan?", "6", "7")
         )
         val item = cases[number % cases.size]
-        return question(item.first, item.second, listOf(item.third, "Depende del color", "No lo sé"), level)
+        return question(item.first, item.second, listOf(item.third, "No se puede calcular", "0"), level)
     }
 
     private fun planning(number: Int, level: Int): GuidedQuestion {

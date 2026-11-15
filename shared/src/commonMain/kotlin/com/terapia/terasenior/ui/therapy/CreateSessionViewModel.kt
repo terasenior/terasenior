@@ -175,9 +175,10 @@ class CreateSessionViewModel(
             }
         }
         if (category == "Funciones Ejecutivas") {
-            return TherapeuticExerciseCatalog.forCategory(category).map {
-                Triple(it.id, it.name, it.description)
-            }
+            return TherapeuticExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) } +
+                AttentionExerciseCatalog.forCategory(category)
+                    .map { Triple(it.id, it.name, it.description) }
         }
         if (category == "Lectoescritura") {
             return LiteracyExerciseCatalog.forCategory(category).map {
@@ -185,9 +186,12 @@ class CreateSessionViewModel(
             }
         }
         if (category == "Percepción") {
-            return PerceptionExerciseCatalog.forCategory(category).map {
-                Triple(it.id, it.name, it.description)
-            }
+            return PerceptionExerciseCatalog.forCategory(category)
+                .map { Triple(it.id, it.name, it.description) } +
+                TherapeuticExerciseCatalog.forCategory(category)
+                    .map { Triple(it.id, it.name, it.description) } +
+                AttentionExerciseCatalog.forCategory(category)
+                    .map { Triple(it.id, it.name, it.description) }
         }
         if (category == "Lenguaje") {
             return LanguageExerciseCatalog.forCategory(category).map {

@@ -2,7 +2,7 @@ package com.terapia.terasenior.treatment.repository
 
 /** Banco de 500 actividades de atención para personas mayores. */
 object AttentionExerciseCatalog {
-    data class AttentionExercise(val id: String, val name: String, val description: String, val imageUrl: String)
+    data class AttentionExercise(val id: String, val name: String, val description: String, val imageUrl: String, val category: String)
     data class AttentionQuestion(val text: String, val options: List<String>, val correctAnswer: String, val imageUrl: String)
 
     private data class Stimulus(val name: String, val category: String, val color: String, val image: String)
@@ -19,23 +19,23 @@ object AttentionExerciseCatalog {
         Stimulus("Autobús", "Transporte", "Azul", RealisticExerciseImageCatalog.bus)
     )
 
-    private enum class Family(val title: String, val description: String) {
-        TARGET("Busca el objetivo", "Mantén la atención en un objeto conocido."),
+    private enum class Family(val title: String, val description: String, val category: String = "Atención") {
+        TARGET("Reconocer objetos", "Identifica objetos cotidianos mediante las gnosias visuales.", "Percepción"),
         SAME("Identifica iguales", "Selecciona la palabra que coincide con la imagen."),
         DIFFERENT("Encuentra el diferente", "Distingue una característica visual importante."),
         COUNT("Conteo atento", "Cuenta elementos sencillos sin perder la consigna."),
         SEQUENCE("Secuencias", "Completa una serie corta manteniendo la atención."),
-        CATEGORY("Atención a categorías", "Selecciona el grupo correcto sin distraerte."),
-        COLOR("Atención al color", "Identifica el color predominante del estímulo."),
-        POSITION("Atención espacial", "Responde a una posición sencilla."),
+        CATEGORY("Evocación categorial", "Agrupa estímulos por una categoría común.", "Funciones Ejecutivas"),
+        COLOR("Color predominante", "Identifica el color predominante del estímulo.", "Percepción"),
+        POSITION("Orientación espacial", "Responde a una posición sencilla.", "Percepción"),
         RULE("Cambio de regla", "Aplica una regla breve y clara."),
-        DAILY("Atención cotidiana", "Detecta el dato importante de una situación diaria.")
+        DAILY("Planificación cotidiana", "Identifica la información necesaria para planificar una acción.", "Funciones Ejecutivas")
     }
 
     val items: List<AttentionExercise> = Family.entries.flatMap { family ->
         (1..50).map { number ->
             val stimulus = stimuli[(number - 1) % stimuli.size]
-            AttentionExercise("guided_attention_${family.name.lowercase()}_$number", spokenTitle(family), family.description, stimulus.image)
+            AttentionExercise("guided_attention_${family.name.lowercase()}_$number", spokenTitle(family), family.description, stimulus.image, family.category)
         }
     }
 
@@ -48,19 +48,19 @@ object AttentionExerciseCatalog {
     }
 
     fun contains(id: String): Boolean = id.startsWith("guided_attention_") && items.any { it.id == id }
-    fun forCategory(category: String): List<AttentionExercise> = if (category == "Atención") items else emptyList()
+    fun forCategory(category: String): List<AttentionExercise> = items.filter { it.category == category }
 
     private fun spokenTitle(family: Family): String = when (family) {
-        Family.TARGET -> "Mira y reconoce el objeto"
+        Family.TARGET -> "Reconoce el objeto"
         Family.SAME -> "Busca la palabra igual"
         Family.DIFFERENT -> "Encuentra lo diferente"
         Family.COUNT -> "Cuenta con atención"
         Family.SEQUENCE -> "Completa la secuencia"
-        Family.CATEGORY -> "Reconoce el grupo correcto"
-        Family.COLOR -> "Fíjate en el color"
+        Family.CATEGORY -> "Evoca la categoría"
+        Family.COLOR -> "Identifica el color"
         Family.POSITION -> "Indica la posición"
         Family.RULE -> "Sigue la regla"
-        Family.DAILY -> "Presta atención a la situación"
+        Family.DAILY -> "Planifica la situación cotidiana"
     }
 
     fun question(id: String, challengeLevel: Int): AttentionQuestion? {

@@ -29,7 +29,7 @@ object MemoryExerciseCatalog {
         DAILY("Memoria cotidiana", "Recuerda una información útil del día a día."),
         PAIRS("Parejas", "Reconoce una pareja relacionada."),
         ORDER("Orden temporal", "Recuerda el orden lógico de una acción."),
-        WORDS("Palabras recordadas", "Identifica la palabra que se pidió recordar.")
+        WORDS("Palabras o imágenes recordadas", "Recuerda y reconoce palabras o imágenes mostradas.")
     }
 
     val items: List<MemoryExercise> = Family.entries.flatMap { family ->
@@ -65,7 +65,7 @@ object MemoryExerciseCatalog {
         Family.DAILY -> "Recuerda la rutina diaria"
         Family.PAIRS -> "Encuentra la pareja relacionada"
         Family.ORDER -> "Recuerda el orden"
-        Family.WORDS -> "Recuerda la palabra"
+        Family.WORDS -> "Recuerda la palabra o la imagen"
     }
 
     /** Selecciona una imagen que apoye la consigna y nunca un objeto ajeno a ella. */
