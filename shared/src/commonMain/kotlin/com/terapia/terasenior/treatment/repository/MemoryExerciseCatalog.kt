@@ -1,6 +1,6 @@
 package com.terapia.terasenior.treatment.repository
 
-/** Banco de 500 actividades de memoria con apoyos cotidianos para personas mayores. */
+/** Banco de 650 actividades de memoria con apoyos cotidianos para personas mayores. */
 object MemoryExerciseCatalog {
     data class MemoryExercise(val id: String, val name: String, val description: String, val imageUrl: String)
     data class MemoryQuestion(val text: String, val options: List<String>, val correctAnswer: String, val imageUrl: String)
@@ -29,7 +29,10 @@ object MemoryExerciseCatalog {
         DAILY("Memoria cotidiana", "Recuerda una información útil del día a día."),
         PAIRS("Parejas", "Reconoce una pareja relacionada."),
         ORDER("Orden temporal", "Recuerda el orden lógico de una acción."),
-        WORDS("Palabras o imágenes recordadas", "Recuerda y reconoce palabras o imágenes mostradas.")
+        WORDS("Palabras o imágenes recordadas", "Recuerda y reconoce palabras o imágenes mostradas."),
+        CULTURAL("Conocimiento cultural", "Evoca conocimientos culturales, escolares y semánticos."),
+        DECLARATIVE("Memoria declarativa y evocación", "Recuerda hechos, relatos, nombres y experiencias recientes."),
+        PROCEDURAL("Memoria procedimental o implícita", "Reconoce cómo se utilizan objetos y acciones habituales.")
     }
 
     val items: List<MemoryExercise> = Family.entries.flatMap { family ->
@@ -45,7 +48,7 @@ object MemoryExerciseCatalog {
     }
 
     init {
-        check(items.size == 500) { "El catálogo de memoria debe contener 500 actividades." }
+        check(items.size == 650) { "El catálogo de memoria debe contener 650 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
         check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
             "Cada actividad de memoria debe tener una consigna distinta."
@@ -66,11 +69,14 @@ object MemoryExerciseCatalog {
         Family.PAIRS -> "Encuentra la pareja relacionada"
         Family.ORDER -> "Recuerda el orden"
         Family.WORDS -> "Recuerda la palabra o la imagen"
+        Family.CULTURAL -> "Recuerda el conocimiento cultural"
+        Family.DECLARATIVE -> "Recuerda la información presentada"
+        Family.PROCEDURAL -> "Recuerda cómo se hace"
     }
 
     /** Selecciona una imagen que apoye la consigna y nunca un objeto ajeno a ella. */
     private fun imageFor(family: Family, number: Int, card: Card): String = when (family) {
-        Family.SEQUENCE, Family.WORDS -> cards[number % cards.size].image
+        Family.SEQUENCE, Family.WORDS, Family.PROCEDURAL -> cards[number % cards.size].image
         Family.DAILY -> when (number % 5) {
             2 -> RealisticExerciseImageCatalog.phone
             else -> RealisticExerciseImageCatalog.dailyCalendar
@@ -103,6 +109,9 @@ object MemoryExerciseCatalog {
             Family.PAIRS -> pair(card, level)
             Family.ORDER -> order(number, level)
             Family.WORDS -> words(number, level)
+            Family.CULTURAL -> cultural(number, level)
+            Family.DECLARATIVE -> declarative(number, level)
+            Family.PROCEDURAL -> procedural(number, level)
         }
         return MemoryQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, activity.imageUrl)
     }
@@ -146,6 +155,57 @@ object MemoryExerciseCatalog {
     private fun words(number: Int, level: Int): Triple<String, List<String>, String> {
         val target = cards[number % cards.size].name
         return choice("Recuerda esta palabra: \"$target\". ¿Cuál era?", target, cards.filter { it.name != target }.map { it.name }, level)
+    }
+
+    private fun cultural(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("¿Qué grupo forman enero, febrero y marzo?", "Meses del año", "Días de la semana"),
+            Triple("¿Qué monumento es famoso en Granada?", "La Alhambra", "La Torre Eiffel"),
+            Triple("¿Qué planeta vivimos?", "La Tierra", "La Luna"),
+            Triple("¿Qué autor escribió Don Quijote?", "Miguel de Cervantes", "Pablo Picasso"),
+            Triple("¿Qué grupo forman manzana, pera y plátano?", "Frutas", "Herramientas"),
+            Triple("¿Qué mar baña parte de la costa española?", "El Mediterráneo", "El mar Caspio"),
+            Triple("¿Qué instrumento se usa para medir la temperatura?", "Termómetro", "Calendario"),
+            Triple("¿Qué grupo forman martillo, destornillador y alicate?", "Herramientas", "Animales"),
+            Triple("¿Qué estación llega después del verano?", "Otoño", "Primavera"),
+            Triple("¿Qué refrán habla de la paciencia?", "Poco a poco se llega lejos", "Nunca hay tiempo")
+        )
+        val item = examples[number % examples.size]
+        return choice(item.first, item.second, listOf(item.third, "No pertenecen al mismo grupo"), level)
+    }
+
+    private fun declarative(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("Recuerda esta lista: pan, leche y fruta. ¿Qué había que comprar?", "Leche", "Un paraguas"),
+            Triple("Recuerda: Ana tiene un perro y Luis tiene un gato. ¿Quién tiene el gato?", "Luis", "Ana"),
+            Triple("Recuerda esta frase: el autobús sale a las diez. ¿A qué hora sale?", "A las diez", "A las doce"),
+            Triple("Recuerda: primero se lavan las manos y después se come. ¿Qué se hace primero?", "Lavarse las manos", "Comer"),
+            Triple("Recuerda estos nombres: Carmen, Pedro y Julia. ¿Cuál era un nombre de mujer?", "Carmen", "Autobús"),
+            Triple("Recuerda: ayer hubo paseo por el parque. ¿Dónde fue el paseo?", "En el parque", "En la farmacia"),
+            Triple("Recuerda: la cita es el martes por la mañana. ¿Qué día es la cita?", "Martes", "Viernes"),
+            Triple("Recuerda: en la receta hacen falta huevos y harina. ¿Qué ingrediente se nombró?", "Harina", "Una silla"),
+            Triple("Recuerda: el cumpleaños de Marta es en junio. ¿En qué mes es?", "Junio", "Enero"),
+            Triple("Recuerda: el cuento terminaba con una fiesta. ¿Cómo terminaba?", "Con una fiesta", "Con una tormenta")
+        )
+        val item = examples[number % examples.size]
+        return choice(item.first, item.second, listOf(item.third, "No se mencionó"), level)
+    }
+
+    private fun procedural(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("¿Para qué se usa un peine?", "Para peinarse", "Para cortar papel"),
+            Triple("¿Cómo usamos unas gafas?", "Las ponemos delante de los ojos", "Las ponemos en los pies"),
+            Triple("¿Para qué sirve un paraguas?", "Para protegerse de la lluvia", "Para cocinar"),
+            Triple("¿Qué hacemos con un tenedor al comer?", "Pinchar o coger alimentos", "Escribir una carta"),
+            Triple("¿Para qué se usa una tijera?", "Para cortar", "Para medir la hora"),
+            Triple("¿Qué se hace con un cepillo de dientes?", "Cepillarse los dientes", "Peinarse"),
+            Triple("¿Para qué sirve un martillo?", "Para golpear clavos", "Para beber agua"),
+            Triple("¿Cómo se usa una bicicleta?", "Pedaleando", "Con una cuchara"),
+            Triple("¿Para qué sirve una llave?", "Para abrir una cerradura", "Para leer"),
+            Triple("¿Qué hacemos con una cuchara?", "Tomar alimentos", "Coser ropa")
+        )
+        val item = examples[number % examples.size]
+        return choice(item.first, item.second, listOf(item.third, "No se utiliza"), level)
     }
 
     private fun choice(text: String, correct: String, wrong: List<String>, level: Int): Triple<String, List<String>, String> {

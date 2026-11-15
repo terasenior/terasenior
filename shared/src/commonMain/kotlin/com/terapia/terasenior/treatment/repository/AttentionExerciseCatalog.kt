@@ -1,6 +1,6 @@
 package com.terapia.terasenior.treatment.repository
 
-/** Banco de 500 actividades de atención para personas mayores. */
+/** Banco de 750 actividades de atención para personas mayores. */
 object AttentionExerciseCatalog {
     data class AttentionExercise(val id: String, val name: String, val description: String, val imageUrl: String, val category: String)
     data class AttentionQuestion(val text: String, val options: List<String>, val correctAnswer: String, val imageUrl: String)
@@ -29,7 +29,12 @@ object AttentionExerciseCatalog {
         COLOR("Color predominante", "Identifica el color predominante del estímulo.", "Percepción"),
         POSITION("Orientación espacial", "Responde a una posición sencilla.", "Percepción"),
         RULE("Cambio de regla", "Aplica una regla breve y clara."),
-        DAILY("Planificación cotidiana", "Identifica la información necesaria para planificar una acción.", "Funciones Ejecutivas")
+        DAILY("Planificación cotidiana", "Identifica la información necesaria para planificar una acción.", "Funciones Ejecutivas"),
+        FOCALIZATION("Focalización", "Dirige la atención hacia un estímulo concreto."),
+        MAIN("Información principal", "Selecciona el dato importante de una situación."),
+        SUSTAINED("Sostenimiento atencional", "Mantiene la atención durante una tarea breve."),
+        ALTERNATION("Alternancias", "Cambia el foco de atención siguiendo una pauta."),
+        DIVIDED("Foco dividido", "Atiende a dos instrucciones sencillas a la vez.")
     }
 
     val items: List<AttentionExercise> = Family.entries.flatMap { family ->
@@ -40,7 +45,7 @@ object AttentionExerciseCatalog {
     }
 
     init {
-        check(items.size == 500) { "El catálogo de atención debe contener 500 actividades." }
+        check(items.size == 750) { "El catálogo de atención debe contener 750 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
         check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
             "Cada actividad de atención debe tener una consigna distinta."
@@ -61,6 +66,11 @@ object AttentionExerciseCatalog {
         Family.POSITION -> "Indica la posición"
         Family.RULE -> "Sigue la regla"
         Family.DAILY -> "Planifica la situación cotidiana"
+        Family.FOCALIZATION -> "Busca el estímulo indicado"
+        Family.MAIN -> "Encuentra la información importante"
+        Family.SUSTAINED -> "Mantén la atención"
+        Family.ALTERNATION -> "Cambia siguiendo la pauta"
+        Family.DIVIDED -> "Atiende a dos indicaciones"
     }
 
     fun question(id: String, challengeLevel: Int): AttentionQuestion? {
@@ -81,6 +91,11 @@ object AttentionExerciseCatalog {
             Family.POSITION -> position(number, level)
             Family.RULE -> rule(number, level)
             Family.DAILY -> daily(number, level)
+            Family.FOCALIZATION -> focalization(stimulus, level)
+            Family.MAIN -> mainInfo(number, level)
+            Family.SUSTAINED -> sustained(number, level)
+            Family.ALTERNATION -> alternation(number, level)
+            Family.DIVIDED -> divided(number, level)
         }
         return AttentionQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, activity.imageUrl)
     }
@@ -133,6 +148,47 @@ object AttentionExerciseCatalog {
             Triple("Al hacer una lista de compra, ¿en qué debes fijarte?", "En lo que falta", "En el ruido"))
         val item = examples[number % examples.size]
         return choice(item.first, item.second, listOf(item.third, "En nada", "En otra cosa"), level)
+    }
+
+    private fun focalization(stimulus: Stimulus, level: Int): Triple<String, List<String>, String> =
+        choice("Busca solo el estímulo indicado. ¿Cuál es \"${stimulus.name}\"?", stimulus.name, stimuli.filter { it != stimulus }.map { it.name }, level)
+
+    private fun mainInfo(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("Para no perder un autobús, ¿qué información es la más importante?", "La hora de salida", "El color del asiento"),
+            Triple("En una receta, ¿qué dato necesitamos para preparar la comida?", "Los ingredientes", "El color del papel"),
+            Triple("En una cita médica, ¿qué conviene recordar?", "El día y la hora", "El tamaño de la sala"),
+            Triple("En una lista de compra, ¿qué buscamos primero?", "Lo que falta en casa", "El ruido de la tienda"),
+            Triple("En una señal de calle, ¿qué dato nos orienta?", "El nombre de la calle", "El color del cielo")
+        )[number % 5]
+        return choice(examples.first, examples.second, listOf(examples.third, "Un dato sin importancia"), level)
+    }
+
+    private fun sustained(number: Int, level: Int): Triple<String, List<String>, String> {
+        val target = (number % 4) + 2
+        return choice("Mantén la atención: cuenta desde 1 hasta $target. ¿Cuál es el último número?", target.toString(), listOf((target - 1).toString(), (target + 1).toString(), "0"), level)
+    }
+
+    private fun alternation(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("Sigue la pauta número-letra: 1, A, 2, B, 3, __. ¿Qué sigue?", "C", "4"),
+            Triple("Sigue la pauta fruta-animal: manzana, perro, plátano, gato, __. ¿Qué sigue?", "Fruta", "Animal"),
+            Triple("Sigue la pauta día-número: lunes, 1, martes, 2, __. ¿Qué sigue?", "Miércoles", "3"),
+            Triple("Sigue la pauta arriba-abajo: arriba, abajo, arriba, __. ¿Qué sigue?", "Abajo", "Arriba"),
+            Triple("Sigue la pauta grande-pequeño: grande, pequeño, grande, __. ¿Qué sigue?", "Pequeño", "Grande")
+        )[number % 5]
+        return choice(examples.first, examples.second, listOf(examples.third, "No hay pauta"), level)
+    }
+
+    private fun divided(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("Haz dos cosas: busca una fruta y di su color. ¿Cuál es una respuesta correcta?", "Manzana roja", "Reloj amarillo"),
+            Triple("Haz dos cosas: mira el reloj y di para qué sirve. ¿Cuál es correcta?", "Sirve para saber la hora", "Sirve para comer"),
+            Triple("Haz dos cosas: busca el animal y di dónde puede vivir. ¿Cuál es correcta?", "Perro en casa", "Libro en un nido"),
+            Triple("Haz dos cosas: busca el transporte y di para qué sirve. ¿Cuál es correcta?", "Autobús para viajar", "Taza para viajar"),
+            Triple("Haz dos cosas: busca un objeto y di su uso. ¿Cuál es correcta?", "Teléfono para llamar", "Silla para nadar")
+        )[number % 5]
+        return choice(examples.first, examples.second, listOf(examples.third, "No se puede responder"), level)
     }
 
     private fun choice(text: String, correct: String, wrong: List<String>, level: Int): Triple<String, List<String>, String> {

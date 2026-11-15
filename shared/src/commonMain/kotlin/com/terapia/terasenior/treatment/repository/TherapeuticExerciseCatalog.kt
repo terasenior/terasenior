@@ -1,7 +1,7 @@
 package com.terapia.terasenior.treatment.repository
 
 /**
- * Banco de 500 ejercicios de funciones ejecutivas.
+ * Banco de 750 ejercicios de funciones ejecutivas.
  *
  * Las actividades se presentan sin una etiqueta GDS. Cada actividad adapta
  * automáticamente su longitud, vocabulario y número de alternativas al nivel
@@ -34,7 +34,12 @@ object TherapeuticExerciseCatalog {
         FLEXIBILITY("Frases alternativas", "Elige una continuación útil y con sentido."),
         STORIES("Historias encadenadas", "Escoge el siguiente paso lógico de una historia."),
         LOGIC("Operaciones matemáticas", "Resuelve problemas matemáticos cotidianos sencillos."),
-        PLANNING("Planifica la tarea", "Selecciona el primer paso de una tarea cotidiana.")
+        PLANNING("Planifica la tarea", "Selecciona el primer paso de una tarea cotidiana."),
+        REASONING("Razonamiento lógico", "Encuentra una solución lógica a una situación cotidiana."),
+        IMPULSE("Control del impulso", "Elige una respuesta segura antes de actuar."),
+        ABSTRACT("Abstracción y analogías", "Relaciona conceptos por su significado."),
+        PROCESSING("Procesamiento y memoria de trabajo", "Mantiene y transforma información breve."),
+        SPEED("Rapidez y tiempo empleado", "Responde con atención a información breve.")
     }
 
     private val dailyThemes = listOf(
@@ -55,7 +60,7 @@ object TherapeuticExerciseCatalog {
     }
 
     init {
-        check(items.size == 500) { "El catálogo debe contener exactamente 500 actividades." }
+        check(items.size == 750) { "El catálogo debe contener exactamente 750 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
         check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
             "Cada actividad de funciones ejecutivas debe tener una consigna distinta."
@@ -79,6 +84,11 @@ object TherapeuticExerciseCatalog {
         Family.STORIES -> "Continúa la historia"
         Family.LOGIC -> "Resuelve la operación"
         Family.PLANNING -> "Planifica el primer paso"
+        Family.REASONING -> "Busca la solución lógica"
+        Family.IMPULSE -> "Piensa antes de actuar"
+        Family.ABSTRACT -> "Encuentra la relación"
+        Family.PROCESSING -> "Mantén la información"
+        Family.SPEED -> "Responde con atención"
     }
 
     /**
@@ -101,6 +111,11 @@ object TherapeuticExerciseCatalog {
             Family.STORIES -> story(number, level)
             Family.LOGIC -> logic(number, level)
             Family.PLANNING -> planning(number, level)
+            Family.REASONING -> reasoning(number, level)
+            Family.IMPULSE -> impulse(number, level)
+            Family.ABSTRACT -> abstract(number, level)
+            Family.PROCESSING -> processing(number, level)
+            Family.SPEED -> speed(number, level)
         }
         return guided.copy(text = distinctCatalogPrompt(guided.text, number), imageUrl = imageFor(family, number))
     }
@@ -118,7 +133,7 @@ object TherapeuticExerciseCatalog {
         }
         Family.EMOTIONS -> RealisticExerciseImageCatalog.emotions
         Family.RHYTHMS -> RealisticExerciseImageCatalog.hand
-        Family.CALCULATION, Family.REVERSE, Family.LOGIC -> null
+        Family.CALCULATION, Family.REVERSE, Family.LOGIC, Family.REASONING, Family.IMPULSE, Family.ABSTRACT, Family.PROCESSING, Family.SPEED -> null
         Family.FLEXIBILITY -> when (number % 10) {
             0, 1, 5, 6 -> RealisticExerciseImageCatalog.seasons
             3 -> RealisticExerciseImageCatalog.homeCommunity
@@ -297,6 +312,46 @@ object TherapeuticExerciseCatalog {
         )
         val item = cases[number % cases.size]
         return question("${item.first}, ¿qué va primero?", item.second, listOf(item.third, "Hacer algo sin relación", "No comprobar nada"), level)
+    }
+
+    private fun reasoning(number: Int, level: Int): GuidedQuestion = executiveProposalQuestion(number, level, listOf(
+        Triple("Si no encuentra las gafas, ¿qué solución tiene más sentido?", "Buscar donde las dejó", "Tirar otros objetos"),
+        Triple("Si una calle está cortada, ¿qué puede hacer?", "Buscar otra ruta", "Seguir sin mirar"),
+        Triple("Si falta un ingrediente para la receta, ¿qué conviene hacer?", "Comprobar si se puede sustituir", "Empezar sin pensar"),
+        Triple("Si el autobús no es su línea, ¿qué debe hacer?", "Esperar el correcto", "Subir igualmente"),
+        Triple("Si empieza a llover durante el paseo, ¿qué solución es adecuada?", "Buscar refugio o volver", "Ignorar la lluvia")))
+
+    private fun impulse(number: Int, level: Int): GuidedQuestion = executiveProposalQuestion(number, level, listOf(
+        Triple("Antes de cruzar una calle, ¿qué debe hacer?", "Mirar antes de cruzar", "Cruzar deprisa"),
+        Triple("Si está enfadado, ¿qué es mejor hacer primero?", "Respirar y esperar", "Gritar"),
+        Triple("Antes de tomar una medicina, ¿qué conviene comprobar?", "El nombre y la pauta", "Tomarla sin mirar"),
+        Triple("Si suena el teléfono en una conversación, ¿qué puede hacer?", "Contestar con calma", "Interrumpir gritando"),
+        Triple("Antes de salir de casa, ¿qué es prudente revisar?", "Llaves y puerta", "Nada")))
+
+    private fun abstract(number: Int, level: Int): GuidedQuestion = executiveProposalQuestion(number, level, listOf(
+        Triple("¿Qué relación hay entre un libro y una revista?", "Ambos sirven para leer", "Ambos se comen"),
+        Triple("¿Qué relación hay entre un abrigo y un paraguas?", "Protegen del tiempo", "Sirven para cocinar"),
+        Triple("¿Qué relación hay entre una taza y un vaso?", "Sirven para beber", "Sirven para llamar"),
+        Triple("¿Qué relación hay entre un reloj y un calendario?", "Dan información del tiempo", "Son alimentos"),
+        Triple("¿Qué relación hay entre un autobús y un tren?", "Sirven para viajar", "Son prendas")))
+
+    private fun processing(number: Int, level: Int): GuidedQuestion = executiveProposalQuestion(number, level, listOf(
+        Triple("Recuerda: 2, 4, 6. ¿Qué número sigue?", "8", "5"),
+        Triple("Recuerda: lunes, miércoles, viernes. ¿Qué día sigue?", "Domingo", "Martes"),
+        Triple("Recuerda: A, B, C. ¿Qué letra sigue?", "D", "F"),
+        Triple("Recuerda: taza, libro, reloj. ¿Cuál fue la última palabra?", "Reloj", "Taza"),
+        Triple("Recuerda: 5, 4, 3. ¿Cuál es el orden al revés?", "3, 4, 5", "5, 4, 3")))
+
+    private fun speed(number: Int, level: Int): GuidedQuestion = executiveProposalQuestion(number, level, listOf(
+        Triple("Elige la respuesta correcta: un semáforo rojo indica…", "Detenerse", "Correr"),
+        Triple("Elige la respuesta correcta: para saber la hora usamos…", "Un reloj", "Una cuchara"),
+        Triple("Elige la respuesta correcta: para llamar a alguien usamos…", "Un teléfono", "Un tenedor"),
+        Triple("Elige la respuesta correcta: si llueve usamos…", "Un paraguas", "Un abanico"),
+        Triple("Elige la respuesta correcta: para leer usamos…", "Un libro", "Un plato")))
+
+    private fun executiveProposalQuestion(number: Int, level: Int, examples: List<Triple<String, String, String>>): GuidedQuestion {
+        val item = examples[number % examples.size]
+        return question(item.first, item.second, listOf(item.third, "No corresponde"), level)
     }
 
     private fun question(text: String, correct: String, wrong: List<String>, level: Int): GuidedQuestion {

@@ -1,7 +1,7 @@
 package com.terapia.terasenior.treatment.repository
 
 /**
- * Banco de 500 actividades de percepción para personas mayores.
+ * Banco de 1.050 actividades de percepción para personas mayores.
  *
  * Emplea fotografías de objetos familiares, alto contraste y consignas
  * breves. El nivel escogido en la sesión regula alternativas y complejidad,
@@ -46,7 +46,18 @@ object PerceptionExerciseCatalog {
         POSITION("Orientación espacial", "Responde a una pregunta sencilla sobre posición."),
         BODY("Percepción corporal", "Reconoce una parte del cuerpo o una acción segura."),
         DIFFERENCE("Discriminación visual", "Distingue una característica importante."),
-        CONTEXT("Contexto cotidiano", "Relaciona una imagen con una situación diaria.")
+        CONTEXT("Contexto cotidiano", "Relaciona una imagen con una situación diaria."),
+        FEATURES("Características del objeto", "Reconoce rasgos físicos de objetos cotidianos."),
+        MAZE("Recorridos y laberintos espaciales", "Sigue recorridos y relaciones espaciales sencillas."),
+        SIZE("Identificación de tamaños", "Compara tamaños y ordena de menor a mayor."),
+        DRAWING("El dibujo", "Reconoce y completa dibujos sencillos."),
+        CLOCKS("Reconocer las horas", "Interpreta horas cotidianas en un reloj."),
+        SOUNDS("Discriminación de sonidos", "Relaciona sonidos cotidianos con su origen."),
+        TEXTURES("Identificación de texturas", "Distingue cualidades táctiles básicas."),
+        OVERLAY("Dibujos entremezclados", "Distingue una figura entre varios elementos."),
+        DRESSING("Praxias del vestido", "Selecciona prendas y acciones adecuadas para vestirse."),
+        VISUAL("Juegos visoespaciales", "Resuelve relaciones visuales y espaciales sencillas."),
+        ROTATION("Rotaciones y giros", "Reconoce cambios de orientación sencillos.")
     }
 
     val items: List<PerceptionExercise> = Family.entries.flatMap { family ->
@@ -62,7 +73,7 @@ object PerceptionExerciseCatalog {
     }
 
     init {
-        check(items.size == 500) { "El catálogo de percepción debe contener 500 actividades." }
+        check(items.size == 1050) { "El catálogo de percepción debe contener 1.050 actividades." }
         check(items.map { it.id }.distinct().size == items.size) { "Cada actividad debe tener un identificador único." }
         check(items.mapNotNull { question(it.id, 3)?.text }.distinct().size == items.size) {
             "Cada actividad de percepción debe tener una consigna distinta."
@@ -83,6 +94,17 @@ object PerceptionExerciseCatalog {
         Family.BODY -> "Reconoce una parte del cuerpo"
         Family.DIFFERENCE -> "Encuentra la diferencia"
         Family.CONTEXT -> "Relaciona la imagen con su situación"
+        Family.FEATURES -> "Reconoce una característica"
+        Family.MAZE -> "Sigue el recorrido"
+        Family.SIZE -> "Compara los tamaños"
+        Family.DRAWING -> "Observa el dibujo"
+        Family.CLOCKS -> "Reconoce la hora"
+        Family.SOUNDS -> "Reconoce el sonido"
+        Family.TEXTURES -> "Reconoce la textura"
+        Family.OVERLAY -> "Encuentra la figura"
+        Family.DRESSING -> "Elige la prenda adecuada"
+        Family.VISUAL -> "Resuelve la relación espacial"
+        Family.ROTATION -> "Reconoce el giro"
     }
 
     fun question(id: String, challengeLevel: Int): PerceptionQuestion? {
@@ -103,6 +125,7 @@ object PerceptionExerciseCatalog {
             Family.BODY -> body(number, level)
             Family.DIFFERENCE -> difference(item, level)
             Family.CONTEXT -> context(item, level)
+            Family.FEATURES, Family.MAZE, Family.SIZE, Family.DRAWING, Family.CLOCKS, Family.SOUNDS, Family.TEXTURES, Family.OVERLAY, Family.DRESSING, Family.VISUAL, Family.ROTATION -> proposal(family, number, level)
         }
         return PerceptionQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, activity.imageUrl)
     }
@@ -147,6 +170,25 @@ object PerceptionExerciseCatalog {
     private fun context(item: ObjectCard, level: Int): Triple<String, List<String>, String> {
         val place = when (item.name) { "Autobús" -> "En una parada"; "Taza" -> "En la cocina"; "Libro" -> "En una estantería"; "Reloj" -> "En una pared o mesa"; "Perro", "Gato" -> "En casa o en la calle"; else -> "En la vida diaria" }
         return choice("¿Dónde es habitual encontrar este objeto?", place, listOf("En el mar", "En la luna", "Dentro de una nube"), level)
+    }
+
+    private fun proposal(family: Family, number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = when (family) {
+            Family.FEATURES -> listOf(Triple("¿Qué característica puede tener una almohada?", "Es blanda", "Es una fruta"), Triple("¿Qué característica puede tener una escalera?", "Es alta", "Es un alimento"))
+            Family.MAZE -> listOf(Triple("Para llegar a una puerta que está delante, ¿hacia dónde avanzamos?", "Hacia delante", "Hacia atrás"), Triple("Si el camino gira a la derecha, ¿hacia dónde seguimos?", "A la derecha", "A la izquierda"))
+            Family.SIZE -> listOf(Triple("¿Qué es más grande: un autobús o una taza?", "Un autobús", "Una taza"), Triple("¿Qué es más pequeño: una llave o una puerta?", "Una llave", "Una puerta"))
+            Family.DRAWING -> listOf(Triple("Si a un dibujo de una casa le falta el tejado, ¿qué falta?", "El tejado", "Una rueda"), Triple("¿Qué figura puede tener tres lados?", "Un triángulo", "Un círculo"))
+            Family.CLOCKS -> listOf(Triple("Si el reloj marca las ocho, ¿qué hora es?", "Las ocho", "Las cinco"), Triple("Si una cita es a las doce, ¿qué debemos mirar?", "El reloj", "El color de la pared"))
+            Family.SOUNDS -> listOf(Triple("¿Qué objeto suele hacer el sonido de un timbre?", "Una puerta", "Una almohada"), Triple("¿Qué podemos oír cuando suena un teléfono?", "Un tono de llamada", "Una luz"))
+            Family.TEXTURES -> listOf(Triple("¿Cómo suele ser una almohada?", "Blanda", "Áspera como una lija"), Triple("¿Cómo puede ser una mesa de madera pulida?", "Lisa", "Mojada siempre"))
+            Family.OVERLAY -> listOf(Triple("Si hay varios dibujos juntos, ¿qué hacemos para encontrar uno?", "Mirar sus detalles", "Elegir sin observar"), Triple("Para distinguir una figura entre otras, ¿en qué nos fijamos?", "En su forma", "En un sonido"))
+            Family.DRESSING -> listOf(Triple("¿Qué prenda ponemos en los pies?", "Zapatos", "Sombrero"), Triple("¿Qué prenda usamos si hace frío?", "Abrigo", "Bañador"))
+            Family.VISUAL -> listOf(Triple("Si una pieza va dentro de un hueco del mismo tamaño, ¿dónde va?", "Dentro del hueco", "Fuera sin encajar"), Triple("En un puzle, ¿qué ayuda a unir dos piezas?", "Que encajen sus bordes", "Que sean de cualquier tamaño"))
+            Family.ROTATION -> listOf(Triple("Si giramos una flecha que mira arriba media vuelta, ¿hacia dónde mira?", "Abajo", "Arriba"), Triple("Si un objeto se gira, ¿qué puede cambiar?", "Su orientación", "Su nombre"))
+            else -> emptyList()
+        }
+        val item = examples[number % examples.size]
+        return choice(item.first, item.second, listOf(item.third, "No corresponde"), level)
     }
 
     private fun choice(text: String, correct: String, wrong: List<String>, level: Int): Triple<String, List<String>, String> {
