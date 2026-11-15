@@ -1,7 +1,7 @@
 package com.terapia.terasenior.treatment.repository
 
 /**
- * Banco de 500 actividades de orientación para personas mayores.
+ * Banco de 600 actividades de orientación para personas mayores.
  * Las preguntas se basan en referencias temporales, espaciales y situacionales
  * estables; el nivel regula alternativas y complejidad sin mostrar etiquetas.
  */
@@ -19,7 +19,9 @@ object OrientationExerciseCatalog {
         TIME_USE("Uso del tiempo", "Relaciona objetos con información temporal.", RealisticExerciseImageCatalog.dailyCalendar),
         WEATHER("Tiempo y preparación", "Elige una acción adecuada según el tiempo.", RealisticExerciseImageCatalog.seasons),
         ROUTINE("Rutinas diarias", "Ordena acciones habituales del día.", RealisticExerciseImageCatalog.dailyCalendar),
-        SITUATION("Situaciones cotidianas", "Reconoce la referencia adecuada en una situación.", RealisticExerciseImageCatalog.homeCommunity)
+        SITUATION("Situaciones cotidianas", "Reconoce la referencia adecuada en una situación.", RealisticExerciseImageCatalog.homeCommunity),
+        TEMPORAL("Relación temporal", "Relaciona comidas, prendas, fiestas y costumbres con la época del año.", RealisticExerciseImageCatalog.seasonsLandscape),
+        REMINISCENCE("Reminiscencias", "Reconoce objetos, prendas y costumbres significativos de otras épocas.", RealisticExerciseImageCatalog.homeCommunity)
     }
 
     val items: List<OrientationExercise> by lazy {
@@ -33,7 +35,7 @@ object OrientationExerciseCatalog {
                 )
             }
         }.also { activities ->
-            check(activities.size == 500) { "El catálogo de orientación debe contener 500 actividades." }
+            check(activities.size == 600) { "El catálogo de orientación debe contener 600 actividades." }
             check(activities.map { it.id }.distinct().size == activities.size) { "Cada actividad debe tener un identificador único." }
         }
     }
@@ -53,6 +55,8 @@ object OrientationExerciseCatalog {
         Family.WEATHER -> weather(number, 1).first
         Family.ROUTINE -> routine(number, 1).first
         Family.SITUATION -> situation(number, 1).first
+        Family.TEMPORAL -> temporalRelation(number, 1).first
+        Family.REMINISCENCE -> reminiscence(number, 1).first
     }
 
     fun question(id: String, challengeLevel: Int): OrientationQuestion? {
@@ -72,6 +76,8 @@ object OrientationExerciseCatalog {
             Family.WEATHER -> weather(number, level)
             Family.ROUTINE -> routine(number, level)
             Family.SITUATION -> situation(number, level)
+            Family.TEMPORAL -> temporalRelation(number, level)
+            Family.REMINISCENCE -> reminiscence(number, level)
         }
         return OrientationQuestion(distinctCatalogPrompt(triple.first, number), triple.second, triple.third, imageFor(family, number))
     }
@@ -91,6 +97,8 @@ object OrientationExerciseCatalog {
             4 -> RealisticExerciseImageCatalog.dailyCalendar
             else -> RealisticExerciseImageCatalog.homeCommunity
         }
+        Family.TEMPORAL -> RealisticExerciseImageCatalog.seasonsLandscape
+        Family.REMINISCENCE -> RealisticExerciseImageCatalog.homeCommunity
     }
 
     private fun week(number: Int, level: Int): Triple<String, List<String>, String> {
@@ -264,6 +272,40 @@ object OrientationExerciseCatalog {
             Triple("Si recibe una carta con una fecha, ¿qué debe mirar?", "El día indicado", "El color del sobre"))
         val item = examples[number % examples.size]
         return choice(item.first, item.second, listOf(item.third, "No importa", "Nada relacionado"), level)
+    }
+
+    private fun temporalRelation(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("¿En qué estación solemos usar un abrigo grueso?", "Invierno", "Verano"),
+            Triple("¿En qué estación suelen verse más flores en los parques?", "Primavera", "Invierno"),
+            Triple("¿En qué estación es habitual llevar ropa ligera por el calor?", "Verano", "Otoño"),
+            Triple("¿En qué estación suelen caer muchas hojas de los árboles?", "Otoño", "Primavera"),
+            Triple("¿Qué fiesta se celebra habitualmente en diciembre?", "Navidad", "Carnaval"),
+            Triple("¿En qué época se celebra habitualmente el Carnaval?", "Antes de la primavera", "En pleno verano"),
+            Triple("¿Qué prenda es más apropiada para un día frío y lluvioso?", "Un impermeable", "Un bañador"),
+            Triple("¿Qué solemos usar para protegernos mucho del sol en verano?", "Sombrero o gorra", "Bufanda de lana"),
+            Triple("¿Qué paisaje es más propio del otoño?", "Hojas de colores en el suelo", "Nieve abundante"),
+            Triple("¿Qué celebración se asocia con la llegada de la primavera en muchas localidades?", "Fiestas y romerías", "La noche de fin de año")
+        )
+        val item = examples[number % examples.size]
+        return choice(item.first, item.second, listOf(item.third, "Ninguna época"), level)
+    }
+
+    private fun reminiscence(number: Int, level: Int): Triple<String, List<String>, String> {
+        val examples = listOf(
+            Triple("¿Qué objeto se utilizaba para escuchar música antes de los teléfonos móviles?", "Una radio", "Un mando a distancia"),
+            Triple("¿Para qué servía una máquina de coser antigua?", "Para coser ropa", "Para medir la temperatura"),
+            Triple("¿Qué objeto se usaba para iluminar una casa antes de tener electricidad?", "Un candil", "Una bombilla led"),
+            Triple("¿Qué prenda tradicional se puede ver en fiestas populares?", "Un traje regional", "Un pijama"),
+            Triple("¿Qué solían guardar muchas familias en un baúl?", "Ropa y recuerdos", "Comida congelada"),
+            Triple("¿Para qué servía un almirez?", "Para machacar alimentos", "Para escribir cartas"),
+            Triple("¿Qué objeto se usaba antes para llamar desde casa?", "Un teléfono fijo", "Una tableta"),
+            Triple("¿Qué puede recordar una fotografía antigua?", "Personas y momentos vividos", "El tiempo de mañana"),
+            Triple("¿Dónde se conservan a menudo objetos antiguos de una familia?", "En una caja de recuerdos", "En el congelador"),
+            Triple("¿Qué costumbre ayuda a recordar la historia de un pueblo?", "Escuchar relatos de sus mayores", "Olvidar las tradiciones")
+        )
+        val item = examples[number % examples.size]
+        return choice(item.first, item.second, listOf(item.third, "No tiene relación"), level)
     }
 
     private fun choice(text: String, correct: String, wrong: List<String>, level: Int): Triple<String, List<String>, String> {

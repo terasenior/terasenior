@@ -433,6 +433,8 @@ private fun exercisePartTitle(key: String): String = when (key) {
     "weather" -> "Parte 8 · Tiempo y preparación"
     "routine" -> "Parte 9 · Rutinas diarias"
     "situation" -> "Parte 10 · Situaciones cotidianas"
+    "temporal" -> "Parte 11 · Relación temporal"
+    "reminiscence" -> "Parte 12 · Reminiscencias"
     "target" -> "Parte 1 · Reconocer el objetivo"
     "same" -> "Parte 2 · Buscar iguales"
     "different" -> "Parte 3 · Encontrar diferencias"
