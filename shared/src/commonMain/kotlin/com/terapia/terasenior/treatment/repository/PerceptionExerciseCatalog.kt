@@ -46,7 +46,7 @@ object PerceptionExerciseCatalog {
         POSITION("Orientación espacial", "Responde a una pregunta sencilla sobre posición."),
         BODY("Percepción corporal", "Reconoce una parte del cuerpo o una acción segura."),
         DIFFERENCE("Discriminación visual", "Distingue una característica importante."),
-        CONTEXT("Contexto cotidiano", "Relaciona una imagen con una situación diaria."),
+        CONTEXT("Actividades de la vida diaria", "Reconoce actividades básicas, instrumentales y avanzadas de la vida diaria."),
         FEATURES("Características del objeto", "Reconoce rasgos físicos de objetos cotidianos."),
         MAZE("Recorridos y laberintos espaciales", "Sigue recorridos y relaciones espaciales sencillas."),
         SIZE("Identificación de tamaños", "Compara tamaños y ordena de menor a mayor."),
@@ -93,7 +93,7 @@ object PerceptionExerciseCatalog {
         Family.POSITION -> "Indica dónde está"
         Family.BODY -> "Reconoce una parte del cuerpo"
         Family.DIFFERENCE -> "Encuentra la diferencia"
-        Family.CONTEXT -> "Relaciona la imagen con su situación"
+        Family.CONTEXT -> "Reconoce la actividad cotidiana"
         Family.FEATURES -> "Reconoce una característica"
         Family.MAZE -> "Sigue el recorrido"
         Family.SIZE -> "Compara los tamaños"
@@ -168,9 +168,23 @@ object PerceptionExerciseCatalog {
     }
 
     private fun context(item: ObjectCard, level: Int): Triple<String, List<String>, String> {
-        val place = when (item.name) { "Autobús" -> "En una parada"; "Taza" -> "En la cocina"; "Libro" -> "En una estantería"; "Reloj" -> "En una pared o mesa"; "Perro", "Gato" -> "En casa o en la calle"; else -> "En la vida diaria" }
-        return choice("¿Dónde es habitual encontrar este objeto?", place, listOf("En el mar", "En la luna", "Dentro de una nube"), level)
+        val examples = listOf(
+            Triple("Lavarse los dientes es una actividad de la vida diaria…", "Básica", "Avanzada"),
+            Triple("Preparar una lista de compra es una actividad…", "Instrumental", "Solo deportiva"),
+            Triple("Llamar por teléfono a un familiar es una actividad…", "Instrumental", "No cotidiana"),
+            Triple("Vestirse para salir es una actividad de la vida diaria…", "Básica", "Solo laboral"),
+            Triple("Participar en una actividad cultural es una actividad…", "Avanzada", "De aseo"),
+            Triple("Tomar una comida con cubiertos es una actividad…", "Básica", "No relacionada con la vida diaria"),
+            Triple("Usar el autobús para ir a una cita es una actividad…", "Instrumental", "Solo de descanso"),
+            Triple("Leer un libro por interés personal puede ser una actividad…", "Avanzada", "De higiene"),
+            Triple("Preparar una bebida en casa es una actividad…", "Básica", "No cotidiana"),
+            Triple("Organizar una visita es una actividad…", "Instrumental", "Solo de aseo")
+        )
+        val example = examples[numberFrom(item) % examples.size]
+        return choice(example.first, example.second, listOf(example.third, "No corresponde"), level)
     }
+
+    private fun numberFrom(item: ObjectCard): Int = objects.indexOf(item).coerceAtLeast(0)
 
     private fun proposal(family: Family, number: Int, level: Int): Triple<String, List<String>, String> {
         val examples = when (family) {
