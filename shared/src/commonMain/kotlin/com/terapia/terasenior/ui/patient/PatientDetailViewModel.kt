@@ -7,6 +7,7 @@ import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
+import com.terapia.terasenior.domain.model.patient.OccupationalHistory
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
 import com.terapia.terasenior.domain.model.admin.UserProfile
@@ -30,6 +31,7 @@ sealed interface PatientDetailUiState {
         val assessments: List<PatientAssessment> = emptyList(),
         val consents: List<Consent> = emptyList(),
         val discharges: List<PatientDischarge> = emptyList(),
+        val occupationalHistory: OccupationalHistory? = null,
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
         val treatedBy: List<UserProfile> = emptyList(), // Terapeutas que lo han atendido
         val entityProfessionals: List<UserProfile> = emptyList(), // Para el traspaso
@@ -72,6 +74,7 @@ class PatientDetailViewModel(
             val assessmentsResult = repository.getPatientAssessments(patientId)
             val consentsResult = repository.getConsents(patientId)
             val dischargesResult = repository.getPatientDischarges(patientId)
+            val occupationalHistoryResult = repository.getOccupationalHistory(patientId)
             val resultsResult = resultsRepository.getPatientResults(patientId).first()
             val sessionsResult = therapyRepository.getPatientSessions(patientId).first()
 
@@ -108,6 +111,7 @@ class PatientDetailViewModel(
                         assessments = assessmentsResult.getOrDefault(emptyList()).sortedByDescending { it.createdAt },
                         consents = consentsResult.getOrDefault(emptyList()),
                         discharges = dischargesResult.getOrDefault(emptyList()).sortedByDescending { it.dischargeDate },
+                        occupationalHistory = occupationalHistoryResult.getOrNull(),
                         sessionsHistory = history,
                         treatedBy = treatedBy,
                         entityProfessionals = entityProfs,
@@ -190,6 +194,18 @@ class PatientDetailViewModel(
             repository.createPatientDischarge(saved)
                 .onSuccess { loadPatientData() }
                 .onFailure { setUpdating(false) }
+        }
+    }
+
+    fun saveOccupationalHistory(history: OccupationalHistory) {
+        viewModelScope.launch {
+            setUpdating(true)
+            repository.saveOccupationalHistory(history.copy(
+                patientId = patientId,
+                authorId = currentProfessionalId,
+                authorName = currentProfessionalName,
+                authorRole = currentProfessionalRole
+            )).onSuccess { loadPatientData() }.onFailure { setUpdating(false) }
         }
     }
 

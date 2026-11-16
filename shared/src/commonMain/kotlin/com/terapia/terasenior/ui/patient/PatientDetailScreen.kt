@@ -36,6 +36,7 @@ import com.terapia.terasenior.domain.model.patient.SupportLevel
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
+import com.terapia.terasenior.domain.model.patient.OccupationalHistory
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
@@ -114,6 +115,7 @@ fun PatientDetailScreen(
                         Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Valoración") })
                         Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Historial") })
                         Tab(selected = selectedTab == 4, onClick = { selectedTab = 4 }, text = { Text("Alta") })
+                        Tab(selected = selectedTab == 5, onClick = { selectedTab = 5 }, text = { Text("Historia TO") })
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
@@ -123,6 +125,7 @@ fun PatientDetailScreen(
                             2 -> PatientAssessmentTab(state, viewModel)
                             3 -> PatientHistoryTab(state, viewModel)
                             4 -> PatientDischargeTab(state, viewModel)
+                            5 -> OccupationalHistoryTab(state, viewModel)
                         }
                     }
                 }
@@ -539,6 +542,144 @@ private fun DischargeField(label: String, value: String, minLines: Int = 1, onCh
         modifier = Modifier.fillMaxWidth(),
         minLines = minLines
     )
+}
+
+@Composable
+private fun OccupationalHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
+    var showEditor by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Historia de terapia ocupacional", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Información funcional, contextual y terapéutica", style = MaterialTheme.typography.bodySmall)
+            }
+            Button(onClick = { showEditor = true }, enabled = !state.isUpdating) {
+                Icon(if (state.occupationalHistory == null) Icons.Default.Add else Icons.Default.Edit, null)
+                Spacer(Modifier.width(6.dp))
+                Text(if (state.occupationalHistory == null) "Crear" else "Editar")
+            }
+        }
+        val history = state.occupationalHistory
+        if (history == null) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
+                Text("Todavía no hay una historia de terapia ocupacional registrada.", modifier = Modifier.padding(20.dp))
+            }
+        } else {
+            OccupationalHistorySummary(history)
+        }
+    }
+    if (showEditor) OccupationalHistoryEditorDialog(
+        patientId = state.patient.id,
+        existing = state.occupationalHistory,
+        onDismiss = { showEditor = false },
+        onSave = { history -> viewModel.saveOccupationalHistory(history); showEditor = false }
+    )
+}
+
+@Composable
+private fun OccupationalHistorySummary(history: OccupationalHistory) {
+    val groups = listOf(
+        "Motivo de derivación" to history.referralReason,
+        "Diagnóstico y antecedentes de salud" to listOfNotNull(history.medicalDiagnosis, history.relevantHealthHistory, history.medication).filter { it.isNotBlank() }.joinToString("\n"),
+        "Autonomía y funcionamiento" to history.functionalAssessment,
+        "Cognición, estado emocional y comunicación" to listOfNotNull(history.cognitiveEmotionalStatus, history.sensoryCommunication).filter { it.isNotBlank() }.joinToString("\n"),
+        "Entorno y red de apoyo" to listOfNotNull(history.housingAndSupport, history.familySocialContext).filter { it.isNotBlank() }.joinToString("\n"),
+        "Rutinas, ocupación e intereses" to listOfNotNull(history.dailyRoutines, history.occupationalHistory, history.interestsPreferences).filter { it.isNotBlank() }.joinToString("\n"),
+        "Objetivos e intervención" to listOfNotNull(history.therapeuticGoals, history.interventionPlan).filter { it.isNotBlank() }.joinToString("\n"),
+        "Observaciones" to history.observations
+    )
+    groups.filter { !it.second.isNullOrBlank() }.forEach { (title, value) ->
+        CollapsibleCard(title = title, icon = Icons.Default.Description) { Text(value.orEmpty(), style = MaterialTheme.typography.bodyMedium) }
+    }
+}
+
+@Composable
+private fun OccupationalHistoryEditorDialog(
+    patientId: String,
+    existing: OccupationalHistory?,
+    onDismiss: () -> Unit,
+    onSave: (OccupationalHistory) -> Unit
+) {
+    val layout = LocalTeraseniorLayout.current
+    var referralReason by remember(existing) { mutableStateOf(existing?.referralReason.orEmpty()) }
+    var medicalDiagnosis by remember(existing) { mutableStateOf(existing?.medicalDiagnosis.orEmpty()) }
+    var relevantHealthHistory by remember(existing) { mutableStateOf(existing?.relevantHealthHistory.orEmpty()) }
+    var medication by remember(existing) { mutableStateOf(existing?.medication.orEmpty()) }
+    var functionalAssessment by remember(existing) { mutableStateOf(existing?.functionalAssessment.orEmpty()) }
+    var cognitiveEmotionalStatus by remember(existing) { mutableStateOf(existing?.cognitiveEmotionalStatus.orEmpty()) }
+    var sensoryCommunication by remember(existing) { mutableStateOf(existing?.sensoryCommunication.orEmpty()) }
+    var housingAndSupport by remember(existing) { mutableStateOf(existing?.housingAndSupport.orEmpty()) }
+    var familySocialContext by remember(existing) { mutableStateOf(existing?.familySocialContext.orEmpty()) }
+    var dailyRoutines by remember(existing) { mutableStateOf(existing?.dailyRoutines.orEmpty()) }
+    var occupationalHistory by remember(existing) { mutableStateOf(existing?.occupationalHistory.orEmpty()) }
+    var interestsPreferences by remember(existing) { mutableStateOf(existing?.interestsPreferences.orEmpty()) }
+    var therapeuticGoals by remember(existing) { mutableStateOf(existing?.therapeuticGoals.orEmpty()) }
+    var interventionPlan by remember(existing) { mutableStateOf(existing?.interventionPlan.orEmpty()) }
+    var observations by remember(existing) { mutableStateOf(existing?.observations.orEmpty()) }
+    var section by remember { mutableStateOf(0) }
+    fun nullable(value: String) = value.trim().ifBlank { null }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.88f)
+                .fillMaxHeight(if (layout.isCompactHeight) 0.94f else 0.88f)
+                .heightIn(max = 860.dp)
+        ) {
+            Column(Modifier.padding(if (layout.isCompactHeight) 16.dp else 24.dp)) {
+                Text("Historia de terapia ocupacional", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                TabRow(selectedTabIndex = section) {
+                    listOf("Salud", "Función", "Entorno", "Plan").forEachIndexed { index, title ->
+                        Tab(selected = section == index, onClick = { section = index }, text = { Text(title) })
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    when (section) {
+                        0 -> {
+                            DischargeField("Motivo de derivación", referralReason, 3) { referralReason = it }
+                            DischargeField("Diagnóstico médico relevante", medicalDiagnosis, 3) { medicalDiagnosis = it }
+                            DischargeField("Antecedentes de salud relevantes", relevantHealthHistory, 4) { relevantHealthHistory = it }
+                            DischargeField("Medicación relevante", medication, 3) { medication = it }
+                        }
+                        1 -> {
+                            DischargeField("Valoración funcional y autonomía", functionalAssessment, 5) { functionalAssessment = it }
+                            DischargeField("Estado cognitivo y emocional", cognitiveEmotionalStatus, 4) { cognitiveEmotionalStatus = it }
+                            DischargeField("Comunicación y aspectos sensoriales", sensoryCommunication, 4) { sensoryCommunication = it }
+                        }
+                        2 -> {
+                            DischargeField("Vivienda y apoyos", housingAndSupport, 4) { housingAndSupport = it }
+                            DischargeField("Contexto familiar y social", familySocialContext, 4) { familySocialContext = it }
+                            DischargeField("Rutinas diarias", dailyRoutines, 4) { dailyRoutines = it }
+                            DischargeField("Historia ocupacional", occupationalHistory, 4) { occupationalHistory = it }
+                            DischargeField("Intereses y preferencias", interestsPreferences, 4) { interestsPreferences = it }
+                        }
+                        else -> {
+                            DischargeField("Objetivos terapéuticos", therapeuticGoals, 5) { therapeuticGoals = it }
+                            DischargeField("Plan de intervención", interventionPlan, 5) { interventionPlan = it }
+                            DischargeField("Observaciones", observations, 5) { observations = it }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = { onSave(OccupationalHistory(
+                        patientId = patientId, referralReason = nullable(referralReason), medicalDiagnosis = nullable(medicalDiagnosis),
+                        relevantHealthHistory = nullable(relevantHealthHistory), medication = nullable(medication),
+                        functionalAssessment = nullable(functionalAssessment), cognitiveEmotionalStatus = nullable(cognitiveEmotionalStatus),
+                        sensoryCommunication = nullable(sensoryCommunication), housingAndSupport = nullable(housingAndSupport),
+                        familySocialContext = nullable(familySocialContext), dailyRoutines = nullable(dailyRoutines),
+                        occupationalHistory = nullable(occupationalHistory), interestsPreferences = nullable(interestsPreferences),
+                        therapeuticGoals = nullable(therapeuticGoals), interventionPlan = nullable(interventionPlan), observations = nullable(observations)
+                    )) }) { Icon(Icons.Default.Save, null); Spacer(Modifier.width(6.dp)); Text("Guardar historia") }
+                }
+            }
+        }
+    }
 }
 
 @Composable
