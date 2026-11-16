@@ -35,6 +35,7 @@ import com.terapia.terasenior.domain.model.patient.PatientStatus
 import com.terapia.terasenior.domain.model.patient.SupportLevel
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
+import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
@@ -112,6 +113,7 @@ fun PatientDetailScreen(
                         Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Evolución") })
                         Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Valoración") })
                         Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Historial") })
+                        Tab(selected = selectedTab == 4, onClick = { selectedTab = 4 }, text = { Text("Alta") })
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
@@ -120,6 +122,7 @@ fun PatientDetailScreen(
                             1 -> PatientEvolutionTab(state)
                             2 -> PatientAssessmentTab(state, viewModel)
                             3 -> PatientHistoryTab(state, viewModel)
+                            4 -> PatientDischargeTab(state, viewModel)
                         }
                     }
                 }
@@ -388,6 +391,155 @@ private fun AssessmentEditorDialog(existing: PatientAssessment?, patientId: Stri
 
 @Composable
 private fun AssessmentEditorField(label: String, value: String, onChange: (String) -> Unit) { OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = 7, colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f), unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) }
+
+@Composable
+private fun PatientDischargeTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
+    var showEditor by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Altas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Registro asistencial y administrativo de finalización", style = MaterialTheme.typography.bodySmall)
+            }
+            Button(onClick = { showEditor = true }, enabled = !state.isUpdating) {
+                Icon(Icons.Default.Add, null)
+                Spacer(Modifier.width(6.dp))
+                Text("Registrar alta")
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (state.discharges.isEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
+                Text("Todavía no hay altas registradas para este paciente.", modifier = Modifier.padding(20.dp))
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(state.discharges, key = { it.id }) { discharge ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Alta · ${discharge.dischargeDate}", fontWeight = FontWeight.Bold)
+                            Text(discharge.dischargeReason, style = MaterialTheme.typography.bodyMedium)
+                            if (discharge.isVoluntary) Text("Alta voluntaria", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                            Text("Registrada por ${discharge.authorName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (showEditor) {
+        PatientDischargeEditorDialog(
+            patient = state.patient,
+            onDismiss = { showEditor = false },
+            onSave = { discharge ->
+                viewModel.saveDischarge(discharge)
+                showEditor = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun PatientDischargeEditorDialog(
+    patient: Patient,
+    onDismiss: () -> Unit,
+    onSave: (PatientDischarge) -> Unit
+) {
+    val layout = LocalTeraseniorLayout.current
+    var assessmentDate by remember { mutableStateOf("") }
+    var serviceArrivalDate by remember { mutableStateOf(patient.admissionDate ?: "") }
+    var interventionStartDate by remember { mutableStateOf("") }
+    var dischargeDate by remember { mutableStateOf("") }
+    var programDuration by remember { mutableStateOf("") }
+    var programFollowUp by remember { mutableStateOf("") }
+    var reason by remember { mutableStateOf("") }
+    var observations by remember { mutableStateOf("") }
+    var isVoluntary by remember { mutableStateOf(false) }
+    var declarantName by remember { mutableStateOf("") }
+    var declarantDocumentId by remember { mutableStateOf("") }
+    var declarantRelationship by remember { mutableStateOf("") }
+    var declarationDate by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
+
+    fun nullable(value: String) = value.trim().ifBlank { null }
+    fun isIsoDate(value: String) = value.isBlank() || Regex("\\d{4}-\\d{2}-\\d{2}").matches(value)
+    fun validDates() = listOf(assessmentDate, serviceArrivalDate, interventionStartDate, dischargeDate, declarationDate).all(::isIsoDate)
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.78f)
+                .fillMaxHeight(if (layout.isCompactHeight) 0.94f else 0.88f)
+                .heightIn(max = 860.dp)
+        ) {
+            Column(Modifier.padding(if (layout.isCompactHeight) 16.dp else 24.dp)) {
+                Text("Registrar alta", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("Las fechas se introducen en formato AAAA-MM-DD.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DischargeField("Fecha de valoración CEDEC", assessmentDate) { assessmentDate = it }
+                    DischargeField("Fecha de llegada al servicio", serviceArrivalDate) { serviceArrivalDate = it }
+                    DischargeField("Fecha de inicio de intervención", interventionStartDate) { interventionStartDate = it }
+                    DischargeField("Fecha de alta *", dischargeDate) { dischargeDate = it }
+                    DischargeField("Temporalidad del programa", programDuration, minLines = 3) { programDuration = it }
+                    DischargeField("Seguimiento del programa", programFollowUp, minLines = 3) { programFollowUp = it }
+                    DischargeField("Motivo del alta *", reason, minLines = 3) { reason = it }
+                    DischargeField("Observaciones", observations, minLines = 4) { observations = it }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = isVoluntary, onCheckedChange = { isVoluntary = it })
+                        Text("Alta voluntaria")
+                    }
+                    if (isVoluntary) {
+                        Text("Datos de la declaración voluntaria", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        DischargeField("Nombre de quien declara *", declarantName) { declarantName = it }
+                        DischargeField("DNI/NIE de quien declara *", declarantDocumentId) { declarantDocumentId = it }
+                        DischargeField("Relación con la persona beneficiaria *", declarantRelationship) { declarantRelationship = it }
+                        DischargeField("Fecha de declaración *", declarationDate) { declarationDate = it }
+                    }
+                    validationError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = {
+                        validationError = when {
+                            dischargeDate.isBlank() || reason.isBlank() -> "Indica la fecha y el motivo del alta."
+                            !validDates() -> "Revisa el formato de las fechas: AAAA-MM-DD."
+                            isVoluntary && listOf(declarantName, declarantDocumentId, declarantRelationship, declarationDate).any { it.isBlank() } -> "Completa todos los datos de la declaración voluntaria."
+                            else -> null
+                        }
+                        if (validationError == null) onSave(PatientDischarge(
+                            patientId = patient.id,
+                            assessmentDate = nullable(assessmentDate), serviceArrivalDate = nullable(serviceArrivalDate),
+                            interventionStartDate = nullable(interventionStartDate), dischargeDate = dischargeDate.trim(),
+                            programDuration = nullable(programDuration), programFollowUp = nullable(programFollowUp),
+                            dischargeReason = reason.trim(), observations = nullable(observations), isVoluntary = isVoluntary,
+                            voluntaryDeclarantName = nullable(declarantName), voluntaryDeclarantDocumentId = nullable(declarantDocumentId),
+                            voluntaryDeclarantRelationship = nullable(declarantRelationship), voluntaryDeclarationDate = nullable(declarationDate)
+                        ))
+                    }) {
+                        Icon(Icons.Default.Save, null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Guardar alta")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DischargeField(label: String, value: String, minLines: Int = 1, onChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        minLines = minLines
+    )
+}
 
 @Composable
 fun PatientHistoryTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {

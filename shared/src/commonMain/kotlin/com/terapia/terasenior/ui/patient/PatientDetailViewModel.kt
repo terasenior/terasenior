@@ -6,6 +6,7 @@ import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.Consent
+import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
 import com.terapia.terasenior.domain.model.admin.UserProfile
@@ -28,6 +29,7 @@ sealed interface PatientDetailUiState {
         val therapeuticProfile: TherapeuticProfile?,
         val assessments: List<PatientAssessment> = emptyList(),
         val consents: List<Consent> = emptyList(),
+        val discharges: List<PatientDischarge> = emptyList(),
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
         val treatedBy: List<UserProfile> = emptyList(), // Terapeutas que lo han atendido
         val entityProfessionals: List<UserProfile> = emptyList(), // Para el traspaso
@@ -69,6 +71,7 @@ class PatientDetailViewModel(
             val profileResult = repository.getTherapeuticProfile(patientId)
             val assessmentsResult = repository.getPatientAssessments(patientId)
             val consentsResult = repository.getConsents(patientId)
+            val dischargesResult = repository.getPatientDischarges(patientId)
             val resultsResult = resultsRepository.getPatientResults(patientId).first()
             val sessionsResult = therapyRepository.getPatientSessions(patientId).first()
 
@@ -104,6 +107,7 @@ class PatientDetailViewModel(
                         therapeuticProfile = profileResult.getOrNull(),
                         assessments = assessmentsResult.getOrDefault(emptyList()).sortedByDescending { it.createdAt },
                         consents = consentsResult.getOrDefault(emptyList()),
+                        discharges = dischargesResult.getOrDefault(emptyList()).sortedByDescending { it.dischargeDate },
                         sessionsHistory = history,
                         treatedBy = treatedBy,
                         entityProfessionals = entityProfs,
@@ -172,6 +176,21 @@ class PatientDetailViewModel(
             status = "DISCONTINUED",
             discontinuedByName = currentProfessionalName
         ))
+    }
+
+    fun saveDischarge(discharge: PatientDischarge) {
+        viewModelScope.launch {
+            setUpdating(true)
+            val saved = discharge.copy(
+                patientId = patientId,
+                authorId = currentProfessionalId,
+                authorName = currentProfessionalName,
+                authorRole = currentProfessionalRole
+            )
+            repository.createPatientDischarge(saved)
+                .onSuccess { loadPatientData() }
+                .onFailure { setUpdating(false) }
+        }
     }
 
     fun setHistoryPage(page: Int) {

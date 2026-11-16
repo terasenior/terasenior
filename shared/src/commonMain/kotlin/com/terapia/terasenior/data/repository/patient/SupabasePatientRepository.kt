@@ -3,12 +3,14 @@ package com.terapia.terasenior.data.repository.patient
 import com.terapia.terasenior.data.model.patient.ConsentDto
 import com.terapia.terasenior.data.model.patient.PatientDto
 import com.terapia.terasenior.data.model.patient.PatientAssessmentDto
+import com.terapia.terasenior.data.model.patient.PatientDischargeDto
 import com.terapia.terasenior.data.model.patient.TherapeuticProfileDto
 import com.terapia.terasenior.data.model.patient.toData
 import com.terapia.terasenior.data.model.patient.toDomain
 import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
+import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.supabase
@@ -70,6 +72,16 @@ class SupabasePatientRepository : PatientRepository {
         supabase.postgrest["patient_assessments"].update(assessment.toData()) {
             filter { eq("id", assessment.id) }
         }
+    }
+
+    override suspend fun getPatientDischarges(patientId: String): Result<List<PatientDischarge>> = runCatching {
+        supabase.postgrest["patient_discharges"].select {
+            filter { eq("patient_id", patientId) }
+        }.decodeList<PatientDischargeDto>().map { it.toDomain() }
+    }
+
+    override suspend fun createPatientDischarge(discharge: PatientDischarge): Result<Unit> = runCatching {
+        supabase.postgrest["patient_discharges"].insert(discharge.toData())
     }
 
     override suspend fun getConsents(patientId: String): Result<List<Consent>> = runCatching {
