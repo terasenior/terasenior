@@ -5,6 +5,7 @@ import com.terapia.terasenior.data.model.patient.PatientDto
 import com.terapia.terasenior.data.model.patient.PatientAssessmentDto
 import com.terapia.terasenior.data.model.patient.PatientDischargeDto
 import com.terapia.terasenior.data.model.patient.OccupationalHistoryDto
+import com.terapia.terasenior.data.model.patient.OccupationalFollowUpDto
 import com.terapia.terasenior.data.model.patient.TherapeuticProfileDto
 import com.terapia.terasenior.data.model.patient.toData
 import com.terapia.terasenior.data.model.patient.toDomain
@@ -13,6 +14,7 @@ import com.terapia.terasenior.domain.model.patient.Patient
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.OccupationalHistory
+import com.terapia.terasenior.domain.model.patient.OccupationalFollowUp
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.supabase
@@ -94,6 +96,16 @@ class SupabasePatientRepository : PatientRepository {
 
     override suspend fun saveOccupationalHistory(history: OccupationalHistory): Result<Unit> = runCatching {
         supabase.postgrest["patient_occupational_histories"].upsert(history.toData())
+    }
+
+    override suspend fun getOccupationalFollowUps(patientId: String): Result<List<OccupationalFollowUp>> = runCatching {
+        supabase.postgrest["patient_occupational_followups"].select {
+            filter { eq("patient_id", patientId) }
+        }.decodeList<OccupationalFollowUpDto>().map { it.toDomain() }
+    }
+
+    override suspend fun createOccupationalFollowUp(followUp: OccupationalFollowUp): Result<Unit> = runCatching {
+        supabase.postgrest["patient_occupational_followups"].insert(followUp.toData())
     }
 
     override suspend fun getConsents(patientId: String): Result<List<Consent>> = runCatching {

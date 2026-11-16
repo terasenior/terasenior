@@ -37,6 +37,7 @@ import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.OccupationalHistory
+import com.terapia.terasenior.domain.model.patient.OccupationalFollowUp
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
@@ -109,13 +110,14 @@ fun PatientDetailScreen(
                 Column(modifier = Modifier.fillMaxSize().padding(padding)) {
                     PatientHeader(state.patient, onEditClick = { showEditDialog = true })
                     
-                    PrimaryTabRow(selectedTabIndex = selectedTab) {
+                    ScrollableTabRow(selectedTabIndex = selectedTab) {
                         Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Perfil") })
                         Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Evolución") })
                         Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Valoración") })
                         Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("Historial") })
                         Tab(selected = selectedTab == 4, onClick = { selectedTab = 4 }, text = { Text("Alta") })
                         Tab(selected = selectedTab == 5, onClick = { selectedTab = 5 }, text = { Text("Historia TO") })
+                        Tab(selected = selectedTab == 6, onClick = { selectedTab = 6 }, text = { Text("Seguimiento TO") })
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
@@ -126,6 +128,7 @@ fun PatientDetailScreen(
                             3 -> PatientHistoryTab(state, viewModel)
                             4 -> PatientDischargeTab(state, viewModel)
                             5 -> OccupationalHistoryTab(state, viewModel)
+                            6 -> OccupationalFollowUpTab(state, viewModel)
                         }
                     }
                 }
@@ -676,6 +679,113 @@ private fun OccupationalHistoryEditorDialog(
                         occupationalHistory = nullable(occupationalHistory), interestsPreferences = nullable(interestsPreferences),
                         therapeuticGoals = nullable(therapeuticGoals), interventionPlan = nullable(interventionPlan), observations = nullable(observations)
                     )) }) { Icon(Icons.Default.Save, null); Spacer(Modifier.width(6.dp)); Text("Guardar historia") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OccupationalFollowUpTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
+    var showEditor by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Seguimiento de terapia ocupacional", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Registros fechados de indicaciones, intervención y evolución", style = MaterialTheme.typography.bodySmall)
+            }
+            Button(onClick = { showEditor = true }, enabled = !state.isUpdating) {
+                Icon(Icons.Default.Add, null)
+                Spacer(Modifier.width(6.dp))
+                Text("Nuevo seguimiento")
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (state.occupationalFollowUps.isEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
+                Text("Todavía no hay seguimientos registrados.", modifier = Modifier.padding(20.dp))
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(state.occupationalFollowUps, key = { it.id }) { followUp ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text("Seguimiento · ${followUp.followUpDate}", fontWeight = FontWeight.Bold)
+                            FollowUpSummary("Indicaciones", followUp.neuropsychologicalIndications)
+                            FollowUpSummary("Objetivos", followUp.treatmentObjectives)
+                            FollowUpSummary("Intervención", followUp.intervention)
+                            FollowUpSummary("Observaciones", followUp.observations)
+                            Text("Profesional: ${followUp.signatureName ?: followUp.authorName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (showEditor) OccupationalFollowUpEditorDialog(
+        patientId = state.patient.id,
+        onDismiss = { showEditor = false },
+        onSave = { followUp -> viewModel.saveOccupationalFollowUp(followUp); showEditor = false }
+    )
+}
+
+@Composable
+private fun FollowUpSummary(label: String, value: String?) {
+    if (!value.isNullOrBlank()) Text("$label: $value", style = MaterialTheme.typography.bodyMedium)
+}
+
+@Composable
+private fun OccupationalFollowUpEditorDialog(
+    patientId: String,
+    onDismiss: () -> Unit,
+    onSave: (OccupationalFollowUp) -> Unit
+) {
+    val layout = LocalTeraseniorLayout.current
+    var followUpDate by remember { mutableStateOf("") }
+    var indications by remember { mutableStateOf("") }
+    var objectives by remember { mutableStateOf("") }
+    var intervention by remember { mutableStateOf("") }
+    var observations by remember { mutableStateOf("") }
+    var signatureName by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
+    fun nullable(value: String) = value.trim().ifBlank { null }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.78f)
+                .fillMaxHeight(if (layout.isCompactHeight) 0.94f else 0.82f)
+                .heightIn(max = 760.dp)
+        ) {
+            Column(Modifier.padding(if (layout.isCompactHeight) 16.dp else 24.dp)) {
+                Text("Nuevo seguimiento", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("Fecha en formato AAAA-MM-DD.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DischargeField("Fecha *", followUpDate) { followUpDate = it }
+                    DischargeField("Indicaciones de neuropsicología", indications, 4) { indications = it }
+                    DischargeField("Objetivos de tratamiento", objectives, 4) { objectives = it }
+                    DischargeField("Intervención realizada", intervention, 5) { intervention = it }
+                    DischargeField("Observaciones", observations, 5) { observations = it }
+                    DischargeField("Nombre para firma", signatureName) { signatureName = it }
+                    validationError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = {
+                        validationError = when {
+                            !Regex("\\d{4}-\\d{2}-\\d{2}").matches(followUpDate.trim()) -> "Indica una fecha válida en formato AAAA-MM-DD."
+                            else -> null
+                        }
+                        if (validationError == null) onSave(OccupationalFollowUp(
+                            patientId = patientId, followUpDate = followUpDate.trim(),
+                            neuropsychologicalIndications = nullable(indications), treatmentObjectives = nullable(objectives),
+                            intervention = nullable(intervention), observations = nullable(observations), signatureName = nullable(signatureName)
+                        ))
+                    }) { Icon(Icons.Default.Save, null); Spacer(Modifier.width(6.dp)); Text("Guardar seguimiento") }
                 }
             }
         }
