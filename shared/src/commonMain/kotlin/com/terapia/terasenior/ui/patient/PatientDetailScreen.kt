@@ -38,6 +38,7 @@ import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.OccupationalHistory
 import com.terapia.terasenior.domain.model.patient.OccupationalFollowUp
+import com.terapia.terasenior.domain.model.patient.ManualActivityLog
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.ui.components.PaginationControls
 import com.terapia.terasenior.ui.components.LocalTeraseniorLayout
@@ -118,6 +119,7 @@ fun PatientDetailScreen(
                         Tab(selected = selectedTab == 4, onClick = { selectedTab = 4 }, text = { Text("Alta") })
                         Tab(selected = selectedTab == 5, onClick = { selectedTab = 5 }, text = { Text("Historia TO") })
                         Tab(selected = selectedTab == 6, onClick = { selectedTab = 6 }, text = { Text("Seguimiento TO") })
+                        Tab(selected = selectedTab == 7, onClick = { selectedTab = 7 }, text = { Text("Registro manual") })
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
@@ -129,6 +131,7 @@ fun PatientDetailScreen(
                             4 -> PatientDischargeTab(state, viewModel)
                             5 -> OccupationalHistoryTab(state, viewModel)
                             6 -> OccupationalFollowUpTab(state, viewModel)
+                            7 -> ManualActivityLogTab(state, viewModel)
                         }
                     }
                 }
@@ -786,6 +789,125 @@ private fun OccupationalFollowUpEditorDialog(
                             intervention = nullable(intervention), observations = nullable(observations), signatureName = nullable(signatureName)
                         ))
                     }) { Icon(Icons.Default.Save, null); Spacer(Modifier.width(6.dp)); Text("Guardar seguimiento") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualActivityLogTab(state: PatientDetailUiState.Success, viewModel: PatientDetailViewModel) {
+    var showEditor by remember { mutableStateOf(false) }
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Text("Registro de actividades manuales", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Actividades no electrónicas para valorar su evolución", style = MaterialTheme.typography.bodySmall)
+            }
+            Button(onClick = { showEditor = true }, enabled = !state.isUpdating) {
+                Icon(Icons.Default.Add, null)
+                Spacer(Modifier.width(6.dp))
+                Text("Registrar actividad")
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (state.manualActivityLogs.isEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
+                Text("Todavía no hay actividades manuales registradas.", modifier = Modifier.padding(20.dp))
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(state.manualActivityLogs, key = { it.id }) { log ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text(log.activityName, fontWeight = FontWeight.Bold)
+                            Text("${log.activityDate} · Complejidad ${log.complexity.lowercase().replaceFirstChar { it.uppercase() }}", style = MaterialTheme.typography.bodySmall)
+                            log.therapeuticArea?.let { Text("Área: $it", style = MaterialTheme.typography.bodySmall) }
+                            log.performanceScore?.let { Text("Resultado: $it/4", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
+                            log.durationMinutes?.let { Text("Duración: $it min", style = MaterialTheme.typography.bodySmall) }
+                            log.resultNotes?.let { Text("Resultado: $it", style = MaterialTheme.typography.bodyMedium) }
+                            log.behavioralObservations?.let { Text("Conducta: $it", style = MaterialTheme.typography.bodyMedium) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (showEditor) ManualActivityLogEditorDialog(
+        patientId = state.patient.id,
+        onDismiss = { showEditor = false },
+        onSave = { log -> viewModel.saveManualActivityLog(log); showEditor = false }
+    )
+}
+
+@Composable
+private fun ManualActivityLogEditorDialog(
+    patientId: String,
+    onDismiss: () -> Unit,
+    onSave: (ManualActivityLog) -> Unit
+) {
+    val layout = LocalTeraseniorLayout.current
+    var activityDate by remember { mutableStateOf("") }
+    var activityName by remember { mutableStateOf("") }
+    var area by remember { mutableStateOf("") }
+    var complexity by remember { mutableStateOf("MEDIA") }
+    var score by remember { mutableStateOf<Int?>(null) }
+    var duration by remember { mutableStateOf("") }
+    var resultNotes by remember { mutableStateOf("") }
+    var behavior by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
+    fun nullable(value: String) = value.trim().ifBlank { null }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth(if (layout.isCompactWidth) 0.96f else 0.72f)
+                .fillMaxHeight(if (layout.isCompactHeight) 0.94f else 0.84f)
+                .heightIn(max = 780.dp)
+        ) {
+            Column(Modifier.padding(if (layout.isCompactHeight) 16.dp else 24.dp)) {
+                Text("Registrar actividad manual", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("Fecha en formato AAAA-MM-DD. La valoración 0-4 es opcional.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DischargeField("Fecha *", activityDate) { activityDate = it }
+                    DischargeField("Actividad *", activityName) { activityName = it }
+                    DischargeField("Área terapéutica", area) { area = it }
+                    Text("Complejidad", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("BAJA" to "Baja", "MEDIA" to "Media", "ALTA" to "Alta").forEach { (value, label) ->
+                            FilterChip(selected = complexity == value, onClick = { complexity = value }, label = { Text(label) })
+                        }
+                    }
+                    Text("Valoración del resultado (0-4)", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf<Int?>(null, 0, 1, 2, 3, 4).forEach { value ->
+                            FilterChip(selected = score == value, onClick = { score = value }, label = { Text(value?.toString() ?: "Sin valorar") })
+                        }
+                    }
+                    DischargeField("Duración aproximada (minutos)", duration) { duration = it.filter(Char::isDigit) }
+                    DischargeField("Resultado y desempeño", resultNotes, 4) { resultNotes = it }
+                    DischargeField("Observaciones conductuales", behavior, 4) { behavior = it }
+                    validationError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = {
+                        validationError = when {
+                            !Regex("\\d{4}-\\d{2}-\\d{2}").matches(activityDate.trim()) -> "Indica una fecha válida en formato AAAA-MM-DD."
+                            activityName.isBlank() -> "Indica la actividad realizada."
+                            else -> null
+                        }
+                        if (validationError == null) onSave(ManualActivityLog(
+                            patientId = patientId, activityDate = activityDate.trim(), activityName = activityName.trim(),
+                            therapeuticArea = nullable(area), complexity = complexity, performanceScore = score,
+                            durationMinutes = duration.toIntOrNull(), resultNotes = nullable(resultNotes),
+                            behavioralObservations = nullable(behavior)
+                        ))
+                    }) { Icon(Icons.Default.Save, null); Spacer(Modifier.width(6.dp)); Text("Guardar actividad") }
                 }
             }
         }

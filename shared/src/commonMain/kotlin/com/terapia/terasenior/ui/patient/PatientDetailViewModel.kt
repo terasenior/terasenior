@@ -9,6 +9,7 @@ import com.terapia.terasenior.domain.model.patient.Consent
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.OccupationalHistory
 import com.terapia.terasenior.domain.model.patient.OccupationalFollowUp
+import com.terapia.terasenior.domain.model.patient.ManualActivityLog
 import com.terapia.terasenior.domain.model.results.ActivityResult
 import com.terapia.terasenior.domain.model.therapy.PatientSessionHistory
 import com.terapia.terasenior.domain.model.admin.UserProfile
@@ -34,6 +35,7 @@ sealed interface PatientDetailUiState {
         val discharges: List<PatientDischarge> = emptyList(),
         val occupationalHistory: OccupationalHistory? = null,
         val occupationalFollowUps: List<OccupationalFollowUp> = emptyList(),
+        val manualActivityLogs: List<ManualActivityLog> = emptyList(),
         val sessionsHistory: List<PatientSessionHistory> = emptyList(),
         val treatedBy: List<UserProfile> = emptyList(), // Terapeutas que lo han atendido
         val entityProfessionals: List<UserProfile> = emptyList(), // Para el traspaso
@@ -78,6 +80,7 @@ class PatientDetailViewModel(
             val dischargesResult = repository.getPatientDischarges(patientId)
             val occupationalHistoryResult = repository.getOccupationalHistory(patientId)
             val occupationalFollowUpsResult = repository.getOccupationalFollowUps(patientId)
+            val manualActivityLogsResult = repository.getManualActivityLogs(patientId)
             val resultsResult = resultsRepository.getPatientResults(patientId).first()
             val sessionsResult = therapyRepository.getPatientSessions(patientId).first()
 
@@ -116,6 +119,7 @@ class PatientDetailViewModel(
                         discharges = dischargesResult.getOrDefault(emptyList()).sortedByDescending { it.dischargeDate },
                         occupationalHistory = occupationalHistoryResult.getOrNull(),
                         occupationalFollowUps = occupationalFollowUpsResult.getOrDefault(emptyList()).sortedByDescending { it.followUpDate },
+                        manualActivityLogs = manualActivityLogsResult.getOrDefault(emptyList()).sortedByDescending { it.activityDate },
                         sessionsHistory = history,
                         treatedBy = treatedBy,
                         entityProfessionals = entityProfs,
@@ -222,6 +226,18 @@ class PatientDetailViewModel(
                 authorName = currentProfessionalName,
                 authorRole = currentProfessionalRole,
                 signatureName = followUp.signatureName?.ifBlank { currentProfessionalName } ?: currentProfessionalName
+            )).onSuccess { loadPatientData() }.onFailure { setUpdating(false) }
+        }
+    }
+
+    fun saveManualActivityLog(log: ManualActivityLog) {
+        viewModelScope.launch {
+            setUpdating(true)
+            repository.createManualActivityLog(log.copy(
+                patientId = patientId,
+                authorId = currentProfessionalId,
+                authorName = currentProfessionalName,
+                authorRole = currentProfessionalRole
             )).onSuccess { loadPatientData() }.onFailure { setUpdating(false) }
         }
     }

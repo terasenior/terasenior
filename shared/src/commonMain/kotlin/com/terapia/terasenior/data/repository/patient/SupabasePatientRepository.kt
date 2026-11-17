@@ -6,6 +6,7 @@ import com.terapia.terasenior.data.model.patient.PatientAssessmentDto
 import com.terapia.terasenior.data.model.patient.PatientDischargeDto
 import com.terapia.terasenior.data.model.patient.OccupationalHistoryDto
 import com.terapia.terasenior.data.model.patient.OccupationalFollowUpDto
+import com.terapia.terasenior.data.model.patient.ManualActivityLogDto
 import com.terapia.terasenior.data.model.patient.TherapeuticProfileDto
 import com.terapia.terasenior.data.model.patient.toData
 import com.terapia.terasenior.data.model.patient.toDomain
@@ -15,6 +16,7 @@ import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.OccupationalHistory
 import com.terapia.terasenior.domain.model.patient.OccupationalFollowUp
+import com.terapia.terasenior.domain.model.patient.ManualActivityLog
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import com.terapia.terasenior.domain.repository.patient.PatientRepository
 import com.terapia.terasenior.supabase
@@ -106,6 +108,16 @@ class SupabasePatientRepository : PatientRepository {
 
     override suspend fun createOccupationalFollowUp(followUp: OccupationalFollowUp): Result<Unit> = runCatching {
         supabase.postgrest["patient_occupational_followups"].insert(followUp.toData())
+    }
+
+    override suspend fun getManualActivityLogs(patientId: String): Result<List<ManualActivityLog>> = runCatching {
+        supabase.postgrest["patient_manual_activity_logs"].select {
+            filter { eq("patient_id", patientId) }
+        }.decodeList<ManualActivityLogDto>().map { it.toDomain() }
+    }
+
+    override suspend fun createManualActivityLog(log: ManualActivityLog): Result<Unit> = runCatching {
+        supabase.postgrest["patient_manual_activity_logs"].insert(log.toData())
     }
 
     override suspend fun getConsents(patientId: String): Result<List<Consent>> = runCatching {

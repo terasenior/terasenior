@@ -6,6 +6,7 @@ import com.terapia.terasenior.domain.model.patient.PatientAssessment
 import com.terapia.terasenior.domain.model.patient.PatientDischarge
 import com.terapia.terasenior.domain.model.patient.OccupationalHistory
 import com.terapia.terasenior.domain.model.patient.OccupationalFollowUp
+import com.terapia.terasenior.domain.model.patient.ManualActivityLog
 import com.terapia.terasenior.domain.model.patient.TherapeuticProfile
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +26,8 @@ interface PatientRepository {
     suspend fun saveOccupationalHistory(history: OccupationalHistory): Result<Unit>
     suspend fun getOccupationalFollowUps(patientId: String): Result<List<OccupationalFollowUp>>
     suspend fun createOccupationalFollowUp(followUp: OccupationalFollowUp): Result<Unit>
+    suspend fun getManualActivityLogs(patientId: String): Result<List<ManualActivityLog>>
+    suspend fun createManualActivityLog(log: ManualActivityLog): Result<Unit>
     suspend fun getConsents(patientId: String): Result<List<Consent>>
     suspend fun updateConsent(consent: Consent): Result<Unit>
     suspend fun logAccess(patientId: String, action: String): Result<Unit>
